@@ -1,0 +1,11 @@
+{
+  "python_version": "3.11",
+  "dependencies": [
+    ".",
+    "langgraph"
+  ],
+  "graphs": {
+    "code_team": "workflow:app"
+  },
+  "env": ".env"
+}
