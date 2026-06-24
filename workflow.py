@@ -26,80 +26,105 @@ from spec.spec_qa import spec_qa_node
 from human_node import human_node
 from tools.git_node import git_node
 import logging
+from globals import  WorkflowStatus
 logger = logging.getLogger(__name__)
 
-MAX_ATTAMPTS= 2
+
 # ============================================================
 # Router
 # ============================================================
 
 def decide_after_issue_manager_node(state: GraphState):
-    current_issue = state.get("current_issue", None)
-    if not current_issue:
+    status = state['status']
+    if status == WorkflowStatus.TO_TESTER:
         return "no_issue"
-    # test code 和 code bug 都是代码修复
-    if current_issue['type'] == 'TEST_BUG' :
-        return "test_code_patcher"
-    if current_issue['type'] == 'CODE_BUG':
+    if status == WorkflowStatus.TO_PATCHER_CODE:
         return "code_patcher"
-    # design bug 是spec.md修复
-    if current_issue['type'] == 'DESIGN_BUG':
+    if status == WorkflowStatus.TO_PATCHER_TEST:
+        return "test_code_patcher"
+    if status == WorkflowStatus.TO_PATCHER_DESIGN:
         return "design_patcher"
-    raise ValueError(f"未知的issue类型: {current_issue['type']}")
+
+    logger.warning(f"issue_manager_node 未知的状态: {status}")
+    return "unexpected"
 
 def decide_after_coder(state: GraphState):
-    if state.get('is_issueing', False):
+    status = state['status']
+    if status == WorkflowStatus.IS_ISSUEING:
         return 'is_issueing'
     return 'success'
 
 def decide_after_test_writer(state: GraphState):
-    attempts = state.get("attempts", 0)
-    if attempts >= MAX_ATTAMPTS:
+    status = state.get('status', None)
+    if status == WorkflowStatus.MAX_ATTEMPTS:
         return 'max_attempts'
-
-    if state.get('is_issueing', False):
+    if status == WorkflowStatus.IS_ISSUEING:
         return 'is_issueing'
-    
+
     return "success"
 
-# 检查是否正在处理issue
 def decide_after_spec_writer(state: GraphState):
-    attempts = state.get("attempts", 0)
-    if attempts >= MAX_ATTAMPTS:
+    status = state['status']
+    if status == WorkflowStatus.MAX_ATTEMPTS:
         return 'max_attempts'
     return 'success'
 
 def decide_after_judge(state: GraphState):
-    issues = state.get("issues", [])
-    if not issues:
+    status = state['status']
+    if status == WorkflowStatus.TO_ISSUE_MANAGER:
         return "need_issue"
-    else:
-        return "failed"
-
+    if status == WorkflowStatus.TO_COMMIT:
+        return "pass"
+    logger.warning(f"judge_node 未知的状态: {status}")
+    return "unexpected"
 def decide_after_tester(state: GraphState):
-    attempts = state.get("attempts", 0)
-    if attempts >= MAX_ATTAMPTS:
+
+    status = state['status']
+    if status == WorkflowStatus.MAX_ATTEMPTS:
         return "max_attempts"
     return "success"
 
-def decide_after_test_qa(state: GraphState):
-    test_qa_review = state.get("test_qa_review", "")
 
-    if test_qa_review == "":
-        if state.get('is_issueing', False):
-            return 'is_issueing'
+def decide_after_test_qa(state: GraphState):
+    status = state['status']
+    if status == WorkflowStatus.IS_ISSUEING:
+        return 'is_issueing'
+    if status == WorkflowStatus.TEST_QA_DONE:
         return "success"
-    else:
+    if status == WorkflowStatus.TO_TEST_WRITER:
         return "failed"
+    logger.warning(f"test_qa_node 未知的状态: {status}")
+
+    return "unexpected"
 
 def decide_after_spec_qa(state: GraphState):
-    spec_qa_review = state.get("spec_qa_review", "")
-    if spec_qa_review == "":
-        if state.get('is_issueing', False):
-            return 'is_issueing'
+    status = state['status']
+    if status == WorkflowStatus.IS_ISSUEING:
+        return 'is_issueing'
+    if status == WorkflowStatus.SPEC_QA_DONE:
         return "success"
-    else:
+    if status == WorkflowStatus.TO_SPEC:
         return "failed"
+    logger.warning(f"spec_qa_node 未知的状态: {status}")
+    return "unexpected"
+def decide_after_git(state: GraphState):
+    status = state['status']
+    if status == WorkflowStatus.GIT_COMMITTED:
+        return "success"
+    if status == WorkflowStatus.INIT:
+        return "to_spec"
+    logger.warning(f"git_node 未知的状态: {status}")
+    return "unexpected"
+
+def decide_after_human_node(state: GraphState):
+    logger.info(f'after human node , {state['status']}')
+    if state['status'] == WorkflowStatus.TO_COMMIT:
+        return "to_git"
+    if state['status'] == WorkflowStatus.GIT_COMMITTED:
+        return "success"
+    logger.warning(f"human node 未知的状态: {state['status']}")
+    return "unexpected"
+
 # ============================================================
 # Build Graph
 # ============================================================
@@ -118,7 +143,26 @@ workflow.add_node("judge", judge_node)
 workflow.add_node("issue_manager_node", issue_manager_node)
 
 workflow.set_entry_point("git_node")
-workflow.add_edge("git_node", "spec")
+
+workflow.add_conditional_edges(
+    "human_node",
+    decide_after_human_node,
+    {
+        "to_git": "git_node",
+        "success": END,
+        "unexpected": END
+    }
+)
+
+workflow.add_conditional_edges(
+    "git_node",
+    decide_after_git,
+    {
+        'success': 'human_node', # COMMIT成功了
+        "to_spec": "spec",
+        'unexpected': END
+    }
+)
 
 
 workflow.add_conditional_edges(
@@ -160,7 +204,8 @@ workflow.add_conditional_edges(
     {
         'failed': 'spec', # 规格审计失败，回到spec重写
         'success': 'coder', # 规格审计成功，进入代码生成
-        'is_issueing': 'issue_manager_node' # 规格审计成功，但当前
+        'is_issueing': 'issue_manager_node', # 规格审计成功，但当前
+        'unexpected': END
     }
 )
 workflow.add_conditional_edges(
@@ -169,7 +214,8 @@ workflow.add_conditional_edges(
     {
         'is_issueing': 'issue_manager_node', #qa成功， 有issue时，继续修复
         "success": "tester", # qa成功，没有issue,正常test
-        "failed": 'test_writer'  # qa失败，重新生成测试代码
+        "failed": 'test_writer',  # qa失败，重新生成测试代码
+        'unexpected': END
     }
 )
 
@@ -178,47 +224,30 @@ workflow.add_conditional_edges(
     "issue_manager_node",
     decide_after_issue_manager_node,
     {
-        'no_issue': 'tester', # 没有issue时，正常test
+        'no_issue': 'tester', 
         'test_code_patcher': 'test_writer',
         "code_patcher": "coder",
         "design_patcher": "spec",
+        'unexpected': END
     }
 )
 workflow.add_conditional_edges(
     "judge",
     decide_after_judge,
     {
-        "pass": END,
-        "need_issue": "issue_manager_node"
+        "pass": 'human_node',
+        "need_issue": "issue_manager_node",
+        'unexpected': END
     }
 )
 
-if __name__ == "__main__":
 
-    conn = sqlite3.connect("checkpoints.db", check_same_thread=False) 
-    memory = SqliteSaver(conn) 
-    app = workflow.compile(checkpointer=memory)
+from utils import draw_workflow_png
 
-
-def draw_workflow_png(app):
-    graph = app.get_graph()
-    # 1. 导出原始mermaid字符串
-    mermaid_text = graph.draw_mermaid()
-    # 替换布局为竖向TD，增加样式
-    mermaid_text = mermaid_text.replace(
-        "graph LR",
-        """graph TD
-        classDef node fill:#f0f8ff,stroke:#2c3e50,stroke-width:1.5
-        linkStyle all stroke:#555,stroke-width:1
-        """
-    )
-    # 写入mmd文件
-    with open("workflow.mmd", "w", encoding="utf-8") as f:
-        f.write(mermaid_text)
-    logger.info("已生成 workflow.mmd")
-
-    png_data = graph.draw_mermaid_png()
-    with open("workflow.png", "wb") as f:
-        f.write(png_data)
-        logger.info("workflow png saved.")
+conn = sqlite3.connect("checkpoints.db", check_same_thread=False) 
+memory = SqliteSaver(conn) 
+app = workflow.compile(checkpointer=memory)
 draw_workflow_png(app)
+
+logger.info("workflow compiled !")
+

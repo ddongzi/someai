@@ -2,7 +2,7 @@ from globals import llm
 from typing import Dict
 import re   
 from langchain_ollama import ChatOllama
-from globals import GraphState, Issue, PatchOperation, GENERATED_DIR
+from globals import GraphState, update_attampts, Issue, PatchOperation, GENERATED_DIR
 import subprocess
 import sys
 
@@ -14,7 +14,7 @@ def test_code_node(state: GraphState) -> Dict:
     print("\n🧪 [Tester] 执行pytest测试")
     print("=" * 60)
 
-    attempts = state.get("attempts", 0) + 1
+    update_attampts(state)
 
     app_file = f"{GENERATED_DIR}/app.py"
     test_file = f"{GENERATED_DIR}/test.py"
@@ -45,13 +45,15 @@ def test_code_node(state: GraphState) -> Dict:
         print(output)
 
         return {
-            "attempts": attempts,
+            'status':state['status'],
+            "attempts": state['attempts'],
             "test_output": output,
         }
 
     except Exception as e:
 
         return {
-            "attempts": attempts,
+            "attempts": state['attempts'],
+            'status':state['status'],
             "test_output": str(e),
         }

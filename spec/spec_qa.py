@@ -1,5 +1,5 @@
 from globals import llm
-from globals import GraphState, Issue, PatchOperation
+from globals import GraphState, Issue, PatchOperation, update_attampts, WorkflowStatus
 from typing import Dict
 import re
 from globals import GENERATED_DIR
@@ -7,10 +7,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-REQUIREMENT = ""
-with open("spec/requirement.md", "r", encoding="utf-8") as f:
-    REQUIREMENT = f.read()
 
 QA_PROMPT = ""
 with open("spec/prompts/qa_prompt.md", "r", encoding="utf-8") as f:
@@ -26,15 +22,6 @@ def spec_qa_node(state: GraphState) -> Dict:
 
     requirement = state.get("requirement", "").strip()
     spec = state.get("spec", "").strip()
-    if not spec:
-        logger.warning("⚠️ [SpecQA] 当前 state 中未找到 spec 文档，跳过审计。")
-        return {
-            "spec": spec,
-            "issues": [],
-            "is_issueing": False,
-            "current_issue": None,
-        }
-
     prompt = QA_PROMPT.format(requirement=requirement, spec=spec)
     full_content = ""
     for chunk in llm.stream(prompt):
@@ -51,7 +38,17 @@ def spec_qa_node(state: GraphState) -> Dict:
     qa_reviews = [item.strip() for item in pattern.findall(clean_content) if item.strip()]
 
     qa_review = "\n".join(qa_reviews)
+    current_issue = state['current_issue']
+
+    if not qa_review:
+        state['status'] = WorkflowStatus.SPEC_QA_DONE
+    elif current_issue:
+        state['status'] = WorkflowStatus.IS_ISSUEING
+    else:
+        state['status'] = WorkflowStatus.TO_SPEC
+
 
     return {
+        'status':state['status'],
         'spec_qa_review': qa_review,
     }

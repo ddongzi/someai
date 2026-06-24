@@ -1,7 +1,7 @@
 # ============================================================
 # Test QA Node 测试代码审计
 # ============================================================
-from globals import GraphState
+from globals import GraphState, WorkflowStatus
 from typing import Dict
 import re
 from globals import llm
@@ -42,9 +42,19 @@ def test_qa_node(state: GraphState) -> Dict:
     qa_reviews = [i.strip() for i in qa_reviews if i.strip()]
     qa_reviews_str = "\n".join(qa_reviews)
 
-    if qa_reviews:
-        print(f"⚠️ [TestQA] 发现 {len(qa_reviews)} 个测试代码质量问题")
-        return {"test_qa_review": qa_reviews_str}
+
+    current_issue = state['current_issue']
+    
+    if not qa_reviews_str:
+        if current_issue:
+            state['status'] = WorkflowStatus.IS_ISSUEING
+        else:
+            state['status'] = WorkflowStatus.TO_TESTER
+
     else:
-        print("✅ [TestQA] 测试代码审计通过，未发现问题")
-        return {}
+        state['status'] = WorkflowStatus.TO_TEST_WRITER
+
+    return {
+        'status':state['status'],
+        "test_qa_review": qa_reviews_str
+        }

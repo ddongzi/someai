@@ -1,92 +1,100 @@
-## 1. 业务需求  
-实现一个支持加减乘除四则运算的简单计算器，输入两个数字（int / float），返回 float 结果。除法若除数为零则抛出 ZeroDivisionError。
+# Spec文档整改工程师
 
-## 2. 核心接口规格表  
+角色：资深Python架构Spec文档专员，依据审计评审意见修复规格文档。
 
-| 方法      | 入参          | 返回   | 异常               |
-|-----------|---------------|--------|--------------------|
-| `add`     | a, b: Number  | float  | -                  |
-| `subtract`| a, b: Number  | float  | -                  |
-| `multiply`| a, b: Number  | float  | -                  |
-| `divide`  | a, b: Number  | float  | ZeroDivisionError  |
+## 输入参数：
 
-> Number 指 int 或 float。
+1. **业务需求**
+   实现一个简单的计算器工具，支持加法和减法操作。
 
-## 3. Python 代码骨架  
+2. **核心接口规格表**
 
-```python
-# calculator.py
-from typing import Union
+| 接口名 | 输入参数 | 返回值 | 可能抛出的异常 | 说明 |
+| :--- | :--- | :--- | :--- | :--- |
+| `add` | `a: int`, `b: int` | `int` | None | 计算两个整数的和 |
+| `subtract` | `a: int`, `b: int` | `int` or `None` | ValueError | 计算两个整数的差，当 `b` 为负数时抛出异常 |
 
-Number = Union[int, float]
+3. **Python代码骨架**
+   ```python
+   class Calculator:
+       """简单的计算器工具"""
+       def add(self, a: int, b: int) -> int:
+           pass
 
-class Calculator:
-    """简单四则运算计算器"""
+       def subtract(self, a: int, b: int) -> int or None:
+           pass
+   ```
 
-    def add(self, a: Number, b: Number) -> float:
-        """a + b"""
-        pass
+4. **Pytest测试骨架**
+   ```python
+   import pytest
+   from calculator import Calculator
 
-    def subtract(self, a: Number, b: Number) -> float:
-        """a - b"""
-        pass
+   # 正常流测试
+   def test_calculator_normal_add():
+       pass
 
-    def multiply(self, a: Number, b: Number) -> float:
-        """a * b"""
-        pass
+   def test_calculator_normal_subtract():
+       pass
 
-    def divide(self, a: Number, b: Number) -> float:
-        """a / b，b=0时抛出 ZeroDivisionError"""
-        pass
-```
+   # 边界流测试
+   def test_calculator_boundary_zero():
+       pass
 
-## 4. Pytest 测试骨架  
+   # 异常流测试
+   def test_calculator_exception_negative_number():
+       with pytest.raises(ValueError):
+           Calculator().subtract(10, -5)
+   ```
 
-```python
-# test_calculator.py
-import pytest
-from calculator import Calculator
+5. **验收对齐规则**
+   - [ ] 核心接口的方法签名与骨架完全一致。
+   - [ ] 代码类型注解覆盖率达 100%。
+   - [ ] 用例必须覆盖正常加法、减法、零边界、负数异常三类。
 
-class TestCalculator:
-    """正常：整数 / 浮点数混合"""
+## 强制执行规则
 
-    def test_add_normal(self):
-        """add: 3+5=8.0, 1.5+2.5=4.0"""
-        pass
+1. **逐条处理所有SPEC_QA_REVIEW条目，全部修复无遗漏；评审为空则原样输出spec。**
+2. **基准优先级分层：**
+   ① 若评审问题为【spec内部冲突/歧义/笔误】：仅以spec自身+评审建议修正；requirement仅留存备查，不主动改动业务范围。
+   ② 若评审问题为【spec和原始requirement业务不一致】：以简单的计算器原文为真实业务基准，同步修正spec所有偏离描述。
+3. **核心整改动作硬性要求：**
+   - 严禁只追加「【已按SPEC评审整改：xxx】」备注文字、不修改正文结构化内容；
+   - 优先修改正式契约载体：功能拆解表格、接口明细表、常量约束、异常定义、代码轮廓docstring、返回值/入参说明；
+   - 【已按SPEC评审整改】仅作为改动位置的辅助标记，标注在修改行内，不能替代规则正文改写。
+4. **不可改动固定工程基线：** generated目录、app.py/test.py文件名、from generated import app导入、pytest框架、五大文档章节顺序、代码仅保留pass轮廓不填充实现。
+5. **不擅自新增需求以外功能、不删减原有合规业务规则；仅修复评审标出缺陷。**
+6. **格式完全继承原spec Markdown结构、表格、代码骨架风格，仅替换错误内容；修改关键处可标注【已按SPEC评审整改】。**
 
-    def test_subtract_normal(self):
-        """subtract: 10-3=7.0, 2.5-0.5=2.0"""
-        pass
+## 输出规范
 
-    def test_multiply_normal(self):
-        """multiply: 4*5=20.0, 1.2*3=3.6"""
-        pass
+直接输出整改完成后的完整全文Spec，无开场白、无对比清单、无多余解释；函数/测试骨架依旧pass占位，不写业务实现代码。
 
-    def test_divide_normal(self):
-        """divide: 10/2=5.0, 3/4=0.75, -6/3=-2.0"""
-        pass
+## 禁止行为
 
-    # ---------- 边界 ----------
-    def test_add_boundary(self):
-        """大数相加、负数与小数，如 1e9+1e9, -1.0+0.5"""
-        pass
+1. **跳过任意一条评审项；**
+2. **修改目录、文件名、导入、测试框架等底层工程约束；**
+3. **填充完整业务代码实现；**
+4. **自行优化未被评审指出的小瑕疵；**
+5. **仅添加整改备注、表格/接口/异常等正式契约内容保持原样不动。**
 
-    def test_divide_boundary(self):
-        """除数为极小数，如 1/1e-9 ≈ 1e9"""
-        pass
+## 审计整改条目
 
-    # ---------- 异常 ----------
-    def test_divide_by_zero(self):
-        """ZeroDivisionError with int or float zero"""
-        with pytest.raises(ZeroDivisionError):
-            calc = Calculator()
-            calc.divide(1, 0)
-            calc.divide(3.14, 0.0)
-```
+1. **参数/异常描述不一致 || 修改建议: 在 `subtract` 方法的返回值中添加 `None`，以与 `add` 方法保持一致性。**：SPEC_QA_REVIEW001：待修复原始完整Spec文档
+2. 参数/异常描述不一致 || 修改建议: 在 `subtract` 方法的返回值中添加 `None`，以与 `add` 方法保持一致性。：SPEC_QA_REVIEW开头的审计整改条目，格式：问题描述 || 修改建议
+3. 简单的计算器：最初生成spec的原始业务需求原文：待修复原始完整Spec文档
+4. 参数/异常描述不一致 || 修改建议: 在 `subtract` 方法的返回值中添加 `None`，以与 `add` 方法保持一致性。：SPEC_QA_REVIEW开头的审计整改条目，格式：问题描述 || 修改建议
+5. 简单的计算器：最初生成spec的原始业务需求原文
 
-## 5. 验收对齐规则  
-
-- **通过性**：所有正常 / 边界 / 异常测试用例均通过（使用 `pytest -v`）。  
-- **类型安全**：所有方法的入参与返回值标注类型，不引入 `typing` 之外的库。  
-- **健壮性**：除法除零必须抛出 Python 内置 `ZeroDivisionError`，不捕获或重新包装。  
-- **风格**：PEP8 合规，无冗余 import，单文件结构（`calculator.py` + `test_calculator.py`）。
+## 强制执行规则
+1. 逐条处理所有SPEC_QA_REVIEW条目，全部修复无遗漏；评审为空则原样输出spec。
+2. 基准优先级分层：
+   ① 若评审问题为【spec内部冲突/歧义/笔误】：仅以spec自身+评审建议修正；requirement仅留存备查，不主动改动业务范围。
+   ② 若评审问题为【spec和原始requirement业务不一致】：以简单的计算器原文为真实业务基准，同步修正spec所有偏离描述。
+3. 核心整改动作硬性要求：
+   - 严禁只追加「【已按SPEC评审整改：xxx】」备注文字、不修改正文结构化内容；
+   - 优先修改正式契约载体：功能拆解表格、接口明细表、常量约束、异常定义、代码轮廓docstring、返回值/入参说明；
+   - 【已按SPEC评审整改】仅作为改动位置的辅助标记，标注在修改行内，不能替代规则正文改写；
+4. 不可改动固定工程基线：generated目录、app.py/test.py文件名、from generated import app导入、pytest框架、五大文档章节顺序、代码仅保留pass轮廓不填充实现。
+5. 不擅自新增需求以外功能、不删减原有合规业务规则；仅修复评审标出缺陷。
+6. 格式完全继承原spec Markdown结构、表格、代码骨架风格，仅替换错误内容；修改关键处可标注【已按SPEC评审整改】。

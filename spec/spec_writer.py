@@ -1,5 +1,5 @@
 from globals import llm
-from globals import GraphState, Issue, PatchOperation
+from globals import GraphState, Issue, PatchOperation, update_attampts, WorkflowStatus
 from typing import Dict
 import re
 from globals import GENERATED_DIR
@@ -61,8 +61,7 @@ def _build_writer_prompt(requirement: str, spec_history: str, state: GraphState)
             return REPAIR_PROMPT.format(review=review, spec_history=spec_history, requirement=requirement)
 
     logger.info("🆕 [SpecWriter] 当前无评审意见，执行 -> 【首次全新架构设计构建】")
-    return FIRST_PROMPT.format(requirement=requirement)
-
+    return FIRST_PROMPT.replace("{requirement}", requirement)
 
 def _stream_llm_response(prompt: str) -> str:
     full_content = ""
@@ -90,8 +89,7 @@ def spec_writer_node(state: GraphState) -> Dict:
     """
     根据用户需求
     """
-    attempts = state.get("attempts", 0)
-    logger.info(f"\n📋 [SpecWriter] 正在编写或重构软件规格说明书...{attempts}")
+    logger.info(f"\n📋 [SpecWriter] 正在编写或重构软件规格说明书...{state['attempts']}")
     logger.info("=" * 60)
 
     requirement = state.get("requirement", "").strip()
@@ -102,10 +100,11 @@ def spec_writer_node(state: GraphState) -> Dict:
     clean_content = _clean_spec_content(raw_content)
     _persist_spec_content(clean_content)
 
-    attempts = state.get("attempts", 0) + 1
+    update_attampts(state)
 
     return {
-        "attempts": attempts,
+        'status':state['status'],
+        "attempts": state['attempts'],
         "spec": clean_content,
         "current_issue": None
     }

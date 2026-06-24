@@ -18,3 +18,5 @@ wheels/
 .coding
 .pytest_cache
 *.env
+
+**/__pycache__/

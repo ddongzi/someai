@@ -1,4 +1,4 @@
-from globals import llm, GraphState, Issue, PatchOperation
+from globals import llm, GraphState, Issue, PatchOperation,update_attampts,WorkflowStatus
 from typing import Dict
 import re
 from globals import GENERATED_DIR
@@ -63,11 +63,9 @@ def test_writer_node(state: GraphState) -> Dict:
 
     current_issue = state.get("current_issue", None)
 
-    attempts = state.get("attempts", 0)
-    attempts += 1
-    print(f"当前尝试次数: {attempts}")
+    update_attampts(state)
 
-    all_files = get_all_files_in_dir(".")
+    # test_qa 和 TEST_BUG 不会同时存在的，
 
     # 如果有代码审计意见，先处理代码审计意见
     if test_qa_review:
@@ -75,7 +73,7 @@ def test_writer_node(state: GraphState) -> Dict:
         test_code = _deal_qa_review(test_qa_review, test_code, spec)
         _write_test_code(test_code)
         return {
-            "attempts": attempts,
+            "attempts": state['attempts'],
             "test_code": test_code,
             "test_qa_review": '',
         }
@@ -85,8 +83,10 @@ def test_writer_node(state: GraphState) -> Dict:
         print("处理测试输出评审建议")
         test_code = _deal_issue_review(current_issue)
         _write_test_code(test_code)
+        state['status'] = WorkflowStatus.IS_ISSUEING
         return {
-            "attempts": attempts,
+        'status':state['status'],
+            "attempts": state['attempts'],
             "test_code": test_code,
             "current_issue": None,
         }
@@ -97,7 +97,8 @@ def test_writer_node(state: GraphState) -> Dict:
     _write_test_code(test_code)
 
     return {
-        "attempts": attempts,
+        'status':state['status'],
+        "attempts": state['attempts'],
         "test_code": test_code.strip(),
     }
     

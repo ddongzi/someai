@@ -1,7 +1,7 @@
 # ============================================================
 # Test Judge Node 测试输出 分析判别， 生成issue
 # ============================================================
-from globals import GraphState, Issue, PatchOperation
+from globals import GraphState, Issue, PatchOperation, WorkflowStatus
 from typing import Dict
 import re
 from globals import llm
@@ -45,7 +45,13 @@ def judge_node(state: GraphState) -> Dict:
                 "review": review.strip()
             }
         )
+    if len(issues) > 0:
+        state['status'] = WorkflowStatus.TO_ISSUE_MANAGER
+    else:
+        state['status'] = WorkflowStatus.TO_COMMIT
+        
     return {
+        'status':state['status'],
         "issues": issues,
         "test_output": '' # 我们已经转化为issue了，所以test_output为空字符串
     }

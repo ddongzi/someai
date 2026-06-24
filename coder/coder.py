@@ -1,5 +1,5 @@
 from globals import llm, GENERATED_DIR
-from globals import GraphState, Issue, PatchOperation
+from globals import GraphState, Issue, PatchOperation,WorkflowStatus
 from typing import Dict
 import re
 from utils import extract_python_code
@@ -26,6 +26,8 @@ def write_code_node(state: GraphState) -> Dict:
     if current_issue and current_issue.get('type') == 'CODE_BUG':
         review = current_issue.get('review', '').strip()
         print('🐞 [Coder] 收到业务代码评审修复建议:', review)
+        state['status'] = WorkflowStatus.IS_ISSUEING
+
 
     # =====================================================================
     # 动态双轨道路由（Dual-Track Prompting）
@@ -64,7 +66,7 @@ def write_code_node(state: GraphState) -> Dict:
 
     with open(f"{GENERATED_DIR}/app.py", "w") as f:
         f.write(clean_code)
-
+    
     return {
         "code": clean_code.strip(),
         "current_issue": None  # 标记当前单个 issue 已经处理完成

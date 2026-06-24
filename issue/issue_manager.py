@@ -1,4 +1,4 @@
-from globals import GraphState, Issue, PatchOperation
+from globals import GraphState, Issue, PatchOperation,WorkflowStatus
 
 def issue_manager_node(state: GraphState) -> dict:
     """
@@ -9,8 +9,8 @@ def issue_manager_node(state: GraphState) -> dict:
     current_issues = list(state.get('issues', []))
     print(f'issue manager is running!, there are {len(current_issues)} issues')
         
-    # 3. 边界检查：如果队列已经全空了，说明所有任务修复完毕，准备走向图的结束节点
     if not current_issues:
+        state['status'] = WorkflowStatus.TO_TESTER
         return {
             "is_issueing": False,
             "issues": [],
@@ -21,8 +21,16 @@ def issue_manager_node(state: GraphState) -> dict:
     next_issue = current_issues[0]
     current_issues.pop(0)
     
-    # 5. 严格采用 return 模式，把更新后的队列和当前任务一起返回给框架
+    if next_issue['type'] == 'CODE_DEBUG':
+        state['status'] = WorkflowStatus.TO_PATCHER_CODE
+    if next_issue['type'] == 'DESIGN_BUG':
+        state['status'] = WorkflowStatus.TO_PATCHER_DESIGN
+    if next_issue['type'] == 'TEST_BUG':
+        state['status'] = WorkflowStatus.TO_PATCHER_TEST
+    
     return {
+        'status':state['status'],
+
         "is_issueing": True,
         "issues": current_issues,   # 更新图里的剩余任务队列
         "current_issue": next_issue, # 声明当前正在攻坚的任务
