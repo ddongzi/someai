@@ -2,7 +2,7 @@ from globals import llm
 from typing import Dict
 import re   
 from langchain_ollama import ChatOllama
-from globals import GraphState, update_attampts, Issue, PatchOperation, GENERATED_DIR
+from globals import GraphState, update_attampts, Issue,  GENERATED_DIR
 import subprocess
 import sys
 
@@ -45,7 +45,6 @@ def test_code_node(state: GraphState) -> Dict:
         print(output)
 
         return {
-            'status':state['status'],
             "attempts": state['attempts'],
             "test_output": output,
         }
@@ -54,6 +53,5 @@ def test_code_node(state: GraphState) -> Dict:
 
         return {
             "attempts": state['attempts'],
-            'status':state['status'],
             "test_output": str(e),
         }

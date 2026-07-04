@@ -1,0 +1,58 @@
+# prompts/test_coder.yaml
+
+# 1. 基础系统设定
+system_base: |
+  你是一个严谨的资深 Python 测试开发工程师。
+
+# 2. 不同的核心任务模板
+scenes:
+  # 场景 A：从零开始写新功能代码
+  write_code: |
+    根据下面需求，检索知识库，基于得到的要求，编写测试代码。
+    ```text
+    {{requirement}}    
+    ```
+
+    输出格式要求：请直接输出完整的 Python 代码，不要包含任何 Markdown 标记以外的废话。
+  
+  pyright_error: |
+    你刚才编写的代码在pyright静态检查时错误。
+    你需要调用ast_search工具定位到具体错误代码片段。
+    在修改错误时候，可能会用到pyright_client来得到相关引用、定义，进行同步修改。
+
+    - 报错信息:
+    ```json
+    {{pyright_result}}
+    ```
+
+    输出格式要求：为Search-and-Replace Block标准格式。不包含其他任何内容。
+  
+  qa_bug: |
+    你刚才编写的代码在qa代码审计时有错误。
+    你需要调用ast_search工具定位到具体错误代码片段。
+    在修改错误时候，可能会用到pyright_client来得到相关引用、定义，进行同步修改。
+
+    - 报错信息:
+    ```json
+    {{qa_review}}
+    ```
+
+    输出格式要求：为Search-and-Replace Block标准格式。不包含其他任何内容。
+
+  # 场景 B：测试失败时进行 Debug 修复
+  fix_bug: |
+    你刚才编写的代码在运行时发生了错误。
+    - 报错信息 : 
+    {{error_message}}
+    - 当前代码上下文:
+    {{current_code}}
+    
+    请分析报错原因，并输出修正后的完整代码。
+
+  # 场景 C：自动生成 Git 提交信息
+  git_commit: |
+    请阅读以下代码的 Git Diff 变更内容：
+    {{git_diff}}
+    
+    请根据变更内容，生成一行标准的 Git Commit Message。
+    格式要求：必须以 feat: 或 fix: 开头，简明扼要，不超过 50 个字符。

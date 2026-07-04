@@ -1,0 +1,32 @@
+# prompts/judger.yaml
+
+# 1. 基础系统设定
+system_base: |
+  你是一个严谨的资深 Python 测试结果审计工程师。
+
+scenes:
+  base: |
+    根据下面测试代码及其测试输出，识别出问题类型，给出评审意见。最多输出10条意见。
+    - 测试代码
+    ```python
+    {{test_code}}
+    ```
+    - 测试输出
+    ```text
+    {{test_output}}    
+    ```
+    问题类型有：
+    - CODE_BUG: 测试没有问题，是源代码问题。
+    - TEST_BUG: 测试代码有问题。
+    - DESIGN_BUG: 测试代码和源代码都认为没有问题。
+
+    输出格式要求：除了下面
+    ```json
+    [
+      {
+        "type": "问题类型",
+        "review": "评审意见" 
+      }
+      ...
+    ]
+    ```

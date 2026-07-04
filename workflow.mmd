@@ -5,47 +5,35 @@ config:
 ---
 graph TD;
 	__start__([<p>__start__</p>]):::first
-	git_node(git_node)
-	spec(spec)
-	spec_qa(spec_qa)
+	ready_node(ready_node)
+	pyright_node(pyright_node)
 	coder(coder)
 	test_writer(test_writer)
-	test_qa(test_qa)
 	tester(tester)
 	human_node(human_node)
+	qa_node(qa_node)
 	judge(judge)
 	issue_manager_node(issue_manager_node)
 	__end__([<p>__end__</p>]):::last
-	__start__ --> git_node;
-	coder -. &nbsp;is_issueing&nbsp; .-> issue_manager_node;
-	coder -. &nbsp;success&nbsp; .-> test_writer;
-	git_node -. &nbsp;unexpected&nbsp; .-> __end__;
-	git_node -. &nbsp;success&nbsp; .-> human_node;
-	git_node -. &nbsp;to_spec&nbsp; .-> spec;
+	__start__ --> ready_node;
+	coder -. &nbsp;max_attempts&nbsp; .-> human_node;
+	coder -. &nbsp;success&nbsp; .-> pyright_node;
 	human_node -. &nbsp;success&nbsp; .-> __end__;
-	human_node -. &nbsp;to_git&nbsp; .-> git_node;
-	issue_manager_node -. &nbsp;unexpected&nbsp; .-> __end__;
+	issue_manager_node -. &nbsp;dropped&nbsp; .-> __end__;
 	issue_manager_node -. &nbsp;code_patcher&nbsp; .-> coder;
-	issue_manager_node -. &nbsp;design_patcher&nbsp; .-> spec;
+	issue_manager_node -. &nbsp;design_patcher&nbsp; .-> human_node;
 	issue_manager_node -. &nbsp;test_code_patcher&nbsp; .-> test_writer;
-	issue_manager_node -. &nbsp;no_issue&nbsp; .-> tester;
-	judge -. &nbsp;unexpected&nbsp; .-> __end__;
-	judge -. &nbsp;pass&nbsp; .-> human_node;
-	judge -. &nbsp;need_issue&nbsp; .-> issue_manager_node;
-	spec -. &nbsp;max_attempts&nbsp; .-> human_node;
-	spec -. &nbsp;success&nbsp; .-> spec_qa;
-	spec_qa -. &nbsp;unexpected&nbsp; .-> __end__;
-	spec_qa -. &nbsp;success&nbsp; .-> coder;
-	spec_qa -. &nbsp;is_issueing&nbsp; .-> issue_manager_node;
-	spec_qa -. &nbsp;failed&nbsp; .-> spec;
-	test_qa -. &nbsp;unexpected&nbsp; .-> __end__;
-	test_qa -. &nbsp;is_issueing&nbsp; .-> issue_manager_node;
-	test_qa -. &nbsp;failed&nbsp; .-> test_writer;
-	test_qa -. &nbsp;success&nbsp; .-> tester;
+	judge --> issue_manager_node;
+	pyright_node -. &nbsp;code_error&nbsp; .-> coder;
+	pyright_node -.-> qa_node;
+	pyright_node -. &nbsp;test_code_error&nbsp; .-> test_writer;
+	qa_node --> issue_manager_node;
+	qa_node --> tester;
+	ready_node --> coder;
+	ready_node --> test_writer;
 	test_writer -. &nbsp;max_attempts&nbsp; .-> human_node;
-	test_writer -. &nbsp;success&nbsp; .-> test_qa;
-	tester -. &nbsp;max_attempts&nbsp; .-> human_node;
-	tester -. &nbsp;success&nbsp; .-> judge;
+	test_writer -. &nbsp;success&nbsp; .-> pyright_node;
+	tester --> judge;
 	classDef default fill:#f2f0ff,line-height:1.2
 	classDef first fill-opacity:0
 	classDef last fill:#bfb6fc

@@ -5,13 +5,24 @@ import os
 from dotenv import load_dotenv
 import logging
 from enum import Enum
+from tools.git import git_tool,GitAction
+from rag.rag import knowledge_search
+import operator
+from typing import Annotated, List, TypedDict
 logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
+tools = [git_tool, knowledge_search]
+
 llm = ChatOllama(
     model="qwen2.5-coder:3b",  
-    temperature=0,
+    temperature=0.1,   
+    frequency_penalty=2,       # 避免llm回复循环重复的话语
+    presence_penalty=1.0         # 🌟 辅助：惩罚重复的话题
 )
+llm.bind_tools(tools=tools)
+
+
 # llm = ChatOpenAI(
 #     api_key="sk-e0e6b0a59ae14fd18e760afd9d0d9bac",
 #     base_url="https://api.deepseek.com",
@@ -25,120 +36,63 @@ MAX_ATTAMPTS= 1
 # ============================================================
 # State
 # ============================================================
-class PatchOperation(TypedDict):
-    file: str
-    action: str
-    target: str
-    reason: str # patch意图
 
 class Issue(TypedDict):
     issue_id: str # 修复建议ID，唯一标识
+    source: str # qaer, judger
+    type: str # 类型：CODE_BUG, DESIGN_BUG, TEST_CODE_BUG
+    assign: str # coder, test_coder, human
     review: str # 修复建议
-    type: str # 修复建议类型，CODE_BUG/TEST_BUG/DESIGN_BUG
-    patch_plan: list[PatchOperation] # 补丁操作列表
 
 from typing import TypedDict, Optional
 
-class GitAction(str, Enum):
-    NONE = "none"
-    COMMIT = "commit"
-    PUSH = "push"
+
 
 class Git(TypedDict):
     action: GitAction      # 例如: 动作 'commit'
     target: str      # 例如: 动作承受者 'branch', 'file'
     reason: str      # git意图说明
     result: str  # 💡 新增：用来存放这条命令的执行结果（成功/失败的具体日志）
-class WorkflowStatus(str, Enum):
-    """
-    流程内状态，node更新，边 来判断 转移。
-    """
-    INIT = "INIT"
 
-    TO_SPEC = "TO_SPEC"
-    SPEC_DONE = "SPEC_DONE"
-
-    SPEC_QA_DONE = "SPEC_QA_DONE"
-
-    TEST_QA_DONE = "TEST_QA_DONE"
-
-    TO_TEST_WRITER = "TO_TEST_WRITER"
-
-    TO_TESTER = "TO_TESTER"
-
-    TO_PATCHER_CODE = "TO_PATCHER_CODE"
-    TO_PATCHER_TEST = "TO_PATCHER_TEST"
-    TO_PATCHER_DESIGN = "TO_PATCHER_DESIGN"
-
-    CODE_GENERATED = "CODE_GENERATED"
-
-    TEST_GENERATED = "TEST_GENERATED"
-
-    TEST_PASSED = "TEST_PASSED"
-
-    ISSUE_FOUND = "ISSUE_FOUND"
-
-    TO_COMMIT = "TO_COMMIT"
-    GIT_COMMITTED = "GIT_COMMITTED"
-
-    TO_HUMAN = "TO_HUMAN"
-    HUMAN_DONE = "HUMAN_DONE"
-
-    IS_ISSUEING = "IS_ISSUEING"
-
-    TO_ISSUE_MANAGER = "TO_ISSUE_MANAGER"
-
-    MAX_ATTEMPTS = "MAX_ATTEMPTS"
-
-    FINISHED = "FINISHED"
-
-    FAILED = "FAILED"
+class QAReview(TypedDict):
+    target: str # test_code, code
+    result: list[str]
     
 class GraphState(TypedDict):
 
-    requirement: str # 用户需求，原始文本
+    requirement: str # 需求，原始文本
 
     code: str
     attempts: int # 重试次数，目前是只看tester的重试次数的，因为目前都会跑到tester
 
     test_code: str  # 测试代码
-    test_qa_review: str # 测试代码审计结果
     test_output: str # 测试代码输出
-
-    spec: str # 软件规格说明书
-    spec_qa_review: str # 规格说明书审计结果
-
 
     is_issueing: bool # 是否正在处理修复建议
 
-    issues: list[Issue]  # 修复建议列表
+    issue_manager_wait: Annotated[set[str], operator.or_] # judger, qaer
+    issues: Annotated[list[Issue], operator.add] # 修复建议列表
     current_issue: Issue | None # 当前处理的修复建议
 
-    git: Git | None # git操作
+    pyright_target: Annotated[set[str], operator.or_] # code, test_code
+    pyright_result: dict # {'code':[.., ..], 'test_code':[..,..]} 
 
-    status: WorkflowStatus | None # 流程内状态，node更新，边 来判断 转移。
+    human_source: str # human 来源，比如max_attempts, no issue
 
-def create_initial_state(requirement: str) -> GraphState:
-    git = Git(
-        action=GitAction.NONE,
-        target="",
-        reason="",
-        result=""
-    )
+
+def create_initial_state() -> GraphState:
+
     return GraphState(
-        requirement=requirement,
         code="",
         attempts=0,
         test_code="",
-        test_qa_review="",
         test_output="",
-        spec="",
-        spec_qa_review="",
+
         is_issueing=False,
         issues=[],
         current_issue=None,
-        git=git,
-        status=WorkflowStatus.INIT
+        pyright_result={},
+        pyright_target=set()
     )
 
 
@@ -182,7 +136,5 @@ def update_attampts(state: GraphState) -> GraphState:
     更新尝试次数
     """
     state['attempts'] += 1
-    if state['attempts'] > MAX_ATTAMPTS:
-        state['status'] = WorkflowStatus.MAX_ATTEMPTS
 
     return state

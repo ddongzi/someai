@@ -1,57 +1,58 @@
 # ============================================================
 # Test Judge Node 测试输出 分析判别， 生成issue
 # ============================================================
-from globals import GraphState, Issue, PatchOperation, WorkflowStatus
+from globals import GraphState, Issue
 from typing import Dict
 import re
+import uuid
 from globals import llm
-
-JUDGE_PROMPT = ""
-with open("test/prompts/judge_prompt.md", "r", encoding="utf-8") as f:
-    JUDGE_PROMPT = f.read()
+from utils import get_scene_prompt,parse_llm_json
+from langchain_core.messages import SystemMessage, HumanMessage
 def judge_node(state: GraphState) -> Dict:
     print("\n⚖️ [Judge] 正在分析失败原因")
     print("=" * 60)
 
-    spec = state.get("spec", "")
     test_code = state.get("test_code", "")
     output = state.get("test_output", "")
-    prompt = JUDGE_PROMPT.format(spec=spec, test_code=test_code, output=output)
+    system_prompt, user_prompt = get_scene_prompt(
+        file_name='judger',
+        scene_name='base',
+        test_output=output, test_code=test_code
+    )
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt)
+    ]
     
     full_content = ""
     # 保持流式打印体验
-    for chunk in llm.stream(prompt):
+    for chunk in llm.stream(messages):
         if chunk.content:
-            print(chunk.content, end="", flush=True)
             full_content += chunk.content
-    print("\n" + "-" * 40)
 
-    pattern = re.compile(
-        r"ISSUE:\s*"
-        r"TYPE:\s*(CODE_BUG|TEST_BUG|DESIGN_BUG)\s*"
-        r"REVIEW:\s*(.*?)(?=ISSUE:|$)",
-        re.DOTALL | re.IGNORECASE
-    )
-
-    matches = pattern.findall(full_content)
+    result = parse_llm_json(full_content)
 
     issues = []
 
-    for bug_type, review in matches:
+    for issue in result:
+        type = issue['type']
+        assign = 'unknown'
+        if type == 'CODE_BUG':
+            assign = 'coder'
+        if type == 'TEST_BUG':
+            assign = 'test_coder'
+        if type == "DESIGN_BUG":
+            assign = 'human'
 
-        issues.append(
-            {
-                "type": bug_type.upper(),
-                "review": review.strip()
-            }
-        )
-    if len(issues) > 0:
-        state['status'] = WorkflowStatus.TO_ISSUE_MANAGER
-    else:
-        state['status'] = WorkflowStatus.TO_COMMIT
-        
+        issues.append(Issue(
+                issue_id=uuid.uuid4(),
+                source='judger',
+                type= issue['type'],
+                review=issue['review'],
+                assign=assign
+            ))
     return {
-        'status':state['status'],
         "issues": issues,
-        "test_output": '' # 我们已经转化为issue了，所以test_output为空字符串
+        "test_output": '', # 我们已经转化为issue了，所以test_output为空字符串
+        'issue_manager_wait':{'judger'}
     }

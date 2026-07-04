@@ -1,104 +1,141 @@
-from globals import llm, GraphState, Issue, PatchOperation,update_attampts,WorkflowStatus
+from globals import llm, GraphState, Issue,update_attampts
 from typing import Dict
 import re
 from globals import GENERATED_DIR
 from utils import extract_python_code, get_all_files_in_dir
-FIRST_PROMPT = ""
-with open("test/prompts/writer_first_prompt.md", "r", encoding="utf-8") as f:
-    FIRST_PROMPT = f.read()
-
-QA_REVIEW_PROMPT = ""
-with open("test/prompts/writer_qa_review_prompt.md", "r", encoding="utf-8") as f:
-    QA_REVIEW_PROMPT = f.read()
-
-ISSUE_REVIEW_PROMPT = ""
-with open("test/prompts/writer_issue_review_prompt.md", "r", encoding="utf-8") as f:
-    ISSUE_REVIEW_PROMPT = f.read()
+from globals import llm, GENERATED_DIR
+from globals import GraphState, Issue
+from typing import Dict
+from langchain_core.messages import SystemMessage, HumanMessage
+import re
+from utils import extract_python_code,get_scene_prompt
+import logging
+from tools.search_replace_tool import apply_search_replace
+logger = logging.getLogger(__name__)
 
 
-def _get_parse_llm_out(prompt: str) -> str:
-    # =====================================================================
-    # 流式流式输出与清洗回写
-    # =====================================================================
+def _call_llm(prompt:str)->str:
     full_content = ""
     for chunk in llm.stream(prompt):
         if chunk.content:
-            print(chunk.content, end="", flush=True)
             full_content += chunk.content
-    print("\n" + "=" * 60)
+    return full_content
 
-    # 调用你的标准 Python 提取函数
-    test_code = extract_python_code(full_content)
+def _do_first_write(state:GraphState) -> Dict:
+        # 提取代码
+    system_prompt, user_prompt = get_scene_prompt(
+            file_name='test_coder',
+            scene_name='write_code',
+            requirement = state['requirement']
+        )
 
-    # 鲁棒性清洗：彻底剥离 Markdown 标记
-    test_code = test_code.strip()
-    if test_code.startswith("```"):
-        test_code = re.sub(r"^```[a-zA-Z]*\n", "", test_code)
-        test_code = re.sub(r"\n```$", "", test_code)
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt)
+    ]
+    response = _call_llm(messages)
+    clean_code = extract_python_code(response)
 
-    return test_code
+    with open(f"{GENERATED_DIR}/app.py", "w") as f:
+        f.write(clean_code)
+    
+    return {
+        'pyright_target':{'test_code'},
+        "test_code": clean_code.strip(),
+    }
 
-def _deal_qa_review(test_qa_review: str, test_code: str, spec: str) -> str:
-    prompt = QA_REVIEW_PROMPT.format(test_qa_review=test_qa_review, test_code=test_code, spec=spec)
-    test_code = _get_parse_llm_out(prompt)
-    return test_code
+def _do_pyright_repair(state: GraphState) -> Dict:
+    system_prompt, user_prompt = get_scene_prompt(
+        file_name='test_coder',
+        scene_name='pyright_error',
+        pyright_result = state['pyright_result']['test_code']
+    )
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt)
+    ]
+    response = _call_llm(messages)
+    code = state['test_code']
+    modified_code = apply_search_replace.invoke({
+        'original':code,
+        'diff':response
+    })
+    state['test_code'] = modified_code
+    return {
+        'test_code': modified_code
+    }
 
-def _write_test_code(test_code: str) -> None:
-    with open(f"{GENERATED_DIR}/test.py", "w", encoding="utf-8") as f:
-        f.write(test_code)
+def _do_qa_bug(state: GraphState)->Dict:
+    current_issue = state['current_issue']
+    system_prompt, user_prompt = get_scene_prompt(
+        file_name='coder',
+        scene_name='qa_bug',
+        review = current_issue['review']
+    )
+ 
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt)
+    ]
+    response = _call_llm(messages)
+    code = state['code']
+    modified_code = apply_search_replace.invoke({
+        'original':code,
+        'diff':response
+    })
+    state['code'] = modified_code
+    return {
+        'code': state['code'],
+        'current_issue': None
+    }
 
-def _deal_issue_review(issue: Issue) -> str:
-    prompt = ISSUE_REVIEW_PROMPT.format(issue=issue)
-    test_code = _get_parse_llm_out(prompt)
-    return test_code
-
+def _do_test_bug(state: GraphState)->Dict:
+    print(f"[Coder] 有review, 修复代码。")
+    
+    current_issue = state['current_issue']
+    system_prompt, user_prompt  = get_scene_prompt(
+        file_name='coder',
+        scene_name='fix_bug',
+        review = current_issue['review']
+    )
+ 
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt)
+    ]
+    response = _call_llm(messages)
+    code = state['code']
+    modified_code = apply_search_replace.invoke({
+        'original':code,
+        'diff':response
+    })
+    state['code'] = modified_code
+    return {
+        'code': state['code'],
+        'current_issue': None
+    }
 def test_writer_node(state: GraphState) -> Dict:
     print("\n📝 [TestWriter] 正在生成或重构自动化测试")
     print("=" * 60)
-
-    spec = state["spec"]
-    code = state["code"]
-    test_code = state.get("test_code", "")
-    test_qa_review = state.get("test_qa_review", "")
 
     current_issue = state.get("current_issue", None)
 
     update_attampts(state)
 
-    # test_qa 和 TEST_BUG 不会同时存在的，
+    logger.info(f'pyrgiht : {state['pyright_result']}')
+    # 1. 处理pyright 静态 错误
+    if  state['pyright_result'].get('test_code', None):
+        return _do_pyright_repair(state=state)
+    
+    current_issue = state.get("current_issue", None)
+    # 2. 是否有issue
+    if current_issue and current_issue['assign'] == 'coder':
+        if current_issue['source'] == 'qa':
+            return _do_qa_bug(state=state)
+        
+        if current_issue['source'] == 'judger':
+            return _do_test_bug(state=state)
 
-    # 如果有代码审计意见，先处理代码审计意见
-    if test_qa_review:
-        print("处理代码审计意见")
-        test_code = _deal_qa_review(test_qa_review, test_code, spec)
-        _write_test_code(test_code)
-        return {
-            "attempts": state['attempts'],
-            "test_code": test_code,
-            "test_qa_review": '',
-        }
-
-    # 如果有测试输出评审建议
-    if current_issue and current_issue.get('type') == 'TEST_BUG':
-        print("处理测试输出评审建议")
-        test_code = _deal_issue_review(current_issue)
-        _write_test_code(test_code)
-        state['status'] = WorkflowStatus.IS_ISSUEING
-        return {
-        'status':state['status'],
-            "attempts": state['attempts'],
-            "test_code": test_code,
-            "current_issue": None,
-        }
-
-    # 第一次生成测试代码
-    prompt = FIRST_PROMPT.format(spec=spec, code=code, GENERATED_DIR=GENERATED_DIR)
-    test_code = _get_parse_llm_out(prompt)
-    _write_test_code(test_code)
-
-    return {
-        'status':state['status'],
-        "attempts": state['attempts'],
-        "test_code": test_code.strip(),
-    }
+    print("[TestWriter] 第一次写代码...")
+    return _do_first_write(state)
     

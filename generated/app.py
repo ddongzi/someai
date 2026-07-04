@@ -1,54 +1,44 @@
-# PasswordManager.py
+import random
 
-from typing import Dict, Optional
-
-class PasswordManager:
-    """
-    管理内存中的密码，键是密码名称，值是密码。
-    """
-    def __init__(self):
-        self._passwords: Dict[str, str] = {}
-
-    def add_password(self, name: str, password: str) -> None:
-        """
-        添加一个密码到管理器中。
-
-        参数：
-            name (str): 密码名称，必填。
-            password (str): 实际密码，必填。
-
-        返回值：无。
-
-        成功路径：将新密码添加到字典中，如果名称已存在则不进行任何操作。
-        失败路径：
-            err_none: 参数为 None。抛出 ValueError。
-            err_empty_str: 密码名称为空字符串。抛出 ValueError。
-        """
-        if name is None:
-            raise ValueError("name cannot be None")
-        if not name:
-            raise ValueError("name cannot be an empty string")
+def grid_random_algorithm(rows, cols):
+    # 初始化一个空的网格
+    grid = [['.' for _ in range(cols)] for _ in range(rows)]
+    
+    # 随机选择一个起点
+    start_row = random.randint(0, rows - 1)
+    start_col = random.randint(0, cols - 1)
+    grid[start_row][start_col] = 'S'
+    
+    # 定义随机移动的方向（上下左右）
+    directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+    
+    # 随机生成路径
+    path = []
+    current_row, current_col = start_row, start_col
+    
+    while True:
+        # 随机选择一个方向
+        direction = random.choice(directions)
         
-        self._passwords[name] = password
-
-    def remove_password(self, name: str) -> bool:
-        """
-        从管理器中移除一个密码。
-
-        参数：
-            name (str): 密码名称，必填。
-
-        返回值：bool，表示是否成功移除。
-
-        成功路径：从字典中删除指定名称的密码，如果存在则返回 True，否则返回 False。
-        失败路径：
-            err_none: 参数为 None。抛出 ValueError。
-            err_empty_str: 密码名称为空字符串。抛出 ValueError。
-            err_not_found: 密码名称不存在。返回 False。
-        """
-        if name is None:
-            raise ValueError("name cannot be None")
-        if not name:
-            raise ValueError("name cannot be an empty string")
+        # 计算新的位置
+        new_row, new_col = current_row + direction[0], current_col + direction[1]
         
-        return self._passwords.pop(name, False)
+        # 检查新位置是否在网格范围内且未被访问过
+        if 0 <= new_row < rows and 0 <= new_col < cols and grid[new_row][new_col] == '.':
+            path.append((current_row, current_col))
+            grid[current_row][current_col] = 'P'
+            current_row, current_col = new_row, new_col
+        
+        # 如果路径长度达到网格大小的平方，结束
+        if len(path) >= rows * cols:
+            break
+    
+    return grid, path
+
+# 示例用法
+rows = 5
+cols = 5
+grid, path = grid_random_algorithm(rows, cols)
+for row in grid:
+    print(' '.join(row))
+print("Path:", path)

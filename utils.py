@@ -96,3 +96,116 @@ def calculate_memory_size(state_values: dict) -> dict:
         "kb": round(bytes_size / 1024, 2),
         "mb": round(bytes_size / (1024 * 1024), 4)
     }
+
+import json
+import os
+
+
+def get_first_pending_task(file_path: str ='todo_tasks.json' ) -> dict | None:
+    """从todo_tasks.json 任务列表读取并返回 ID 最小且状态为 pending 的单个任务"""
+    if not os.path.exists(file_path):
+        return None
+        
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            tasks = json.load(f)
+            
+        # 1. 过滤出所有 pending 状态的任务
+        pending_tasks = [t for t in tasks if t.get('status') == 'pending']
+        
+        if not pending_tasks:
+            return None
+            
+        # 2. 找出 id 最小的任务并返回
+        return min(pending_tasks, key=lambda x: x.get('id', float('inf')))
+        
+    except (json.JSONDecodeError, Exception):
+        return None
+    
+
+import os
+from typing import Dict, Any, Tuple
+from langchain_core.messages import SystemMessage, HumanMessage
+import yaml
+from jinja2 import Template
+from langchain_core.prompts import ChatPromptTemplate
+# 假设你的所有 prompt yaml 文件都放在当前目录的 prompts 文件夹下
+PROMPT_DIR = "./prompts"
+
+def get_scene_prompt(file_name: str, scene_name: str = 'base', **kwargs) -> str:
+    """
+    根据配置文件名和业务场景，动态组装并渲染返回 System Prompt 和 User Prompt。
+
+    Args:
+        file_name (str): yaml 配置文件名，例如 'coder.yaml'
+        scene_name (str): 对应的场景名称，例如 'write_code'
+        **kwargs: 需要替换到 Prompt 模板中的动态变量，例如 requirement="xxx"
+
+    Returns:
+        Tuple[str, str]: (system_prompt, user_prompt)
+    """
+    file_path = os.path.join(PROMPT_DIR, f"{file_name}.yaml")
+    
+    # 1. 安全读取并解析 YAML 文件
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"未找到 Prompt 配置文件: {file_path}")
+        
+    with open(file_path, "r", encoding="utf-8") as f:
+        try:
+            config = yaml.safe_load(f)
+        except yaml.YAMLError as e:
+            raise ValueError(f"YAML 文件解析失败: {e}")
+
+    # 2. 提取基础系统提示词 (System Base)
+    system_prompt = config.get("system_base", "").strip()
+
+    # 3. 提取对应的业务场景模板 (User Scene)
+    scenes_dict = config.get("scenes", {})
+    if scene_name not in scenes_dict:
+        raise KeyError(f"在文件 {file_name} 中未找到场景配置: '{scene_name}'")
+        
+    raw_user_template = scenes_dict[scene_name]
+
+    # 4. 使用 Jinja2 渲染用户提示词模板，自动替换 {{variable}}
+    try:
+        template = Template(raw_user_template)
+        user_prompt = template.render(**kwargs).strip()
+    except Exception as e:
+        raise RuntimeError(f"Prompt 模板渲染失败，可能缺少必要参数。错误信息: {e}")
+
+
+    return system_prompt, user_prompt
+
+import json
+import re
+
+def parse_llm_json(llm_output: str):
+    """
+    清洗并解析 LLM 输出的 JSON 字符串，支持带有 Markdown 标记或前后废话的情况
+    """
+    # 1. 去除两端的空白字符
+    text = llm_output.strip()
+    
+    # 2. 核心正则：匹配最外层的 {} 或 []
+    # 这样即使 LLM 输出 "这是结果：```json {\"a\": 1} ``` 谢谢！" 也能精准提取
+    match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+    
+    if not match:
+        raise ValueError("在 LLM 输出中未找到有效的 JSON 结构 ({} 或 [])")
+        
+    json_str = match.group(1)
+    
+    # 3. 解析 JSON
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        # 如果解析失败，通常是由于 LLM 输出了不规范的控制字符、单引号或截断
+        print(f"JSON 语法错误: {e}")
+        # 兜底清洗：处理常见的反斜杠转义或截断（可选）
+        return handle_json_retry(json_str)
+
+def handle_json_retry(corrupted_str: str):
+    """兜底逻辑：处理由于 LLM 截断导致的非完整 JSON（可根据需要扩展）"""
+    # 如果是因为 LLM token 达到上限被截断，可以使用 json_repair 等第三方库修复
+    # 这里先直接抛出异常
+    raise ValueError("JSON 结构损坏，无法解析")

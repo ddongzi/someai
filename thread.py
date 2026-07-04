@@ -1,20 +1,25 @@
-from workflow import app
 from globals import (
     GraphStatus,
     create_initial_state,
     get_graph_status,
 )
+import asyncio
 from langgraph.types import Command
 import traceback
+from pprint import pformat
 
 import json
 from pprint import pprint
+import logging
+from workflow import MyWorkflow
+logger = logging.getLogger(__name__)
 
 
-class WorkflowCLI:
+class Thread:
 
-    def __init__(self):
-        self.thread_id = "first_thread"
+    def __init__(self, workflow: MyWorkflow, thread_id: str = "first_thread"):
+        self.thread_id = thread_id
+        self.workflow = workflow
 
     @property
     def config(self):
@@ -24,104 +29,67 @@ class WorkflowCLI:
             }
         }
 
-    def get_snapshot(self):
-        return app.get_state(self.config)
+    async def _do_event(self,state,config, event_queue: asyncio.Queue = None):
+        stream = self.workflow.graph.astream_events(state, config, version="v2")    
 
-    def show_status(self):
-        snapshot = self.get_snapshot()
+        async for event in stream:
+            if event_queue is not None:
+                await event_queue.put({"type": f'{event['event']}', "data": '...'})
+                
+        if event_queue is not None:
+            await event_queue.put(None)
 
-        status = get_graph_status(snapshot)
+    async def start_workflow(self, event_queue: asyncio.Queue = None):
+        state = create_initial_state()
+        
+        await self._do_event(state, self.config, event_queue)
 
-        print("\n====== 当前状态 ======")
-        print(f"Thread: {self.thread_id}")
-        print(f"Status: {status}")
-        print(f"Next: {snapshot.next}")
-        print("======================\n")
 
-    def start_workflow(self):
+    async def resume_workflow(self, checkpoint_id: str, interrupt_id: str, data: str, event_queue: asyncio.Queue = None):
+   
+        target = None
+        async for state in self.workflow.graph.aget_state_history(self.config):
+            if state.config.get("configurable", {}).get("checkpoint_id") == checkpoint_id:
+                target = state
+                break
+        print(f"正在从 Checkpoint ID: {target.config['configurable'].get('checkpoint_id')} resume...")
 
-        requirement = input("请输入需求:\n> ")
+        resume_command = Command(resume={interrupt_id: data})
+        if "approved" in data:
 
-        state = create_initial_state(
-            requirement=requirement
-        )
+            await self._do_event(resume_command, target.config, event_queue)
 
-        # 如果已经存在，就会fork 从根节点
-        app.invoke(
-            state,
-            config=self.config
-        )
 
-        print("工作流已启动")
+    async def continue_workflow(self, event_queue: asyncio.Queue = None):
+   
+        await self._do_event(None, self.config, event_queue)
+        
+    async def get_history(self, limit: int = 20):
+        
+        result = []
+        
+        # 2. 使用 async for 循环遍历读取数据
+        async for sp in self.workflow.graph.aget_state_history(self.config):
+            result.append({
+                'values': sp.values,
+                'next': sp.next,
+                'config': sp.config,
+                'metadata': sp.metadata,
+                'created_at': sp.created_at,
+                'parent_config': sp.parent_config,
+                'tasks': sp.tasks,
+                'interrupts': sp.interrupts
+            })      
+            # 3. 达到限制的数量就停止获取
+            if len(result) >= limit:
+                break
+                
+        return result
 
-    def resume_workflow(self):
-
-        app.invoke(
-            None,
-            config=self.config
-        )
-
-        print("继续执行完成")
-
-    def human_interrupt(self):
-
-        snapshot = self.get_snapshot()
-
-        if not snapshot.tasks:
-            print("没有中断节点")
-            return
-
-        task = snapshot.tasks[0]
-
-        if not task.interrupts:
-            print("没有中断节点")
-            return
-
-        interrupt_info = task.interrupts[0].value
-
-        print("\n中断信息:")
-        pprint(interrupt_info)
-
-        feedback = input(
-            "\n请输入人工反馈:\n> "
-        )
-
-        app.invoke(
-            Command(
-                resume=feedback
-            ),
-            config=self.config
-        )
-
-    def show_history(self):
-
-        history = list(
-            app.get_state_history(
-                self.config
-            )
-        )
-
-        print()
-
-        for idx, state in enumerate(history):
-
-            node = (
-                state.next[0]
-                if state.next
-                else "END"
-            )
-
-            print(
-                f"[{idx}] "
-                f"{node}"
-            )
-
-        print()
-
+  
     def inspect_checkpoint(self):
-
         history = list(
-            app.get_state_history(
+            self.workflow.graph.get_state_history(
                 self.config
             )
         )
@@ -140,47 +108,40 @@ class WorkflowCLI:
 
         pprint(state.values)
 
-    def rollback(self):
+    async def get_state(self):
+        """ 获取当前的精简且完整的状态字典， 不能直接返回snapshot是复杂对象，不能直接json化 """
+        snapshot = await self.workflow.graph.aget_state(self.config)
+        
+        # 如果当前线程没有任何状态（比如刚创建，还没运行过）
+        if not snapshot or not snapshot.values:
+            return {
+                "connected": False,
+                "values": {},
+                "next": [],
+                "checkpoint_id": None
+            }
+            
+        return {
+            "values": snapshot.values, 
+            "next": list(snapshot.next), 
+            "checkpoint_id": snapshot.config.get("configurable", {}).get("checkpoint_id"),
+            "config": snapshot.config,
+            "metadata": snapshot.metadata
+        }
 
-        history = list(
-            app.get_state_history(
-                self.config
-            )
-        )
 
-        self.show_history()
+    async def replay(self, checkpoint_id: str,  event_queue: asyncio.Queue = None):
+        target = None
+        async for state in self.workflow.graph.aget_state_history(self.config):
+            if state.config.get("configurable", {}).get("checkpoint_id") == checkpoint_id:
+                target = state
+                break
+        print(f"正在从 Checkpoint ID: {target.config['configurable'].get('checkpoint_id')} 重放执行...")
 
-        idx = int(
-            input(
-                "\n回溯到哪个checkpoint?\n> "
-            )
-        )
+        await self._do_event(None,target.config, event_queue)  # 继续执行事件流
+        print("重放执行完成")
 
-        target = history[idx]
 
-        fork_config = app.update_state(
-            target.config,
-            values=target.values,
-        )
-
-        app.invoke(
-            None,
-            fork_config
-        )
-
-        print("回溯执行完成")
-
-    def switch_thread(self):
-
-        thread_id = input(
-            "\n输入Thread ID:\n> "
-        )
-
-        self.thread_id = thread_id
-
-        print(
-            f"切换到 {thread_id}"
-        )
 
     def show_state_size(self):
 
@@ -210,71 +171,44 @@ class WorkflowCLI:
         print(
             f"Memory: {mem_size} bytes\n"
         )
+    async def clear_history(self):
+        """
+        显示当前 thread 的状态历史；若 clear=True，则物理删除 SQLite 中的相关历史。
+        """
+        # 1. 提取当前配置中的 thread_id
+        thread_id = self.config.get("configurable", {}).get("thread_id")
+        if not thread_id:
+            print("错误：配置中未检测到有效 thread_id！")
+            return
 
-    def menu(self):
+        print(f"\n正在尝试清空 Thread [{thread_id}] 的所有历史记录。（删除thread）...")
+        
+        try:
+            await self.workflow.graph.checkpointer.adelete_thread(thread_id)
+            print(f"成功！已从 SQLite 数据库中彻底清除该 Thread 的所有快照。")
+            
+        except Exception as e:
+            print(f"清除失败，错误信息: {e}")
 
-        while True:
+    async def fork(self, checkpoint_id: str, state: dict, event_queue: asyncio.Queue = None):
+        target = None
+        async for sp in self.workflow.graph.aget_state_history(self.config):
+            if sp.config.get("configurable", {}).get("checkpoint_id") == checkpoint_id:
+                target = sp
+                break
+                
+        if not target:
+            raise ValueError(f"未找到指定的 Checkpoint ID: {checkpoint_id}")
 
-            print("""
-========================
-1. 查看状态
-2. 启动工作流
-3. 继续执行
-4. 人工干预
-5. 查看历史
-6. 查看Checkpoint
-7. 回溯Checkpoint
-8. 查看State大小
-9. 切换Thread
-0. 退出
-========================
-""")
+        logger.info(f"从 Checkpoint ID: {checkpoint_id} 开始分叉并更新状态...")
 
-            choice = input("> ")
+        # 1. 使用 update_state 将用户传入的 state 写入到该 checkpoint 上
+        # 这会在底层自动生成一个处于新分叉分支的 fork_config,  这是一个新的checkpoint。复制而来类似
+        fork_config = await self.workflow.graph.aupdate_state(
+            target.config, 
+            state, 
+        )
 
-            try:
-
-                if choice == "1":
-                    self.show_status()
-
-                elif choice == "2":
-                    self.start_workflow()
-
-                elif choice == "3":
-                    self.resume_workflow()
-
-                elif choice == "4":
-                    self.human_interrupt()
-
-                elif choice == "5":
-                    self.show_history()
-
-                elif choice == "6":
-                    self.inspect_checkpoint()
-
-                elif choice == "7":
-                    self.rollback()
-
-                elif choice == "8":
-                    self.show_state_size()
-
-                elif choice == "9":
-                    self.switch_thread()
-
-                elif choice == "0":
-                    break
-
-                else:
-                    print("无效输入")
-
-            except Exception:
-                print("\n====== ERROR ======\n")
-
-                traceback.print_exc()
-
-                print("\n===================\n")
-
-
-if __name__ == "__main__":
-
-    WorkflowCLI().menu()
+        # 2. 使用带有新状态的分叉配置 fork_config 去继续执行事件流
+        # 此时无需单独传旧的 state，因为新状态已经持久化在 fork_config 对应的 Checkpoint 中了
+        await self._do_event(None, fork_config, event_queue)  
