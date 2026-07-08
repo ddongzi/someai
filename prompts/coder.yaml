@@ -8,7 +8,7 @@ system_base: |
 scenes:
   # 场景 A：从零开始写新功能代码
   write_code: |
-    根据下面需求，检索知识库，基于得到的内容进行开发。
+    根据需求，调用 `knowledge_search` 工具，获取相关要求，基于要求进行开发。
     ```text
     {{requirement}}    
     ```
@@ -27,20 +27,9 @@ scenes:
 
     输出格式要求：为Search-and-Replace Block标准格式。不包含其他任何内容。
   
-  qa_bug: |
-    你刚才编写的代码在qa代码审计时有错误。
-    你需要调用ast_search工具定位到具体错误代码片段。
-    在修改错误时候，可能会用到pyright_client来得到相关引用、定义，进行同步修改。
-
-    - 报错信息:
-    ```json
-    {{review}}
-    ```
-
-    输出格式要求：为Search-and-Replace Block标准格式。不包含其他任何内容。
   
   fix_bug: |
-    你刚才编写的代码在进行测试时有错误。
+    你刚才编写的代码有bug。
     你需要调用ast_search工具定位到具体错误代码片段。
     在修改错误时候，可能会用到pyright_client来得到相关引用、定义，进行同步修改。
 

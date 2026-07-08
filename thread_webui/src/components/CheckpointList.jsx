@@ -19,7 +19,7 @@ export default function CheckpointList({ checkpoints, selectedId, onSelect }) {
               }`}
             >
               <div className="flex justify-between font-bold mb-1">
-                <span className={selectedId === cp.checkpoint_id ? 'text-blue-800' : 'text-slate-800'}>#{i} next: {cp.next}</span>
+                <span className={selectedId === cp.checkpoint_id ? 'text-blue-800' : 'text-slate-800'}>#{i} next: {cp.next ? cp.next.join(', ') : ''}</span>
               </div>
                 <span className="text-slate-400 font-normal shrink-0">{cp.created_at}</span>
 

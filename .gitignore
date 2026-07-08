@@ -22,3 +22,6 @@ wheels/
 **/__pycache__/
 
 models/
+
+logs/
+*.log

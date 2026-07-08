@@ -1,0 +1,19 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	router_node(router_node)
+	test_writer(test_writer)
+	tools_node(tools_node)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> router_node;
+	router_node --> test_writer;
+	test_writer -. &nbsp;success&nbsp; .-> __end__;
+	test_writer -. &nbsp;tools_executor&nbsp; .-> tools_node;
+	tools_node --> test_writer;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

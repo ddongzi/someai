@@ -34,8 +34,11 @@ class Thread:
 
         async for event in stream:
             if event_queue is not None:
-                await event_queue.put({"type": f'{event['event']}', "data": '...'})
-                
+                etype = event['event']
+                data = event['data']
+                # 统一放入队列
+                await event_queue.put({"type": etype, "data": data})
+
         if event_queue is not None:
             await event_queue.put(None)
 

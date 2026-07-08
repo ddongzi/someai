@@ -36,6 +36,7 @@ def git_tool(
     Returns:
         str: 执行结果的文本描述。
     """
+    logger.info('git tool')
     # 参数校验（防止 LLM 漏传核心参数）
     if action == GitAction.COMMIT and not reason:
         return "Failed: 'reason' (commit message) is required for a commit action."

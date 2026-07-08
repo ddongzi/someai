@@ -2,19 +2,27 @@ from globals import llm
 from typing import Dict
 import re   
 from langchain_ollama import ChatOllama
-from globals import GraphState, update_attampts, Issue,  GENERATED_DIR
+from globals import GraphState, Issue
 import subprocess
 import sys
+from dotenv import load_dotenv
+import os
+import logging
+logger = logging.getLogger(__name__)
 
+load_dotenv()
+
+# 读取环境变量，如果 .env 里没配，则自动降级使用默认值 "generated"
+GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 # ============================================================
 # Tester Node
 # ============================================================
 def test_code_node(state: GraphState) -> Dict:
 
-    print("\n🧪 [Tester] 执行pytest测试")
-    print("=" * 60)
+    logger.info("\n🧪 [Tester] 执行pytest测试")
+    logger.info("=" * 60)
 
-    update_attampts(state)
+
 
     app_file = f"{GENERATED_DIR}/app.py"
     test_file = f"{GENERATED_DIR}/test.py"
@@ -42,16 +50,16 @@ def test_code_node(state: GraphState) -> Dict:
 
         output = result.stdout + "\n" + result.stderr
 
-        print(output)
+        logger.info(output)
 
         return {
-            "attempts": state['attempts'],
+            "attempts":  1,
             "test_output": output,
         }
 
     except Exception as e:
 
         return {
-            "attempts": state['attempts'],
+            "attempts": 1,
             "test_output": str(e),
         }

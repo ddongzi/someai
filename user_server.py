@@ -1,6 +1,6 @@
 """FastAPI 服务器 - 替代 CLI 的工作流管理"""
 from re import A
-
+from langchain_core.load import dumpd
 from fastapi import FastAPI, WebSocket, HTTPException, BackgroundTasks, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -59,6 +59,7 @@ app = FastAPI(title="Thread thread", lifespan=lifespan)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from utils import json_serializer
 
 # 允许 React 开发服务器的端口访问
 origins = [
@@ -74,6 +75,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 event_queue = asyncio.Queue()
+
+import os
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)  # 创建日志文件夹S
+
+from logging.handlers import TimedRotatingFileHandler
+SSE_LOG_FILE_PATH = os.path.join(LOG_DIR, "sse_stream.log")
+sse_logger = logging.getLogger('sse_logger')
+sse_logger.setLevel(logging.INFO)
+# ⭐ 关键修复：关闭日志向父级传播！彻底阻止其打印到控制台
+sse_logger.propagate = False
+
+# 清理可能重复的 Handler，避免重复打印
+if not sse_logger.handlers:
+    # 使用 TimedRotatingFileHandler：按天（midnight）切分日志，最多保留 30 天
+    file_handler = TimedRotatingFileHandler(
+        SSE_LOG_FILE_PATH, 
+        when="midnight", 
+        interval=1, 
+        backupCount=30, 
+        encoding="utf-8"
+    )
+    
+    # 设置日志格式：时间 [日志级别] 线程进程名 - 消息
+    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+    file_handler.setFormatter(formatter)
+    sse_logger.addHandler(file_handler)
+
 
 @app.get("/api/stream")
 async def stream(request: Request,) :
@@ -97,8 +126,9 @@ async def stream(request: Request,) :
 
                 # 3. 严格遵循 SSE 标准格式化： data: <content>\n\n
                 # 使用 json.dumps 确保特殊字符被正确转义
-                # logger.info(f"发送事件: {event}")
-                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+                content = f"data: {json.dumps(dumpd(event))}\n\n"
+                sse_logger.info(content)                
+                yield content
                 
                 # 标记队列任务完成
                 event_queue.task_done()
@@ -155,7 +185,7 @@ async def replay_workflow(body: Dict[str, Any]):
         result = await thread.replay(checkpoint_id, event_queue=event_queue)
         return {"status": "success", "message": f"已回溯到 checkpoint {checkpoint_id}", "result": result}
     except Exception as e:
-        logger.error(f"回溯失败: {e}")
+        logger.exception(f"回溯失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/fork/")
@@ -210,12 +240,8 @@ import sys
 def run_server():
     """运行 FastAPI 服务器"""
     print("""
-╔═══════════════════════════════════════════════════════════════╗
-║           🌐 启动 FastAPI 服务器                              ║
-╚═══════════════════════════════════════════════════════════════╝
-
+🌐 启动 FastAPI 服务器    
 服务器地址:   http://localhost:8000
-热重载:       已启用
 
 """)
     

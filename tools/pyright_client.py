@@ -4,13 +4,12 @@ import subprocess
 import threading
 import queue
 import time
-from urllib.parse import urljoin, pathname2url
-
+from pathlib import Path
 class PyrightLspTool:
     def __init__(self, project_root_path: str):
         self.project_root = os.path.abspath(project_root_path)
         # 将本地路径转换为 LSP 标准的 URI 格式
-        self.root_uri = urljoin('file:', pathname2url(self.project_root))
+        self.root_uri = Path(self.project_root).as_uri()
         
         self.process = None
         self.msg_id = 1
@@ -112,7 +111,7 @@ class PyrightLspTool:
     def open_file_in_lsp(self, file_path: str, content: str):
         """告诉 LSP 服务器当前文件已被打开（同步代码内容）"""
         abs_path = os.path.abspath(file_path)
-        file_uri = urljoin('file:', pathname2url(abs_path))
+        file_uri = Path(abs_path).as_uri()
         self._send_message("textDocument/didOpen", {
             "textDocument": {
                 "uri": file_uri,
@@ -129,7 +128,7 @@ class PyrightLspTool:
         :param character: 从 0 开始的字符列号
         """
         abs_path = os.path.abspath(file_path)
-        file_uri = urljoin('file:', pathname2url(abs_path))
+        file_uri = Path(abs_path).as_uri()
         
         req_id = self._send_message("textDocument/definition", {
             "textDocument": {"uri": file_uri},
@@ -140,7 +139,7 @@ class PyrightLspTool:
     def find_references(self, file_path: str, line: int, character: int):
         """查找所有引用 (Find References)"""
         abs_path = os.path.abspath(file_path)
-        file_uri = urljoin('file:', pathname2url(abs_path))
+        file_uri = Path(abs_path).as_uri()
         
         req_id = self._send_message("textDocument/references", {
             "textDocument": {"uri": file_uri},
@@ -153,3 +152,100 @@ class PyrightLspTool:
         """关闭服务"""
         if self.process:
             self.process.terminate()
+
+import os
+from typing import Optional, Any
+from langchain_core.tools import tool
+
+# 1. 初始化一个全局的单例占位符
+_lsp_client: Optional[PyrightLspTool] = None
+
+def get_lsp_client(project_root: str = "./generated") -> PyrightLspTool:
+    """获取或初始化全局的 LSP 客户端单例"""
+    global _lsp_client
+    if _lsp_client is None:
+        # 当 Agent 第一次需要使用代码分析时，懒加载启动进程
+        _lsp_client = PyrightLspTool(project_root_path=project_root)
+    return _lsp_client
+
+
+# 2. 封装“查找定义”工具
+@tool
+def find_symbol_definition(
+    file_path: str, 
+    line: int, 
+    character: int, 
+    project_root: str = "."
+) -> str:
+    """
+    跳转到指定符号的定义位置（Go to Definition）。
+    当你想知道某个类、函数或变量是在哪里实现的，请调用此工具。
+    
+    参数:
+        file_path: 目标文件相对于项目根目录或绝对路径。
+        line: 符号所在的行号，注意：必须从 0 开始计数（即第 1 行输入 0）。
+        character: 符号所在的字符列号，注意：必须从 0 开始计数（即第 1 个字符输入 0）。
+        project_root: 项目的根目录路径，用于初始化基础服务。
+    返回:
+        JSON 字符串，包含定义所在的文件 URI、起始和结束的行列范围。
+    """
+    try:
+        lsp = get_lsp_client(project_root)
+        
+        # 稳妥起见，查询前最好先同步一次文件状态，避免未保存的代码导致位置错乱
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                lsp.open_file_in_lsp(file_path, f.read())
+                
+        response = lsp.find_definition(file_path, line, character)
+        
+        # 格式化输出，方便 LLM 快速捕捉关键路径
+        if "result" in response and response["result"]:
+            import json
+            return json.dumps(response["result"], indent=2, ensure_ascii=False)
+        elif "error" in response:
+            return f"LSP 服务错误: {response['error']['message']}"
+        else:
+            return "未找到该符号的定义位置，请确认行列号（从0开始）是否精准对齐了符号名称。"
+    except Exception as e:
+        return f"执行跳转定义失败，错误原因: {str(e)}"
+
+
+# 3. 封装“查找引用”工具
+@tool
+def find_symbol_references(
+    file_path: str, 
+    line: int, 
+    character: int, 
+    project_root: str = "."
+) -> str:
+    """
+    查找指定符号在整个项目中的所有引用和调用位置（Find References）。
+    当你想重构某个函数、修改某个类、或者确认这个变量在哪些文件里被使用过时，请调用此工具。
+    
+    参数:
+        file_path: 目标文件相对于项目根目录或绝对路径。
+        line: 符号所在的行号，注意：必须从 0 开始计数。
+        character: 符号所在的字符列号，注意：必须从 0 开始计数。
+        project_root: 项目的根目录路径。
+    返回:
+        JSON 字符串，包含所有引用该符号的文件路径及准确的范围列表。
+    """
+    try:
+        lsp = get_lsp_client(project_root)
+        
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                lsp.open_file_in_lsp(file_path, f.read())
+                
+        response = lsp.find_references(file_path, line, character)
+        
+        if "result" in response and response["result"]:
+            import json
+            return json.dumps(response["result"], indent=2, ensure_ascii=False)
+        elif "error" in response:
+            return f"LSP 服务错误: {response['error']['message']}"
+        else:
+            return "未在项目中找到该符号的其他引用点。"
+    except Exception as e:
+        return f"执行查找引用失败，错误原因: {str(e)}"

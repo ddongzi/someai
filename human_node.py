@@ -18,16 +18,19 @@ def human_node(state: GraphState) -> Dict:
         logger.info(f"人工干预输入: {human_input}")
         return {}
     
-    if state['current_issue'] and state['current_issue']['assign'] == 'human':
-        tip = f'有issue相关问题。{state["current_issue"]}. 请修改设计相关部分部文档，或其他未知。然后会自动结束此次流程。重新运行。'
+    if  state['issue_buckets'].get('human', []):
+        tip = f'有issue相关问题。{state['issue_buckets']['human']}. 请修改设计相关部分部文档，或其他未知。然后会自动结束此次流程。重新运行。'
         human_input = interrupt({
             'tip': tip,
             'type': 'modify_design',
             'input_type': 'all',
         })
         logger.info(f"人工干预输入: {human_input}")
-
-        return {}
+        return {
+            'issue_buckets': {
+                'human':[]
+            }
+        }
 
     if not state['issues']:
         tip = f'no issue. 成功完成。请人工确认是否提交代码。如果拒绝，提供理由。'
@@ -46,3 +49,8 @@ def human_node(state: GraphState) -> Dict:
 
         return {}
 
+
+    human_input = interrupt({
+        'tip': 'unexpected!!',
+    })
+    return {}

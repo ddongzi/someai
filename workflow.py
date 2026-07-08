@@ -14,18 +14,19 @@ from globals import MAX_ATTAMPTS
 from langgraph.graph.state import RunnableConfig
 from qa_node import qa_node
 
-from globals import GraphState, Issue, GENERATED_DIR
+from langgraph.prebuilt import ToolNode
+from globals import GraphState, Issue, tools
 from utils import extract_python_code
-from coder.coder import write_code_node
+from coder import coder_graph
+from test_writer import test_coder_graph
 from issue.issue_manager import issue_manager_node
-from test.test_writer import test_writer_node
-from test.test_tool import test_code_node
-from test.test_judge import judge_node
-from globals import llm, GENERATED_DIR
+from test_tool import test_code_node
+from test_judge import judge_node
+from globals import llm
 from human_node import human_node
 from globals import GitAction
 import logging
-from tools.pyright_node import pyright_node
+from pyright_node import pyright_node
 logger = logging.getLogger(__name__)
 from ready_node import ready_node
 from qa_node import qa_node
@@ -33,28 +34,34 @@ from utils import draw_workflow_png
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from contextlib import asynccontextmanager
+from langgraph.prebuilt import ToolNode, tools_condition
+from langchain_core.messages import AIMessage
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 class MyWorkflow:
     def __init__(self):
-        self.workflow = StateGraph(GraphState)
+        self.graph = StateGraph(GraphState)
         self.build()
     def build(self):
 
         def decide_after_issue_manager_node(state: GraphState):
             # 由于这里默认不是并发等待，必须只有齐全了才可以，其余情况下直接pass
             if 'judger' in state['issue_manager_wait'] and 'qaer' in state['issue_manager_wait']: 
-                logger.info(f'decide : issues {state['issues']}. current: {state['current_issue']}')
                 issues = state['issues']
                 if not issues:
                     return "no_issue"
                 
-                current_issue = state['current_issue']
-                if current_issue['assign'] == 'coder':
+                issue_buckets = state['issue_buckets']
+                if 'coder' in issue_buckets.keys():
                     return "code_patcher"
-                if current_issue['assign'] == 'test_coder':
+                if 'test_coder' in issue_buckets.keys():
                     return "test_code_patcher"
-                if current_issue['assign'] == 'human':
+                if 'human' in issue_buckets.keys():
                     return "design_patcher"
-                logger.warning(f"Unexpected issue assign: {current_issue['assign']}")
+                logger.warning(f"Unexpected issue assign: {issue_buckets.keys()}")
                 return 'dropped'
             else:
                 return "dropped"
@@ -85,68 +92,81 @@ class MyWorkflow:
             return list(set(next_steps))
 
 
-        def decide_after_test_writer(state: GraphState):
-            if state['attempts'] > MAX_ATTAMPTS:
-                return 'max_attempts'
+        def decide_after_test_coder_graph(state: GraphState):
 
-            return "success"
-        def decide_after_coder(state: GraphState):
+
             if state['attempts'] > MAX_ATTAMPTS:
                 return 'max_attempts'
-            return "success"
+            if state['test_coder_subgraph_status'] == 'success':
+                return 'success'
+            return 'unexpected'
+        
+
+        def decide_after_coder_graph(state: GraphState):
+
+            if state['attempts'] > MAX_ATTAMPTS:
+                return 'max_attempts'
+            if state['coder_subgraph_status'] == 'success':
+                return 'success'
+            return 'unexpected'
         def decide_after_human_node(state: GraphState):
             return "success"
 
-        self.workflow.add_node('ready_node', ready_node)
-        self.workflow.add_node('pyright_node', pyright_node)
-        self.workflow.add_node("coder", write_code_node)
-        self.workflow.add_node("test_writer", test_writer_node)
-        self.workflow.add_node("tester", test_code_node)
-        self.workflow.add_node("human_node", human_node)
-        self.workflow.add_node('qa_node',qa_node )
+        self.graph.add_node('ready_node', ready_node)
 
-        self.workflow.add_node("judge", judge_node)
-        self.workflow.add_node("issue_manager_node", issue_manager_node)
+        self.graph.add_node('coder_graph', coder_graph)
+        self.graph.add_node('test_coder_graph', test_coder_graph)
 
-        self.workflow.set_entry_point("ready_node")
-        self.workflow.add_edge('ready_node', 'coder')
-        self.workflow.add_edge('ready_node', 'test_writer')
+        self.graph.add_node('pyright_node', pyright_node)
+        self.graph.add_node("tester", test_code_node)
+        self.graph.add_node("human_node", human_node)
+        self.graph.add_node('qa_node',qa_node )
 
-        self.workflow.add_conditional_edges(
-            'coder', 
-            decide_after_coder,
+        self.graph.add_node("judge", judge_node)
+        self.graph.add_node("issue_manager_node", issue_manager_node)
+
+        self.graph.set_entry_point("ready_node")
+        self.graph.add_edge('ready_node', 'coder_graph')
+        self.graph.add_edge('ready_node', 'test_coder_graph')
+        
+
+        self.graph.add_conditional_edges(
+            'coder_graph', 
+            decide_after_coder_graph,
             {
                 'max_attempts': 'human_node',
-                'success':'pyright_node'
+                'success':'pyright_node',
+                'unexpected': END
             }                  
 
         )
-        self.workflow.add_conditional_edges(
-            'test_writer', 
-            decide_after_test_writer,
+        self.graph.add_conditional_edges(
+            'test_coder_graph', 
+            decide_after_test_coder_graph,
             {
                 'max_attempts': 'human_node',
-                'success':'pyright_node'
+                'success':'pyright_node',
+                'unexpected': END
             }                  
 
         )
-        self.workflow.add_conditional_edges(
+        self.graph.add_conditional_edges(
             'pyright_node',
             decide_after_pyright,
             {   
                 'qa_node': 'qa_node',
-                'test_code_error': 'test_writer',
-                'code_error': 'coder'
+                'test_code_error': 'test_coder_graph',
+                'code_error': 'coder_graph'
             }
         )
 
-        self.workflow.add_edge('qa_node','issue_manager_node')
+        self.graph.add_edge('qa_node','issue_manager_node')
 
-        self.workflow.add_edge('qa_node','tester')
-        self.workflow.add_edge('tester', 'judge')
-        self.workflow.add_edge('judge','issue_manager_node')
+        self.graph.add_edge('qa_node','tester')
+        self.graph.add_edge('tester', 'judge')
+        self.graph.add_edge('judge','issue_manager_node')
 
-        self.workflow.add_conditional_edges(
+        self.graph.add_conditional_edges(
             "human_node",
             decide_after_human_node,
             {
@@ -155,24 +175,25 @@ class MyWorkflow:
             }
         )
 
-        self.workflow.add_conditional_edges(
+        self.graph.add_conditional_edges(
             "issue_manager_node",
             decide_after_issue_manager_node,
             {
                 "dropped": END,
                 'no_issue': 'human_node', 
-                'test_code_patcher': 'test_writer',
-                "code_patcher": "coder",
+                'test_code_patcher': 'test_coder_graph',
+                "code_patcher": "coder_graph",
                 "design_patcher": "human_node", # human_node
             }
         )
+
+        
     @asynccontextmanager
     async def setup(self):
         async with AsyncSqliteSaver.from_conn_string("checkpoints.db") as saver:
             # Your code here
-            graph = self.workflow.compile(checkpointer=saver)
-            draw_workflow_png(graph)
-            self.graph = graph
+            self.graph  = self.graph.compile(checkpointer=saver)
+            draw_workflow_png(self.graph.get_graph(), __name__)
             yield saver
 
 

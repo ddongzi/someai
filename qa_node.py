@@ -35,9 +35,7 @@ def qa_node(state: GraphState) -> Dict:
     # 流式输出
     for chunk in llm.stream(messages):
         if chunk.content:
-            print(chunk.content, end="", flush=True)
             full_content += chunk.content
-    print("\n" + "-" * 40)
 
     issues = []
 
@@ -58,5 +56,6 @@ def qa_node(state: GraphState) -> Dict:
         ))
     return {
         'issues': issues,
-        'issue_manager_wait':{'qaer'}
+        'issue_manager_wait':{'qaer'}, 
+        'messages': full_content
         }

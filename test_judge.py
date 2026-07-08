@@ -54,5 +54,6 @@ def judge_node(state: GraphState) -> Dict:
     return {
         "issues": issues,
         "test_output": '', # 我们已经转化为issue了，所以test_output为空字符串
-        'issue_manager_wait':{'judger'}
+        'issue_manager_wait':{'judger'},
+        'messages':[full_content]
     }

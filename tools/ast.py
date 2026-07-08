@@ -213,7 +213,7 @@ class ASTParser:
 import json
 
 from langchain.tools import tool
-# @tool
+@tool
 def ast_search(file_path:str, name, type, **kwargs) -> dict:
     """
     在指定的 Python 文件中，搜索特定类型-名字的 代码片段信息。
@@ -306,12 +306,12 @@ def read_file_lines(filepath: str, start_line: int, end_line: int) -> List[str]:
     return lines
 
 
-file_path = "./tools/ast_test.py"
-formatter = ASTParser(file_path=file_path)
-result_json = formatter.to_structured_json()
+# file_path = "./tools/ast_test.py"
+# formatter = ASTParser(file_path=file_path)
+# result_json = formatter.to_structured_json()
 
-# 按理来说，智能有一
-search_result = ast_search(file_path=file_path, name='hello', type='function')
+# # 按理来说，智能有一
+# search_result = ast_search(file_path=file_path, name='hello', type='function')
 
-read_result = read_file_lines(filepath=file_path, start_line=search_result['start_line'],end_line= search_result['end_line'])
-print(read_result)
+# read_result = read_file_lines(filepath=file_path, start_line=search_result['start_line'],end_line= search_result['end_line'])
+# print(read_result)

@@ -137,7 +137,6 @@ class KnowledgeManager:
                 for hit in hits:
                     # 1. 核心提取：直接获取 entity 字典
                     entity = hit.get("entity", {})
-                    logger.info("👉 原始 entity 字典:", entity.keys()) 
 
                     # 2. 提取你绝对需要的核心文本
                     text = entity.get("text", "")
@@ -213,13 +212,12 @@ class KnowledgeManager:
         """检索文档"""
             
         docs = self.search_hybrid(query=query, k=local_k)
-        logger.info(f"本地检索到 {len(docs)} 条相关文档。")
+        logger.info(f"本地检索到 {len(docs)} 条相关文档")
         
         return docs
     
 
 _knowledge_instance = None
-
 def get_knowledge():
     """只有在被显式调用时，才会进行真正的懒加载初始化"""
     global _knowledge_instance
@@ -240,9 +238,22 @@ def get_knowledge():
 #     logger.error(f"❌ 知识库初始化失败: {e}")
 #     knowledge = None
 
+
 @tool
 def knowledge_search(query: str) -> str:
-    """搜索知识库"""
+    """
+    在 CodeTeam 内部技术知识库中检索开发文档、API 接口说明及架构设计方案。
+    
+    当用户询问团队内部的接口定义、部署流程、代码规范、组件使用方法
+    或历史技术沉淀时，应调用此工具获取权威解答。
+
+    Args:
+        query (str): 针对开发文档的检索词。应包含具体的组件名、接口名或技术关键字。
+
+    Returns:
+        str: 包含相关文档片段、MDN/内部链接及代码示例的 Markdown 或 JSON 字符串。
+    """
+    logger.info('knowledge_search tool called..')
     knowledge = get_knowledge()  # 确保知识库已初始化
 
     try:
@@ -259,3 +270,46 @@ def knowledge_search(query: str) -> str:
 #     knowledge.add_text(content, 'prod.md', 'local')
 #     docs = knowledge.retrieve(query='实现网格随机算法')
 #     logger.info(docs)
+
+# 直接调用来加载知识。
+import argparse
+
+if __name__ == "__main__":
+    # 1. 创建参数解析器
+    parser = argparse.ArgumentParser(description="CodeTeam 知识库本地文件导入工具")
+    
+    # 2. 添加必填的文件路径参数
+    parser.add_argument(
+        'file_path', 
+        type=str, 
+        help='要导入的 Markdown 文件路径 (例如: ./prod.md)'
+    )
+    
+    # 解析命令行参数
+    args = parser.parse_args()
+
+    # 3. 校验文件是否存在
+    if not os.path.exists(args.file_path):
+        logger.error(f"文件未找到: {args.file_path}")
+        exit(1)
+
+    # 4. 自动获取文件名（例如从 './docs/prod.md' 中提取出 'prod.md'）
+    file_name = os.path.basename(args.file_path)
+
+    try:
+        # 5. 初始化知识库并读取文件
+        knowledge = get_knowledge()
+        
+        with open(args.file_path, mode='r', encoding='utf-8') as f:
+            content = f.read()
+            
+            # 动态传入文件内容和文件名
+            knowledge.add_text(content, file_name, 'local')
+            logger.info(f"成功将文件 [{file_name}] 加载到知识库！")
+            
+            # 测试检索效果
+            docs = knowledge.retrieve(query='实现网格随机算法')
+            logger.info(f"检索测试结果: {docs}")
+            
+    except Exception as e:
+        logger.error(f"加载知识库失败: {str(e)}")

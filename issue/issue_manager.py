@@ -2,31 +2,42 @@ from globals import GraphState, Issue
 
 def issue_manager_node(state: GraphState) -> dict:
     """
-    issue任务队列管理器
-    根据上一步的 patch_success 状态，安全消费队列。
     """
     completed_nodes = state.get("issue_manager_wait", set())
     if "judger" not in completed_nodes or "qaer" not in completed_nodes:
         return {}
 
-    issues = list(state.get('issues', []))
-    print(f'issue manager is running!, there are {len(issues)} issues')
+    all_issues = list(state.get('issues', []))
+    print(f'Issue manager is running! Total remaining issues: {len(all_issues)}')
     
-    if not issues:
+    # 1. 如果全局没有任务了，清空所有人的篮子并结束
+    if not all_issues:
         return {
-            "issue_manager_wait":set(),
+            "issue_manager_wait": set(),
             "is_issueing": False,
             "issues": [],
-            "current_issue": None,
+            "issue_buckets": {}, 
         }
-        
-    # 4. 获取当前需要处理的第一个任务
-    next_issue = issues[0]
-    issues.pop(0)
     
+    buckets = {}
+    assigns = set()
+    remaining_issues = state['issues'].copy()
+    
+    for issue in all_issues:
+        assigns.add(issue.assign)
+    
+    for assignee in assigns:
+        for issue in state['issues']:
+            if issue.assign == assignee:
+                buckets[assignee].append(issue)
+                remaining_issues.remove(issue)
+                break
+
+    # 4. 塞进对应 Agent 的专属篮子里
     return {
-        "issue_manager_wait":set(),
+        "issue_manager_wait": set(),
         "is_issueing": True,
-        "issues": issues,   # 更新图里的剩余任务队列
-        "current_issue": next_issue, # 声明当前正在攻坚的任务
+        "issues": remaining_issues,  # 更新全局队列（拿走的那部分被扣除了）
+        # 🟢 只更新当前这个人的篮子，其他人因为 merge_issue_buckets 机制不会被影响
+        "issue_buckets": buckets
     }

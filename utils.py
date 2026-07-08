@@ -24,27 +24,31 @@ def get_all_files_in_dir(dir_path: str) -> list:
     return [os.path.join(dir_path, f) for f in os.listdir(dir_path) if f.endswith('.py')]
 
 
-def draw_workflow_png(app):
-    graph = app.get_graph()
-    # 1. 导出原始mermaid字符串
-    mermaid_text = graph.draw_mermaid()
-    # 替换布局为竖向TD，增加样式
-    mermaid_text = mermaid_text.replace(
-        "graph LR",
-        """graph TD
-        classDef node fill:#f0f8ff,stroke:#2c3e50,stroke-width:1.5
-        linkStyle all stroke:#555,stroke-width:1
-        """
-    )
-    # 写入mmd文件
-    with open("workflow.mmd", "w", encoding="utf-8") as f:
-        f.write(mermaid_text)
-    logger.info("已生成 workflow.mmd")
+import os
+from pathlib import Path
 
+def draw_workflow_png(graph, name, dir='./art'):
+    # 1. 确保目标目录存在，如果不存在则自动创建（包括多层嵌套目录）
+    output_dir = Path(dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # 2. 拼接完整的输出路径
+    mmd_path = output_dir / f"{name}.mmd"
+    png_path = output_dir / f"{name}.png"
+
+    # 3. 导出原始mermaid字符串
+    mermaid_text = graph.draw_mermaid()
+    # 4. 写入 mmd 文件到指定目录
+    with open(mmd_path, "w", encoding="utf-8") as f:
+        f.write(mermaid_text)
+        logger.info(f"已生成 {mmd_path}")
+
+    # 5. 写入 png 文件到指定目录
     png_data = graph.draw_mermaid_png()
-    with open("workflow.png", "wb") as f:
+    with open(png_path, "wb") as f:
         f.write(png_data)
-        logger.info("workflow png saved.")
+        logger.info(f"{png_path} saved.")
+
 
 
 import json
@@ -209,3 +213,14 @@ def handle_json_retry(corrupted_str: str):
     # 如果是因为 LLM token 达到上限被截断，可以使用 json_repair 等第三方库修复
     # 这里先直接抛出异常
     raise ValueError("JSON 结构损坏，无法解析")
+
+def json_serializer(obj):
+    """当遇到 json 无法识别的特殊类型时，自动进行优雅降级转换"""
+    if isinstance(obj, set):
+        return list(obj)  # 🔥 关键修复：把 set 自动转为普通的 list
+    if hasattr(obj, "dict"):
+        return obj.dict()  # 防御 Pydantic 规范对象
+    if hasattr(obj, "to_json"):
+        return obj.to_json()
+    # 如果实在无法解析，将其转为字符串，防止整个流崩掉
+    return str(obj)

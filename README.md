@@ -38,3 +38,11 @@ ast自身粒度太小了。
  HTTP_PROXY= HTTPS_PROXY= http_proxy= https_proxy= ALL_PROXY= all_proxy= python workflow.py
 
  state： 与遇到A和B都指向C, 不能state字段，并发会覆盖
+
+ 为了各自感知历史聊天，尤其是tool调用。 需要隔离messages, 就需要子图
+
+
+ 子图结束时候 会用state 更新父亲state.
+ 这就会导致，及时是state读取。 在并发子图下。  也是并发更新实际上。 
+
+ 所以对于共享状态，我们必须设置reduce, 即合并或者选择
