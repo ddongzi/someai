@@ -1,53 +1,34 @@
-# code team for my website
+# 一个code team.
 
-prompt多变下， 管理。
+## 节点
+### 0710
+现在状态：
+- prompt不优，导致llm思维宽广，频繁调用工具，在coder/testcoder 子图出不来。这违背了角色分明：比如不应该git提交。
+- 工具不够明确广泛：如llm总想全部更新，比起我给了ast工具。这导致会产生大量token.可能还会强行调取不那么匹配的工具
 
-如何区分 多种requirement？？
+## 技术思路：
+1. prompt管理：使用yaml+模板解析，能够为一个角色节点配置多场景。
+2. 模型和token：
+   1. 本地测试开发流程验证通过ollama，但是`qwen 2.5coder -1.5B`这样模型，调用tool参数是不合理的，不可采用。
+   2. openrouter免费模型的限制完全不足以支撑频繁调用。
+   3. token节省，使用langchain的SQLite Cache缓解一些. 
+3. 快速开发验证：使用thread的checkpoint，thread需要前端webui才灵活。设置了 重放/分叉/继续操作，能够节省token,也能更快调试开发。
 
-history长度？
+## 技术扩展：
+- 定量评价：1. token，  2. 多模型对比生成
 
-we make the limit area first
+## 迭代过程的问题：
+Q1. 在涉及多轮对话时候，历史消息需要组织吗？
+   目前仍然是messages字段，一味的增加。
+   这可能涉及到Transfromer框架的注意力机制，对不同Message
+Q2. 知识库与state的边界？
+   比如PROD,SPEC是否放在state更快更广泛。 但是知识库更加精准。
 
-需要一个状态判断函数？ 全局， 比如git 好乱
+## 一些理念：
+1. 人机边界和协同。
+- llm发散，会很喜欢调用工具，这使得在初期要跟着llm的ToolMessage请求补充我们的工具。至少对新项目来说，人决策、模型执行是模糊的。
+- PRD需求稳定, SPEC接口/数据边界 都应该由human完全控制，DD技术文档由模型，他有着更好的经验技术。
+- 因为文档可能过大，human规划控制todo_tasks，每次执行只实现一个小功能
 
-git 应该始终 执行 branch 等判断后执行
-
-目前不合理， 人构思，人决定。ai执行
-
-PRD, SPEC, DD 都是人类控制
-人写需求稳定PRD：觉得业务功能
-spec由AI编写，人审核。 表明接口，数据 边界
-DD 技术设计文档由AI编写，人审核。 表明实现方式
-
-维护知识库，
-
-lsp服务，局部修改
-
-内存策略
-
-需求文档过大，每次codeteam应该只实现一个小功能， 人类来规划掌控todo_tasks,
-pending,  in_progress,...
-
-
-pyright-langserver 
-
-ast自身粒度太小了。
-
-如何将自然语言 成为 ast查询。  格式化LLM输出
-
- HTTP_PROXY= HTTPS_PROXY= http_proxy= https_proxy= ALL_PROXY= all_proxy= python workflow.py
-
- state： 与遇到A和B都指向C, 不能state字段，并发会覆盖
-
- 为了各自感知历史聊天，尤其是tool调用。 需要隔离messages, 就需要子图
-
-
- 子图结束时候 会用state 更新父亲state.
- 这就会导致，及时是state读取。 在并发子图下。  也是并发更新实际上。 
-
- 所以对于共享状态，我们必须设置reduce, 即合并或者选择
-
-关于message history编排： 这有关于trasformer 的注意力。
-
-
-llm 老想调用工具， 最多他能调用那些？？
+## 终极期待：
+- godot西部世界
