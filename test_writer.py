@@ -4,7 +4,7 @@ import re
 from utils import extract_python_code, get_all_files_in_dir,draw_workflow_png
 from globals import llm
 from typing import Dict
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage,ToolMessage
 import re
 from utils import extract_python_code,get_scene_prompt
 import logging
@@ -21,8 +21,7 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 from langgraph.prebuilt import ToolNode, tools_condition
 from globals import GraphState, Issue,call_llm,tools,any_write,merge_dicts
-
-logger = logging.getLogger(__name__)
+from logger import run_logger
 
 load_dotenv()
 
@@ -63,6 +62,7 @@ def _do_first_write(state:TestWriterGraphState) -> Dict:
     ]
     for msg in state['messages']:
         messages.append(msg)
+
             
     full_content, full_chunk = call_llm(messages)
     full_chunk.name = 'test_writer'
@@ -95,6 +95,7 @@ def _do_pyright_repair(state: TestWriterGraphState) -> Dict:
     ]
     for msg in state['messages']:
         messages.append(msg)
+
     full_content, full_chunk = call_llm(messages)
     full_chunk.name = 'test_writer'
     if full_chunk.tool_calls:
@@ -117,7 +118,7 @@ def _do_pyright_repair(state: TestWriterGraphState) -> Dict:
     }
 
 def _do_fix_bug(state: TestWriterGraphState)->Dict:
-    print(f"[Coder] 有review, 修复代码。")
+    run_logger.info(f"[Coder] 有review, 修复代码。")
     
     issues = state['issue_buckets']['coder']
     reviews = [iss.review for iss in issues]
@@ -133,6 +134,8 @@ def _do_fix_bug(state: TestWriterGraphState)->Dict:
     ]
     for msg in state['messages']:
         messages.append(msg)   
+
+
     full_content, full_chunk = call_llm(messages)
     full_chunk.name = 'test_writer'
     if full_chunk.tool_calls:
@@ -156,12 +159,11 @@ def _do_fix_bug(state: TestWriterGraphState)->Dict:
 
     }
 def test_writer_node(state: TestWriterGraphState) -> Dict:
-    print("\n📝 [TestWriter] 正在生成或重构自动化测试")
-    print("=" * 60)
+    run_logger.info("\n📝 [TestWriter] 正在生成或重构自动化测试")
+    run_logger.info("=" * 60)
     state['test_coder_subgraph_status'] = 'failed'
 
-
-    logger.info(f'pyrgiht : {state['pyright_result']}')
+    run_logger.info(f'pyrgiht : {state['pyright_result']}')
     # 1. 处理pyright 静态 错误
     if  state['pyright_result'].get('test_code', None):
         return _do_pyright_repair(state=state)
@@ -171,7 +173,7 @@ def test_writer_node(state: TestWriterGraphState) -> Dict:
     if issues:
         return _do_fix_bug(state)
 
-    print("[TestWriter] 第一次写代码...")
+    run_logger.info("[TestWriter] 第一次写代码...")
     return _do_first_write(state)
 
 
@@ -179,8 +181,9 @@ def test_writer_node(state: TestWriterGraphState) -> Dict:
 def router_node(state: TestWriterGraphState) :
     # if start at node a
 
-    # 
-    return {}
+    return {
+        'messages':[]
+    }
 
 test_coder_graph = StateGraph(TestWriterGraphState)
 test_coder_graph.add_node('router_node', router_node)
@@ -196,10 +199,10 @@ def decide_after_writer(state:TestWriterGraphState):
     return 'success'     
 
 def grade_after_tools(state:TestWriterGraphState):
-    print('grade after tools: ')
+    run_logger.info('grade after tools: ')
     messages = state['messages']
     last_msg = messages[-1]
-    print(f'last msg: {last_msg}')
+    run_logger.info(f'last msg: {last_msg}')
     return 'test_writer'
 
 test_coder_graph.add_edge(

@@ -2,10 +2,10 @@ from langgraph.types import interrupt
 from globals import GraphState,GitAction, MAX_ATTAMPTS
 from typing import Dict
 from tools.git import git_tool
-import logging
-logger = logging.getLogger(__name__)
+from logger import run_logger
+
 def human_node(state: GraphState) -> Dict:
-    logger.info(f"进入人工干预节点, {state['attempts']}")
+    run_logger.info(f"进入人工干预节点, {state['attempts']}")
     tip = ''
     # human意图？TODO。需要识别意图，引导。
     if state['attempts'] > MAX_ATTAMPTS:
@@ -15,7 +15,7 @@ def human_node(state: GraphState) -> Dict:
             'type': 'modify_and_time_travel',
             'input_type': 'all',
         })
-        logger.info(f"人工干预输入: {human_input}")
+        run_logger.info(f"人工干预输入: {human_input}")
         return {}
     
     if  state['issue_buckets'].get('human', []):
@@ -25,7 +25,7 @@ def human_node(state: GraphState) -> Dict:
             'type': 'modify_design',
             'input_type': 'all',
         })
-        logger.info(f"人工干预输入: {human_input}")
+        run_logger.info(f"人工干预输入: {human_input}")
         return {
             'issue_buckets': {
                 'human':[]
@@ -45,7 +45,7 @@ def human_node(state: GraphState) -> Dict:
                     'reason': 'Human approved, commit.',
                     'target': ''
             })
-        logger.info(f"人工干预输入: {human_input}")
+        run_logger.info(f"人工干预输入: {human_input}")
 
         return {}
 

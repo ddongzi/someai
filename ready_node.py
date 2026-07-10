@@ -3,8 +3,8 @@ from globals import GraphState
 from typing import Dict
 from tools.git import git_tool
 from utils import get_first_pending_task
-import logging
-logger = logging.getLogger(__name__)
+from logger import run_logger
+
 prod_file_path = "prod.md"
 spec_file_path = "spec.md"
 dd_file_path = "dd.md"
@@ -22,7 +22,7 @@ def ready_node(state: GraphState) -> Dict:
         'reason': '',
         'target': ''
     })
-    logger.info(f'git result: {result}')
+    run_logger.info(f'git result: {result}')
     # 设置requirement
     task = get_first_pending_task()
     state['requirement'] = task['description']

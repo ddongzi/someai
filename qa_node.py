@@ -3,19 +3,19 @@
 # ============================================================
 from globals import GraphState
 import re
-from globals import llm
+from globals import llm,call_llm
 from typing import Dict
 from utils import get_scene_prompt,parse_llm_json
 from globals import Issue
 from langchain_core.messages import SystemMessage, HumanMessage
 import uuid
+from logger import run_logger
 
 def qa_node(state: GraphState) -> Dict:
     """
     代码审计节点
     """
-    print("\n🔍 [QA] 正在审计代码质量")
-    print("=" * 60)
+    run_logger.info("\n🔍 [QA] 正在审计代码质量")
 
     code = state.get("code", "")
     test_code = state.get("test_code", "")
@@ -31,11 +31,8 @@ def qa_node(state: GraphState) -> Dict:
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt)
     ]
-    full_content = ""
-    # 流式输出
-    for chunk in llm.stream(messages):
-        if chunk.content:
-            full_content += chunk.content
+
+    full_content, full_chunk = call_llm(messages)
 
     issues = []
 

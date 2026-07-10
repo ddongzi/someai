@@ -2,7 +2,7 @@ import re
 import tiktoken
 import logging
 import json
-logger = logging.getLogger(__name__)
+
 
 def extract_python_code(llm_output: str) -> str:
     # 匹配 ```python 开头，``` 结尾的代码块
@@ -28,6 +28,8 @@ import os
 from pathlib import Path
 
 def draw_workflow_png(graph, name, dir='./art'):
+    from logger import run_logger
+
     # 1. 确保目标目录存在，如果不存在则自动创建（包括多层嵌套目录）
     output_dir = Path(dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -41,13 +43,13 @@ def draw_workflow_png(graph, name, dir='./art'):
     # 4. 写入 mmd 文件到指定目录
     with open(mmd_path, "w", encoding="utf-8") as f:
         f.write(mermaid_text)
-        logger.info(f"已生成 {mmd_path}")
+        run_logger.info(f"已生成 {mmd_path}")
 
     # 5. 写入 png 文件到指定目录
     png_data = graph.draw_mermaid_png()
     with open(png_path, "wb") as f:
         f.write(png_data)
-        logger.info(f"{png_path} saved.")
+        run_logger.info(f"{png_path} saved.")
 
 
 
@@ -65,7 +67,7 @@ def calculate_total_tokens_for_pyobj(dict_values: dict, model="gpt-4o") -> int:
         state_text = json.dumps(dict_values, ensure_ascii=False, indent=2, default=str)
         return calculate_total_tokens_for_text(state_text, model=model)
     except Exception as e:
-        print(f"❌ 序列化 Python 对象失败: {e}")
+        run_logger.info(f"❌ 序列化 Python 对象失败: {e}")
         return 0
 
 def calculate_total_tokens_for_text(text: str, model="gpt-4o") -> int:
@@ -204,7 +206,7 @@ def parse_llm_json(llm_output: str):
         return json.loads(json_str)
     except json.JSONDecodeError as e:
         # 如果解析失败，通常是由于 LLM 输出了不规范的控制字符、单引号或截断
-        print(f"JSON 语法错误: {e}")
+        run_logger.info(f"JSON 语法错误: {e}")
         # 兜底清洗：处理常见的反斜杠转义或截断（可选）
         return handle_json_retry(json_str)
 
@@ -224,3 +226,4 @@ def json_serializer(obj):
         return obj.to_json()
     # 如果实在无法解析，将其转为字符串，防止整个流崩掉
     return str(obj)
+

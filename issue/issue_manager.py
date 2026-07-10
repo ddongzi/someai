@@ -8,7 +8,7 @@ def issue_manager_node(state: GraphState) -> dict:
         return {}
 
     all_issues = list(state.get('issues', []))
-    print(f'Issue manager is running! Total remaining issues: {len(all_issues)}')
+    run_logger.info(f'Issue manager is running! Total remaining issues: {len(all_issues)}')
     
     # 1. 如果全局没有任务了，清空所有人的篮子并结束
     if not all_issues:

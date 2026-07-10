@@ -55,7 +55,7 @@ class PyrightLspTool:
                     # 异步通知（如日志、诊断信息），Agent 暂时忽略
                     pass
         except Exception as e:
-            print(f"LSP 读取线程异常: {e}")
+            run_logger.info(f"LSP 读取线程异常: {e}")
 
     def _send_message(self, method: str, params: dict, is_notification=False):
         """发送 JSON-RPC 消息"""

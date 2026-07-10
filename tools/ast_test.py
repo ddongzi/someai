@@ -1,6 +1,6 @@
 import os
 from random import randint
-print('hello')
+run_logger.info('hello')
 
 PI=30
 

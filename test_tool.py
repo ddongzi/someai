@@ -7,8 +7,8 @@ import subprocess
 import sys
 from dotenv import load_dotenv
 import os
-import logging
-logger = logging.getLogger(__name__)
+from logger import run_logger
+
 
 load_dotenv()
 
@@ -19,8 +19,8 @@ GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 # ============================================================
 def test_code_node(state: GraphState) -> Dict:
 
-    logger.info("\n🧪 [Tester] 执行pytest测试")
-    logger.info("=" * 60)
+    run_logger.info("\n🧪 [Tester] 执行pytest测试")
+    run_logger.info("=" * 60)
 
 
 
@@ -50,7 +50,7 @@ def test_code_node(state: GraphState) -> Dict:
 
         output = result.stdout + "\n" + result.stderr
 
-        logger.info(output)
+        run_logger.info(output)
 
         return {
             "attempts":  1,

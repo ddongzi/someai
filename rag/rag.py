@@ -8,8 +8,8 @@ from langchain_text_splitters import MarkdownHeaderTextSplitter,RecursiveCharact
 
 from tools import web_search
 
+from logger import run_logger
 
-logger = logging.getLogger(__name__)
 URI = "./knowledge.db"
 
 class KnowledgeManager:
@@ -32,10 +32,10 @@ class KnowledgeManager:
             # 3. 显式调用初始化，确保集合存在且结构正确
             self.init_milvus()
             
-            logger.info("✅ Milvus 知识库已成功初始化")
+            run_logger.info("✅ Milvus 知识库已成功初始化")
         except Exception as e:
-            logger.warning(f"⚠️  Milvus 初始化失败: {e}")
-            logger.warning("   知识库搜索功能将不可用，但不影响其他功能")
+            run_logger.warning(f"⚠️  Milvus 初始化失败: {e}")
+            run_logger.warning("   知识库搜索功能将不可用，但不影响其他功能")
 
         self.md_text_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=[
             ("#", "Header 1"),
@@ -48,13 +48,13 @@ class KnowledgeManager:
     def init_milvus(self):
         """完全使用原生 API 精准控制 Schema 和索引，保证不卡死"""
         if not self.client:
-            logger.warning("Milvus 不可用，跳过初始化")
+            run_logger.warning("Milvus 不可用，跳过初始化")
             return
         if self.client.has_collection(collection_name=self.collection_name):
             self.client.drop_collection(collection_name=self.collection_name)
 
         if not self.client.has_collection(collection_name=self.collection_name):
-            logger.info(f"正在创建集合: {self.collection_name} ...")
+            run_logger.info(f"正在创建集合: {self.collection_name} ...")
             
             # 1. 创建 Schema
             schema = self.client.create_schema(auto_id=True, enable_dynamic_field=True)
@@ -89,7 +89,7 @@ class KnowledgeManager:
                 schema=schema,
                 index_params=index_params
             )
-            logger.info("集合创建并加载完成。")
+            run_logger.info("集合创建并加载完成。")
             
         self.client.load_collection(collection_name=self.collection_name)
 
@@ -97,7 +97,7 @@ class KnowledgeManager:
     def search_hybrid(self, query: str, k: int = 5):
         """只进行混合搜索"""
         if not self.client or not self.embedding:
-            logger.warning(f"Milvus 不可用，无法搜索: {query}")
+            run_logger.warning(f"Milvus 不可用，无法搜索: {query}")
             return []
             
         try:
@@ -166,7 +166,7 @@ class KnowledgeManager:
 
             return results
         except Exception as e:
-            logger.error(f"搜索失败: {e}")
+            run_logger.error(f"搜索失败: {e}")
             return []
 
 
@@ -176,11 +176,11 @@ class KnowledgeManager:
         type: local, web, ..
         """ 
         if  not self.client or not self.embedding:
-            logger.warning(f"Milvus 不可用，无法添加文本: {source}")
+            run_logger.warning(f"Milvus 不可用，无法添加文本: {source}")
             return
             
         try:
-            logger.info(f'add text !{source}, {type}')
+            run_logger.info(f'add text !{source}, {type}')
             md_chunks = self.md_text_splitter.split_text(text=text)
             
             # 组装符合 MilvusClient 格式的字典列表
@@ -201,9 +201,9 @@ class KnowledgeManager:
                 collection_name=self.collection_name,
                 data=data_to_insert
             )
-            logger.info(f"成功导入 {len(data_to_insert)} 条切片。")
+            run_logger.info(f"成功导入 {len(data_to_insert)} 条切片。")
         except Exception as e:
-            logger.error(f"添加文本失败: {e}")
+            run_logger.error(f"添加文本失败: {e}")
 
     # =====================================================
     # Hybrid Search 逻辑优化
@@ -212,7 +212,7 @@ class KnowledgeManager:
         """检索文档"""
             
         docs = self.search_hybrid(query=query, k=local_k)
-        logger.info(f"本地检索到 {len(docs)} 条相关文档")
+        run_logger.info(f"本地检索到 {len(docs)} 条相关文档")
         
         return docs
     
@@ -223,10 +223,10 @@ def get_knowledge():
     global _knowledge_instance
     if _knowledge_instance is None:
         try:
-            logger.info("首次调用，正在安全初始化 KnowledgeManager...")
+            run_logger.info("首次调用，正在安全初始化 KnowledgeManager...")
             _knowledge_instance = KnowledgeManager()
         except Exception as e:
-            logger.error(f"❌ 知识库初始化失败: {e}")
+            run_logger.error(f"❌ 知识库初始化失败: {e}")
             raise e
     return _knowledge_instance
 # # =====================================================
@@ -235,7 +235,7 @@ def get_knowledge():
 # try:
 #     knowledge = KnowledgeManager()
 # except Exception as e:
-#     logger.error(f"❌ 知识库初始化失败: {e}")
+#     run_logger.error(f"❌ 知识库初始化失败: {e}")
 #     knowledge = None
 
 
@@ -253,7 +253,7 @@ def knowledge_search(query: str) -> str:
     Returns:
         str: 包含相关文档片段、MDN/内部链接及代码示例的 Markdown 或 JSON 字符串。
     """
-    logger.info('knowledge_search tool called..')
+    run_logger.info('knowledge_search tool called..')
     knowledge = get_knowledge()  # 确保知识库已初始化
 
     try:
@@ -262,14 +262,14 @@ def knowledge_search(query: str) -> str:
             return "未找到相关知识。"
         return "\n\n".join(doc.get("text", doc) if isinstance(doc, dict) else doc.page_content for doc in docs[:5])
     except Exception as e:
-        logger.error(f"搜索失败: {e}")
+        run_logger.error(f"搜索失败: {e}")
         return "搜索失败，请稍后重试。"
 
 # with open('./prod.md', mode='r') as f:
 #     content = f.read()
 #     knowledge.add_text(content, 'prod.md', 'local')
 #     docs = knowledge.retrieve(query='实现网格随机算法')
-#     logger.info(docs)
+#     run_logger.info(docs)
 
 # 直接调用来加载知识。
 import argparse
@@ -290,7 +290,7 @@ if __name__ == "__main__":
 
     # 3. 校验文件是否存在
     if not os.path.exists(args.file_path):
-        logger.error(f"文件未找到: {args.file_path}")
+        run_logger.error(f"文件未找到: {args.file_path}")
         exit(1)
 
     # 4. 自动获取文件名（例如从 './docs/prod.md' 中提取出 'prod.md'）
@@ -305,11 +305,11 @@ if __name__ == "__main__":
             
             # 动态传入文件内容和文件名
             knowledge.add_text(content, file_name, 'local')
-            logger.info(f"成功将文件 [{file_name}] 加载到知识库！")
+            run_logger.info(f"成功将文件 [{file_name}] 加载到知识库！")
             
             # 测试检索效果
             docs = knowledge.retrieve(query='实现网格随机算法')
-            logger.info(f"检索测试结果: {docs}")
+            run_logger.info(f"检索测试结果: {docs}")
             
     except Exception as e:
-        logger.error(f"加载知识库失败: {str(e)}")
+        run_logger.error(f"加载知识库失败: {str(e)}")

@@ -12,7 +12,8 @@ import json
 from pprint import pprint
 import logging
 from workflow import MyWorkflow
-logger = logging.getLogger(__name__)
+from logger import run_logger
+
 
 
 class Thread:
@@ -55,7 +56,7 @@ class Thread:
             if state.config.get("configurable", {}).get("checkpoint_id") == checkpoint_id:
                 target = state
                 break
-        print(f"正在从 Checkpoint ID: {target.config['configurable'].get('checkpoint_id')} resume...")
+        run_logger.info(f"正在从 Checkpoint ID: {target.config['configurable'].get('checkpoint_id')} resume...")
 
         resume_command = Command(resume={interrupt_id: data})
         if "approved" in data:
@@ -107,13 +108,13 @@ class Thread:
 
         state = history[idx]
 
-        print("\n====== STATE ======\n")
+        run_logger.info("\n====== STATE ======\n")
 
         pprint(state.values)
 
     async def get_state(self):
         """ 获取当前的精简且完整的状态字典， 不能直接返回snapshot是复杂对象，不能直接json化 """
-        snapshot = await self.workflow.graph.aget_state(self.config)
+        snapshot = await self.workflow.graph.aget_state(self.config, subgraphs=True)
         
         # 如果当前线程没有任何状态（比如刚创建，还没运行过）
         if not snapshot or not snapshot.values:
@@ -139,10 +140,10 @@ class Thread:
             if state.config.get("configurable", {}).get("checkpoint_id") == checkpoint_id:
                 target = state
                 break
-        print(f"正在从 Checkpoint ID: {target.config['configurable'].get('checkpoint_id')} 重放执行...")
+        run_logger.info(f"正在从 Checkpoint ID: {target.config['configurable'].get('checkpoint_id')} 重放执行...")
 
         await self._do_event(None,target.config, event_queue)  # 继续执行事件流
-        print("重放执行完成")
+        run_logger.info("重放执行完成")
 
 
 
@@ -167,11 +168,11 @@ class Thread:
             )
         )
 
-        print(
+        run_logger.info(
             f"\nToken: {token_size}"
         )
 
-        print(
+        run_logger.info(
             f"Memory: {mem_size} bytes\n"
         )
     async def clear_history(self):
@@ -181,17 +182,17 @@ class Thread:
         # 1. 提取当前配置中的 thread_id
         thread_id = self.config.get("configurable", {}).get("thread_id")
         if not thread_id:
-            print("错误：配置中未检测到有效 thread_id！")
+            run_logger.info("错误：配置中未检测到有效 thread_id！")
             return
 
-        print(f"\n正在尝试清空 Thread [{thread_id}] 的所有历史记录。（删除thread）...")
+        run_logger.info(f"正在尝试清空 Thread [{thread_id}] 的所有历史记录。（删除thread）...")
         
         try:
             await self.workflow.graph.checkpointer.adelete_thread(thread_id)
-            print(f"成功！已从 SQLite 数据库中彻底清除该 Thread 的所有快照。")
+            run_logger.info(f"成功！已从 SQLite 数据库中彻底清除该 Thread 的所有快照。")
             
         except Exception as e:
-            print(f"清除失败，错误信息: {e}")
+            run_logger.info(f"清除失败，错误信息: {e}")
 
     async def fork(self, checkpoint_id: str, state: dict, event_queue: asyncio.Queue = None):
         target = None
@@ -203,7 +204,7 @@ class Thread:
         if not target:
             raise ValueError(f"未找到指定的 Checkpoint ID: {checkpoint_id}")
 
-        logger.info(f"从 Checkpoint ID: {checkpoint_id} 开始分叉并更新状态...")
+        run_logger.info(f"从 Checkpoint ID: {checkpoint_id} 开始分叉并更新状态...")
 
         # 1. 使用 update_state 将用户传入的 state 写入到该 checkpoint 上
         # 这会在底层自动生成一个处于新分叉分支的 fork_config,  这是一个新的checkpoint。复制而来类似

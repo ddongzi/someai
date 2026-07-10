@@ -1,16 +1,17 @@
 # ============================================================
 # Test Judge Node 测试输出 分析判别， 生成issue
 # ============================================================
-from globals import GraphState, Issue
+from globals import GraphState, Issue,call_llm
 from typing import Dict
 import re
 import uuid
 from globals import llm
 from utils import get_scene_prompt,parse_llm_json
 from langchain_core.messages import SystemMessage, HumanMessage
+from logger import run_logger
 def judge_node(state: GraphState) -> Dict:
-    print("\n⚖️ [Judge] 正在分析失败原因")
-    print("=" * 60)
+    run_logger.info("\n⚖️ [Judge] 正在分析失败原因")
+    run_logger.info("=" * 60)
 
     test_code = state.get("test_code", "")
     output = state.get("test_output", "")
@@ -24,11 +25,7 @@ def judge_node(state: GraphState) -> Dict:
         HumanMessage(content=user_prompt)
     ]
     
-    full_content = ""
-    # 保持流式打印体验
-    for chunk in llm.stream(messages):
-        if chunk.content:
-            full_content += chunk.content
+    full_content, full_chunk = call_llm(messages)
 
     result = parse_llm_json(full_content)
 

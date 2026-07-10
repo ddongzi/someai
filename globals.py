@@ -7,27 +7,31 @@ from enum import Enum
 from tools.git import git_tool,GitAction
 from rag.rag import knowledge_search
 import operator
-from tools.inspect_project_structure import inspect_project_structure
 from tools.search_replace_tool import apply_search_replace
 from tools.ast import ast_search
 from tools.pyright_client import find_symbol_definition, find_symbol_references
+from tools.filer import read_file, create_file,inspect_project_structure
 from typing import Annotated, List, TypedDict
 from dotenv import load_dotenv
 from langchain_deepseek import ChatDeepSeek
 from langgraph.graph.message import add_messages,AnyMessage
 import operator
+from langchain_core.globals import set_llm_cache
+from langchain_core.caches import InMemoryCache
+from langchain_community.cache import SQLiteCache
+from logger import run_logger
 
-
-logging.basicConfig(level=logging.INFO) 
-logger = logging.getLogger(__name__)
 # 1. 自动加载项目根目录下的 .env 文件到环境变量中
 load_dotenv()
+
+set_llm_cache(SQLiteCache())
 
 deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
 
 tools = [git_tool, knowledge_search, inspect_project_structure,
           apply_search_replace,ast_search,
-          find_symbol_references, find_symbol_definition]
+          find_symbol_references, find_symbol_definition, 
+          read_file, create_file]
 
 # llm = ChatOllama( 
 #     model="qwen2.5-coder:3b",   # tool calling 不好，格式部队
@@ -70,14 +74,20 @@ def any_write(left, right):
     right：下一个
     """
     return right if right is not None else left
-def merge_dicts(left: dict | None, right: dict | None) -> dict:
-    """
-    新dict增量合并就dict
-    """
-    result = (left or {}).copy()
-    if right:
-        result.update(right)
-    return result
+def merge_dicts(left: dict, right: dict) -> dict:
+    # 强力容错：防止其中一方为 None
+    left = left or {}
+    right = right or {}
+    
+    # 合并逻辑（根据你的业务调整）
+    new_dict = left.copy()
+    for k, v in right.items():
+        if k in new_dict and isinstance(new_dict[k], list) and isinstance(v, list):
+            new_dict[k] = new_dict[k] + v  # 列表合并
+        else:
+            new_dict[k] = v
+    return new_dict
+
 
 class Issue(TypedDict):
     issue_id: str # 修复建议ID，唯一标识
@@ -141,7 +151,10 @@ def create_initial_state() -> GraphState:
         },
         is_issueing=False,
         issues=[],
-        pyright_result={},
+        pyright_result={
+            'code':[],
+            'test_code':[]
+        },
         pyright_target=set(),
     )
 
@@ -181,10 +194,10 @@ def get_graph_status(snapshot) -> GraphStatus:
     return GraphStatus.FINISHED
 
 def call_llm(prompt:str)->str:
-    print(f'prompt :{prompt}')
+    run_logger.info(f'prompt :{prompt}')
     full_content = ""
     full_chunk = None
-    print('====LLM stream ..====')
+    run_logger.info('====LLM stream ..====')
     for chunk in llm.stream(prompt):
         if full_chunk is None:
             full_chunk = chunk
@@ -203,8 +216,10 @@ def call_llm(prompt:str)->str:
 
         # 3. 如果触发了工具调用
         if chunk.tool_calls:
-            print(f"\n⚙️ 命中工具: {chunk.tool_calls}")
+            print(f"⚙️ 命中工具: {chunk.tool_calls}")
 
-    print('====LLM done ====')
+    run_logger.info(f'llm full chunks.\n{full_chunk}')
+    run_logger.info(f'llm full content.\n{full_content}')
+    run_logger.info('====LLM done ====')
     return full_content, full_chunk
 

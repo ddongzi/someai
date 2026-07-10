@@ -22,12 +22,13 @@ from globals import (
 from langgraph.types import Command
 from collections.abc import AsyncIterable, Iterable
 from fastapi.responses import StreamingResponse
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+from logger import run_logger
+
 import asyncio
 from thread import Thread
 from workflow import MyWorkflow
 from rag.rag import get_knowledge
+from logger import sse_logger
 
 my_workflow = MyWorkflow()
 knowledge = None
@@ -40,19 +41,19 @@ thread = Thread(workflow=my_workflow)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("服务器启动")
+    run_logger.info("服务器启动")
     global knowledge
     try:
         # 确保只在服务真正运转的那一刻，在单进程内部初始化一次
         knowledge = get_knowledge()
-        logger.info("🎉 全局知识库 KnowledgeManager 初始化成功！")
+        run_logger.info("🎉 全局知识库 KnowledgeManager 初始化成功！")
     except Exception as e:
-        logger.error(f"❌ 知识库初始化失败: {e}")
+        run_logger.error(f"❌ 知识库初始化失败: {e}")
         knowledge = None
     async with my_workflow.setup() as active_saver:
         yield 
         
-    logger.info("服务器关闭")
+    run_logger.info("服务器关闭")
 
 
 app = FastAPI(title="Thread thread", lifespan=lifespan)
@@ -75,33 +76,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 event_queue = asyncio.Queue()
-
-import os
-LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)  # 创建日志文件夹S
-
-from logging.handlers import TimedRotatingFileHandler
-SSE_LOG_FILE_PATH = os.path.join(LOG_DIR, "sse_stream.log")
-sse_logger = logging.getLogger('sse_logger')
-sse_logger.setLevel(logging.INFO)
-# ⭐ 关键修复：关闭日志向父级传播！彻底阻止其打印到控制台
-sse_logger.propagate = False
-
-# 清理可能重复的 Handler，避免重复打印
-if not sse_logger.handlers:
-    # 使用 TimedRotatingFileHandler：按天（midnight）切分日志，最多保留 30 天
-    file_handler = TimedRotatingFileHandler(
-        SSE_LOG_FILE_PATH, 
-        when="midnight", 
-        interval=1, 
-        backupCount=30, 
-        encoding="utf-8"
-    )
-    
-    # 设置日志格式：时间 [日志级别] 线程进程名 - 消息
-    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
-    file_handler.setFormatter(formatter)
-    sse_logger.addHandler(file_handler)
 
 
 @app.get("/api/stream")
@@ -185,7 +159,7 @@ async def replay_workflow(body: Dict[str, Any]):
         result = await thread.replay(checkpoint_id, event_queue=event_queue)
         return {"status": "success", "message": f"已回溯到 checkpoint {checkpoint_id}", "result": result}
     except Exception as e:
-        logger.exception(f"回溯失败: {e}")
+        run_logger.exception(f"回溯失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/fork/")
@@ -206,7 +180,7 @@ async def fork_workflow(body: Dict[str, Any]):
         result = await thread.fork(checkpoint_id, state, event_queue=event_queue)
         return {"status": "success", "message": f"已回溯到 checkpoint {checkpoint_id}", "result": result}
     except Exception as e:
-        logger.exception(f"回溯失败: {e}")
+        run_logger.exception(f"回溯失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -225,7 +199,7 @@ async def human_input(body: Dict[str, Any]):
         result = await thread.resume_workflow(checkpoint_id, interrupt_id, data, event_queue=event_queue)
         return {"status": "success", "message": f"已回溯到 checkpoint {checkpoint_id}", "result": result}
     except Exception as e:
-        logger.error(f"回溯失败: {e}")
+        run_logger.error(f"回溯失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     
 
@@ -239,11 +213,7 @@ import subprocess
 import sys
 def run_server():
     """运行 FastAPI 服务器"""
-    print("""
-🌐 启动 FastAPI 服务器    
-服务器地址:   http://localhost:8000
-
-""")
+    run_logger.info("🌐 启动 FastAPI 服务器，服务器地址:   http://localhost:8000")
     
     subprocess.run([
         sys.executable, 

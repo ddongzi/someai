@@ -1,9 +1,9 @@
-from globals import GraphState, Issue,call_llm,tools,any_write,merge_dicts
+from globals import GraphState, Issue,call_llm,tools,any_write,merge_dicts, run_logger
 from typing import Dict
 import re
 from utils import extract_python_code,get_scene_prompt,draw_workflow_png
 import logging
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage,ToolMessage
 from tools.search_replace_tool import apply_search_replace
 from dotenv import load_dotenv
 import os
@@ -13,8 +13,6 @@ from typing import Annotated, List, TypedDict
 import operator
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
-
-logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -61,6 +59,7 @@ def _do_first_write(state:CoderGraphState) -> Dict:
     for msg in state['messages']:
         messages.append(msg)
 
+
     full_content, full_chunk = call_llm(messages)
     full_chunk.name = 'coder'
 
@@ -98,6 +97,7 @@ def _do_pyright_repair(state: CoderGraphState) -> Dict:
     ]
     for msg in state['messages']:
         messages.append(msg)
+ 
     full_content, full_chunk = call_llm(messages)
     full_chunk.name = 'coder'
 
@@ -132,6 +132,7 @@ def _do_fix_bug(state: CoderGraphState)->Dict:
     ]
     for msg in state['messages']:
         messages.append(msg)
+
     full_content, full_chunk = call_llm(messages)
     full_chunk.name = 'coder'
 
@@ -152,8 +153,7 @@ def _do_fix_bug(state: CoderGraphState)->Dict:
 
 
 def write_code_node(state: CoderGraphState) -> Dict:
-    print("\n🤖 [Coder] 开始生成或重构业务代码")
-    print("=" * 60)
+    run_logger.info("🤖 [Coder] 开始生成或重构业务代码")
     state['coder_subgraph_status'] = 'failed'
 
     # 1. 处理pyright 静态 错误up
@@ -165,17 +165,22 @@ def write_code_node(state: CoderGraphState) -> Dict:
     if issues:
         return _do_fix_bug(state)
 
-    print("[Coder] 第一次写代码")
+    run_logger.info("[Coder] 第一次写代码")
     return _do_first_write(state)
 
 
 def router_node(state: CoderGraphState) :
-    return {}
+    # 状态初始化
+
+    return {
+        'messages':[]
+    }
 
 coder_graph = StateGraph(CoderGraphState)
 coder_graph.add_node('router_node', router_node)
 
 coder_graph.add_node('writer', write_code_node)
+
 coder_graph.add_node('tools_node', ToolNode(tools=tools, handle_tool_errors=True))
 
 coder_graph.set_entry_point('router_node')
@@ -183,7 +188,7 @@ coder_graph.set_entry_point('router_node')
 coder_graph.add_edge('router_node', 'writer')
 def decide_after_writer(state:CoderGraphState):
     if tools_condition(state) != END:
-        logger.info('after writer. goto tools exec.')
+        run_logger.info('after writer. goto tools exec.')
         return 'tools_executor'
     return 'success'     
 

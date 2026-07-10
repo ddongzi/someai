@@ -2,7 +2,7 @@ import ast
 import os
 from typing import Dict, List, Any, Optional
 import logging
-logger = logging.getLogger(__name__)
+from logger import run_logger
 
 class ASTNodeType:
     """
@@ -191,7 +191,7 @@ class ASTParser:
                     "docstring": ""
                 })
 
-            # 情况 5 (补充): 顶层的纯表达式/函数调用 (如 print(), setup())
+            # 情况 5 (补充): 顶层的纯表达式/函数调用 (如 run_logger.info(), setup())
             elif isinstance(node, ast.Expr):
                 # 排除纯字符串字面量（比如文件开头的多行注释）
                 if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
@@ -314,4 +314,4 @@ def read_file_lines(filepath: str, start_line: int, end_line: int) -> List[str]:
 # search_result = ast_search(file_path=file_path, name='hello', type='function')
 
 # read_result = read_file_lines(filepath=file_path, start_line=search_result['start_line'],end_line= search_result['end_line'])
-# print(read_result)
+# run_logger.info(read_result)

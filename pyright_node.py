@@ -6,8 +6,8 @@ import os
 import json
 from globals import GraphState
 import subprocess
-import logging
-logger = logging.getLogger(__name__)
+from logger import run_logger
+
 
 def _do_pyright(code:str) -> dict:
     temp_file = './temp/pyright_code.py'
@@ -23,7 +23,7 @@ def _do_pyright(code:str) -> dict:
             text=True,
             check=False # 允许返回非 0 退出码
         )
-        # logger.info(f'pyright cli result :{result}')
+        # run_logger.info(f'pyright cli result :{result}')
         # 解析 JSON 诊断报告
         if result.stdout:
             data = json.loads(result.stdout)
@@ -48,7 +48,7 @@ def _do_pyright(code:str) -> dict:
 
 def pyright_node(state: GraphState) -> dict:
     """Pyright 静态检查节点, 支持各类coder, test_writer"""
-    logger.info(f"[pyright] 静态检查....")
+    run_logger.info(f"[pyright] 静态检查....")
     result = {}
     if 'code' in state['pyright_target']:
         errors = _do_pyright(state['code'])
@@ -59,7 +59,7 @@ def pyright_node(state: GraphState) -> dict:
         errors = _do_pyright(state['test_code'])
         if not errors:
             result['test_code'] = errors
-    logger.info(f"pyright node ok. {result}")
+    run_logger.info(f"pyright node ok. {result}")
     
     return {
         'pyright_target': set(), # 消耗完了

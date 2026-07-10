@@ -1,604 +1,578 @@
 """
-网格随机算法 (GridRandom) 单元测试
+网格随机算法 (GridRandom) 实现
+===============================
+适用：小型闯关、小游戏地图
+核心逻辑：根据 wallRatio / trapMaxRatio 逐地块随机生成，保证基础通路，最后 BFS 校验通路。
 
-测试覆盖：
-1. 参数边界极值测试（最大/最小/0值）
-2. 种子一致性回归测试
-3. 四算法独立生成测试（GridRandom）
-4. 校验失败重试测试（BFS 重试）
-5. 模板保存加载测试
-6. 超大地图性能测试
-7. 压测：1000 次连续生成稳定性
-8. 非法参数容错测试
+依赖：Python 3.9+, Pydantic 2.x
 """
 
-import os
-import sys
-import json
+import random
+import hashlib
 import time
-import pytest
-from typing import List, Tuple
-
-# 将被测代码所在目录加入 sys.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from generated.app import (
-    GridRandom,
-    GeneratorFactory,
-    AlgorithmTypeEnum,
-    TileType,
-    GenerateResult,
-    Room,
-)
+import json
+from abc import ABC, abstractmethod
+from enum import IntEnum, StrEnum
+from typing import Optional
+from pydantic import BaseModel, Field, field_validator
 
 
 # ============================================================
-# Fixtures
+# 1. 枚举定义
 # ============================================================
 
-@pytest.fixture
-def default_generator():
-    """返回一个使用默认参数的 GridRandom 实例"""
-    return GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=42)
+class TileType(IntEnum):
+    """地块类型"""
+    GROUND = 0      # 空地/可通行
+    WALL = 1        # 墙壁/障碍物
+    WATER = 2       # 水域（网格随机算法不使用）
+    TRAP_TILE = 3   # 陷阱地块
 
 
-# ============================================================
-# 1. 参数边界极值测试（最大/最小/0值）
-# ============================================================
+class AlgorithmTypeEnum(StrEnum):
+    """算法类型枚举"""
+    GridRandom = "GridRandom"
+    RoomSplit = "RoomSplit"
+    RecursiveBacktrack = "RecursiveBacktrack"
+    PerlinNoise = "PerlinNoise"
 
-class TestParameterBoundaries:
-    """参数边界极值测试"""
 
-    @pytest.mark.parametrize("rows,cols", [
-        (1, 1),       # 最小尺寸
-        (1, 100),     # 单行
-        (100, 1),     # 单列
-        (2, 2),       # 最小有效地图
-        (100, 100),   # 较大尺寸
-        (200, 200),   # 边界大尺寸
-    ])
-    def test_map_size_boundaries(self, rows, cols):
-        """测试地图尺寸边界值"""
-        gen = GridRandom(rows=rows, cols=cols, wall_ratio=0.3, trap_max_ratio=0.1, seed=42)
-        result = gen.generate()
-        assert len(result.tile_map) == rows
-        assert len(result.tile_map[0]) == cols
-        assert result.start is not None
-        assert result.end is not None
-
-    @pytest.mark.parametrize("wall_ratio", [
-        0.0,    # 无墙壁
-        0.01,   # 极小墙壁比例
-        0.5,    # 中等墙壁比例
-        0.8,    # 高墙壁比例
-        0.99,   # 极高墙壁比例（接近全墙）
-    ])
-    def test_wall_ratio_boundaries(self, wall_ratio):
-        """测试墙壁比例边界值"""
-        gen = GridRandom(rows=10, cols=10, wall_ratio=wall_ratio, trap_max_ratio=0.1, seed=42)
-        result = gen.generate()
-        # 统计墙壁数量
-        wall_count = sum(
-            1 for row in result.tile_map for cell in row
-            if cell == TileType.WALL.value
-        )
-        total_cells = 10 * 10
-        # 墙壁比例应在合理范围内（由于起点终点占位，实际比例可能略低）
-        actual_ratio = wall_count / total_cells
-        # 允许 ±5% 的浮动
-        assert actual_ratio <= wall_ratio + 0.05, f"wall_ratio={wall_ratio}, actual={actual_ratio:.3f}"
-
-    @pytest.mark.parametrize("trap_max_ratio", [
-        0.0,    # 无陷阱
-        0.01,   # 极小陷阱比例
-        0.2,    # 中等陷阱比例
-        0.4,    # 较高陷阱比例
-        0.5,    # 最大陷阱比例
-    ])
-    def test_trap_ratio_boundaries(self, trap_max_ratio):
-        """测试陷阱比例边界值"""
-        gen = GridRandom(rows=10, cols=10, wall_ratio=0.2, trap_max_ratio=trap_max_ratio, seed=42)
-        result = gen.generate()
-        trap_count = sum(
-            1 for row in result.tile_map for cell in row
-            if cell == TileType.TRAP.value
-        )
-        total_cells = 10 * 10
-        actual_ratio = trap_count / total_cells
-        # 陷阱比例不应超过设定的最大比例（允许少量浮动）
-        assert actual_ratio <= trap_max_ratio + 0.02, f"trap_max_ratio={trap_max_ratio}, actual={actual_ratio:.3f}"
-
-    def test_zero_wall_and_trap(self):
-        """测试 wall_ratio=0 且 trap_max_ratio=0 的极端情况"""
-        gen = GridRandom(rows=5, cols=5, wall_ratio=0.0, trap_max_ratio=0.0, seed=42)
-        result = gen.generate()
-        for row in result.tile_map:
-            for cell in row:
-                assert cell in (TileType.EMPTY.value, TileType.START.value, TileType.END.value), \
-                    f"Unexpected tile type: {cell}"
+class RoomTypeEnum(StrEnum):
+    """房间类型枚举（网格随机算法不使用，但保留以统一接口）"""
+    battle = "battle"
+    treasure = "treasure"
+    rest = "rest"
+    boss = "boss"
 
 
 # ============================================================
-# 2. 种子一致性回归测试
+# 2. 配置模型 (Pydantic)
 # ============================================================
 
-class TestSeedConsistency:
-    """种子一致性回归测试"""
+class MapBasicConfig(BaseModel):
+    """地图基础配置，使用 Pydantic 进行参数校验"""
+    width: int = Field(default=50, ge=10, le=1000)
+    height: int = Field(default=50, ge=10, le=1000)
+    isRandomSize: bool = False
+    widthRange: list[int] = Field(default=[20, 100], min_length=2, max_length=2)
+    heightRange: list[int] = Field(default=[20, 100], min_length=2, max_length=2)
+    wallRatio: int = Field(default=30, ge=0, le=60)
+    trapMaxRatio: int = Field(default=15, ge=0, le=30)
+    roomMinCount: int = Field(default=3, ge=1, le=50)
+    roomMaxCount: int = Field(default=15, ge=1, le=50)
+    singleRoomMinW: int = Field(default=4, ge=2, le=20)
+    singleRoomMaxW: int = Field(default=12, ge=4, le=20)
+    singleRoomMinH: int = Field(default=4, ge=2, le=20)
+    singleRoomMaxH: int = Field(default=12, ge=4, le=20)
+    pathWidth: int = Field(default=2, ge=1, le=5)
+    difficultyLevel: int = Field(default=1, ge=1, le=5)
 
-    def test_same_seed_produces_same_result(self):
-        """相同种子应生成完全相同的地图"""
-        gen1 = GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=12345)
-        gen2 = GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=12345)
+    @field_validator('widthRange')
+    @classmethod
+    def validate_width_range(cls, v):
+        if v[0] >= v[1]:
+            raise ValueError('widthRange[0] must be less than widthRange[1]')
+        if v[0] < 10 or v[1] > 1000:
+            raise ValueError('widthRange values must be in [10, 1000]')
+        return v
 
-        result1 = gen1.generate()
-        result2 = gen2.generate()
+    @field_validator('heightRange')
+    @classmethod
+    def validate_height_range(cls, v):
+        if v[0] >= v[1]:
+            raise ValueError('heightRange[0] must be less than heightRange[1]')
+        if v[0] < 10 or v[1] > 1000:
+            raise ValueError('heightRange values must be in [10, 1000]')
+        return v
 
-        # 地图数据应完全一致
-        assert result1.tile_map == result2.tile_map
-        assert result1.start == result2.start
-        assert result1.end == result2.end
+    @field_validator('roomMaxCount')
+    @classmethod
+    def validate_room_count(cls, v, info):
+        if 'roomMinCount' in info.data and v < info.data['roomMinCount']:
+            raise ValueError('roomMaxCount must be >= roomMinCount')
+        return v
 
-    def test_different_seed_produces_different_result(self):
-        """不同种子应生成不同的地图（极大概率）"""
-        gen1 = GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=11111)
-        gen2 = GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=99999)
+    @field_validator('singleRoomMaxW')
+    @classmethod
+    def validate_room_max_w(cls, v, info):
+        if 'singleRoomMinW' in info.data and v < info.data['singleRoomMinW']:
+            raise ValueError('singleRoomMaxW must be >= singleRoomMinW')
+        return v
 
-        result1 = gen1.generate()
-        result2 = gen2.generate()
-
-        # 两个地图不太可能完全相同
-        assert result1.tile_map != result2.tile_map, "不同种子生成了相同的地图"
-
-    def test_seed_none_produces_different_results(self):
-        """seed=None 时每次生成应不同"""
-        gen1 = GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=None)
-        gen2 = GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=None)
-
-        result1 = gen1.generate()
-        result2 = gen2.generate()
-
-        # 极大概率不同
-        assert result1.tile_map != result2.tile_map, "seed=None 时生成了相同的地图"
-
-    def test_seed_regression_fixed_result(self):
-        """回归测试：固定种子 42 的已知输出结构"""
-        gen = GridRandom(rows=5, cols=5, wall_ratio=0.3, trap_max_ratio=0.1, seed=42)
-        result = gen.generate()
-
-        # 验证基本结构
-        assert len(result.tile_map) == 5
-        assert len(result.tile_map[0]) == 5
-        assert result.start == (0, 0)
-        assert result.end == (4, 4)
-        assert result.tile_map[0][0] == TileType.START.value
-        assert result.tile_map[4][4] == TileType.END.value
-
-        # 验证起点终点不是墙壁
-        assert result.tile_map[0][0] != TileType.WALL.value
-        assert result.tile_map[4][4] != TileType.WALL.value
-
-
-# ============================================================
-# 3. 四算法独立生成测试（GridRandom）
-# ============================================================
-
-class TestGridRandomAlgorithm:
-    """GridRandom 算法独立生成测试"""
-
-    def test_generate_returns_correct_type(self, default_generator):
-        """generate() 应返回 GenerateResult 类型"""
-        result = default_generator.generate()
-        assert isinstance(result, GenerateResult)
-
-    def test_generate_result_contains_required_fields(self, default_generator):
-        """生成结果应包含所有必要字段"""
-        result = default_generator.generate()
-        assert hasattr(result, "tile_map")
-        assert hasattr(result, "start")
-        assert hasattr(result, "end")
-        assert hasattr(result, "room_list")
-        assert hasattr(result, "algorithm")
-
-    def test_algorithm_name_is_correct(self, default_generator):
-        """算法名称应为 GridRandom"""
-        result = default_generator.generate()
-        assert result.algorithm == "GridRandom"
-
-    def test_tile_map_dimensions(self, default_generator):
-        """地图尺寸应与初始化参数一致"""
-        result = default_generator.generate()
-        assert len(result.tile_map) == 10
-        assert len(result.tile_map[0]) == 10
-
-    def test_start_and_end_positions(self, default_generator):
-        """起点应为 (0,0)，终点应为 (rows-1, cols-1)"""
-        result = default_generator.generate()
-        assert result.start == (0, 0)
-        assert result.end == (9, 9)
-
-    def test_tile_types_are_valid(self, default_generator):
-        """所有瓦片类型应在 TileType 枚举范围内"""
-        result = default_generator.generate()
-        valid_types = {t.value for t in TileType}
-        for row in result.tile_map:
-            for cell in row:
-                assert cell in valid_types, f"Invalid tile type: {cell}"
-
-    def test_start_end_not_wall(self, default_generator):
-        """起点和终点不应是墙壁"""
-        result = default_generator.generate()
-        sr, sc = result.start
-        er, ec = result.end
-        assert result.tile_map[sr][sc] != TileType.WALL.value
-        assert result.tile_map[er][ec] != TileType.WALL.value
-
-    def test_room_list_not_empty(self, default_generator):
-        """room_list 不应为空"""
-        result = default_generator.generate()
-        assert len(result.room_list) > 0
-
-    def test_factory_creates_grid_random(self):
-        """工厂模式应能正确创建 GridRandom 实例"""
-        gen = GeneratorFactory.create_generator(
-            AlgorithmTypeEnum.GridRandom,
-            rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=42
-        )
-        assert isinstance(gen, GridRandom)
-        result = gen.generate()
-        assert result.algorithm == "GridRandom"
+    @field_validator('singleRoomMaxH')
+    @classmethod
+    def validate_room_max_h(cls, v, info):
+        if 'singleRoomMinH' in info.data and v < info.data['singleRoomMinH']:
+            raise ValueError('singleRoomMaxH must be >= singleRoomMinH')
+        return v
 
 
 # ============================================================
-# 4. 校验失败重试测试（BFS 重试）
+# 3. 数据模型
 # ============================================================
 
-class TestBFSRetry:
-    """校验失败重试测试"""
+class Position(BaseModel):
+    """坐标位置"""
+    x: int
+    y: int
 
-    def test_path_is_always_reachable(self, default_generator):
-        """生成的地图起点到终点必须可达"""
-        result = default_generator.generate()
-        assert self._bfs_check(result.tile_map, result.start, result.end), "起点到终点不可达"
 
-    def test_high_wall_ratio_still_reachable(self):
-        """高墙壁比例下仍应保证通路可达"""
-        gen = GridRandom(rows=10, cols=10, wall_ratio=0.6, trap_max_ratio=0.05, seed=42)
-        result = gen.generate()
-        assert self._bfs_check(result.tile_map, result.start, result.end), "高墙壁比例下不可达"
+class RoomData(BaseModel):
+    """房间数据（网格随机算法不使用，但保留接口兼容性）"""
+    roomId: int
+    x: int
+    y: int
+    width: int
+    height: int
+    roomType: str = "battle"
 
-    def test_very_high_wall_ratio_still_reachable(self):
-        """极高墙壁比例下仍应保证通路可达（可能触发重试）"""
-        gen = GridRandom(rows=8, cols=8, wall_ratio=0.75, trap_max_ratio=0.0, seed=42)
-        result = gen.generate()
-        assert self._bfs_check(result.tile_map, result.start, result.end), "极高墙壁比例下不可达"
 
-    def test_retry_does_not_raise_exception(self):
-        """多次重试不应抛出异常"""
-        for seed in range(20):
-            gen = GridRandom(rows=6, cols=6, wall_ratio=0.5, trap_max_ratio=0.1, seed=seed)
-            try:
-                result = gen.generate()
-                assert self._bfs_check(result.tile_map, result.start, result.end)
-            except RecursionError:
-                pytest.fail(f"seed={seed} 触发了递归错误")
+class MonsterData(BaseModel):
+    """怪物数据"""
+    id: int
+    x: int
+    y: int
+    isBoss: bool = False
+
+
+class ItemData(BaseModel):
+    """道具数据"""
+    id: int
+    x: int
+    y: int
+
+
+class ChestData(BaseModel):
+    """宝箱数据"""
+    id: int
+    x: int
+    y: int
+
+
+class TrapData(BaseModel):
+    """陷阱数据"""
+    id: int
+    x: int
+    y: int
+    damage: int = 10
+
+
+class MapFullData(BaseModel):
+    """完整地图数据"""
+    seed: str
+    mapWidth: int
+    mapHeight: int
+    tileLayer: list[list[int]]
+    startPos: Position
+    endPos: Position
+    roomList: list[RoomData] = []
+    monsterData: list[MonsterData] = []
+    itemData: list[ItemData] = []
+    chestData: list[ChestData] = []
+    trapData: list[TrapData] = []
+    generateCostMs: int = 0
+    retryCount: int = 0
+    checkPass: bool = True
+
+
+# ============================================================
+# 4. 种子工具
+# ============================================================
+
+class SeedUtils:
+    """种子工具：支持 int/str 种子，保证确定性复现"""
 
     @staticmethod
-    def _bfs_check(tile_map: List[List[int]], start: Tuple[int, int], end: Tuple[int, int]) -> bool:
-        """BFS 检查起点到终点是否可达"""
-        from collections import deque
-        rows, cols = len(tile_map), len(tile_map[0])
-        visited = [[False] * cols for _ in range(rows)]
-        queue = deque()
-        queue.append(start)
-        visited[start[0]][start[1]] = True
+    def normalize_seed(seed: Optional[str | int] = None) -> str:
+        """
+        标准化种子。
+        - int 种子范围：1 ~ 999999999
+        - str 种子：长度 1~32，仅字母数字，非法字符自动清洗
+        - 非法种子：自动生成 6 位随机数字兜底
+        """
+        if seed is None:
+            # 自动生成 6 位随机数字
+            return str(random.randint(100000, 999999))
 
-        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        if isinstance(seed, int):
+            if 1 <= seed <= 999999999:
+                return str(seed)
+            # 超出范围，取模后保证在范围内
+            return str((abs(seed) % 999999999) + 1)
+
+        if isinstance(seed, str):
+            if len(seed) == 0 or len(seed) > 32:
+                return str(random.randint(100000, 999999))
+            # 清洗非法字符，仅保留字母数字
+            cleaned = ''.join(c for c in seed if c.isalnum())
+            if len(cleaned) == 0:
+                return str(random.randint(100000, 999999))
+            return cleaned[:32]
+
+        return str(random.randint(100000, 999999))
+
+    @staticmethod
+    def seed_to_int(seed_str: str) -> int:
+        """字符串种子统一 hash 转为整数种子"""
+        try:
+            return int(seed_str)
+        except ValueError:
+            # 使用 hashlib 将字符串 hash 为整数
+            hash_bytes = hashlib.sha256(seed_str.encode('utf-8')).digest()
+            return int.from_bytes(hash_bytes[:8], 'big') % 999999999 + 1
+
+
+# ============================================================
+# 5. 抽象基类
+# ============================================================
+
+class BaseGenerator(ABC):
+    """
+    所有地图生成算法的抽象基类。
+    统一接口：generate() -> MapFullData
+    """
+
+    def __init__(self, config: MapBasicConfig, seed: Optional[str | int] = None):
+        self.config = config
+        self.seed_str = SeedUtils.normalize_seed(seed)
+        self.seed_int = SeedUtils.seed_to_int(self.seed_str)
+        self._random = random.Random(self.seed_int)
+
+    @abstractmethod
+    def generate(self) -> MapFullData:
+        """生成地图，返回完整地图数据"""
+        pass
+
+    def _resolve_size(self) -> tuple[int, int]:
+        """根据配置解析最终地图尺寸"""
+        if self.config.isRandomSize:
+            w = self._random.randint(self.config.widthRange[0], self.config.widthRange[1])
+            h = self._random.randint(self.config.heightRange[0], self.config.heightRange[1])
+            return w, h
+        return self.config.width, self.config.height
+
+
+# ============================================================
+# 6. 网格随机算法实现
+# ============================================================
+
+class GridRandomGenerator(BaseGenerator):
+    """
+    网格随机算法 (GridRandom)
+    
+    逻辑：
+    1. 根据 wallRatio 随机生成墙壁地块
+    2. 根据 trapMaxRatio 随机生成陷阱地块
+    3. 保证起点和终点为可通行空地
+    4. 使用 BFS 校验起点到终点是否存在通路
+    5. 若不通则重试，直到生成有效地图或达到最大重试次数
+    """
+
+    MAX_RETRY = 50
+
+    def generate(self) -> MapFullData:
+        """生成网格随机地图"""
+        start_time = time.time()
+        retry_count = 0
+
+        width, height = self._resolve_size()
+
+        for attempt in range(self.MAX_RETRY):
+            retry_count = attempt
+            tile_layer = self._generate_tile_layer(width, height)
+
+            # 选取起点（左上区域）和终点（右下区域）
+            start_pos, end_pos = self._pick_start_end(width, height, tile_layer)
+
+            # BFS 校验通路
+            if self._bfs_check(tile_layer, start_pos, end_pos, width, height):
+                # 生成成功
+                elapsed_ms = int((time.time() - start_time) * 1000)
+
+                # 收集陷阱数据
+                trap_data = self._collect_trap_data(tile_layer, width, height)
+
+                return MapFullData(
+                    seed=self.seed_str,
+                    mapWidth=width,
+                    mapHeight=height,
+                    tileLayer=tile_layer,
+                    startPos=Position(x=start_pos[0], y=start_pos[1]),
+                    endPos=Position(x=end_pos[0], y=end_pos[1]),
+                    roomList=[],
+                    monsterData=[],
+                    itemData=[],
+                    chestData=[],
+                    trapData=trap_data,
+                    generateCostMs=elapsed_ms,
+                    retryCount=retry_count,
+                    checkPass=True
+                )
+
+        # 所有重试均失败，返回一个全空地的最小有效地图
+        elapsed_ms = int((time.time() - start_time) * 1000)
+        fallback_tile = [[TileType.GROUND for _ in range(width)] for _ in range(height)]
+        # 在边界加墙
+        for x in range(width):
+            fallback_tile[0][x] = TileType.WALL
+            fallback_tile[height - 1][x] = TileType.WALL
+        for y in range(height):
+            fallback_tile[y][0] = TileType.WALL
+            fallback_tile[y][width - 1] = TileType.WALL
+        # 留出起点终点
+        fallback_tile[1][1] = TileType.GROUND
+        fallback_tile[height - 2][width - 2] = TileType.GROUND
+
+        return MapFullData(
+            seed=self.seed_str,
+            mapWidth=width,
+            mapHeight=height,
+            tileLayer=fallback_tile,
+            startPos=Position(x=1, y=1),
+            endPos=Position(x=width - 2, y=height - 2),
+            roomList=[],
+            monsterData=[],
+            itemData=[],
+            chestData=[],
+            trapData=[],
+            generateCostMs=elapsed_ms,
+            retryCount=retry_count,
+            checkPass=False
+        )
+
+    def _generate_tile_layer(self, width: int, height: int) -> list[list[int]]:
+        """
+        根据 wallRatio 和 trapMaxRatio 逐地块随机生成。
+        
+        策略：
+        - 边界固定为墙壁
+        - 内部区域按 wallRatio 概率生成墙壁
+        - 非墙壁地块按 trapMaxRatio 概率生成陷阱
+        """
+        tile_layer = [[TileType.GROUND for _ in range(width)] for _ in range(height)]
+
+        wall_ratio = min(self.config.wallRatio, 60) / 100.0
+        trap_ratio = min(self.config.trapMaxRatio, 30) / 100.0
+
+        for y in range(height):
+            for x in range(width):
+                # 边界固定为墙壁
+                if x == 0 or x == width - 1 or y == 0 or y == height - 1:
+                    tile_layer[y][x] = TileType.WALL
+                else:
+                    # 内部区域按概率生成
+                    if self._random.random() < wall_ratio:
+                        tile_layer[y][x] = TileType.WALL
+                    elif self._random.random() < trap_ratio:
+                        tile_layer[y][x] = TileType.TRAP_TILE
+                    else:
+                        tile_layer[y][x] = TileType.GROUND
+
+        return tile_layer
+
+    def _pick_start_end(
+        self, width: int, height: int, tile_layer: list[list[int]]
+    ) -> tuple[tuple[int, int], tuple[int, int]]:
+        """
+        选取起点和终点。
+        起点在左上 1/4 区域，终点在右下 1/4 区域。
+        确保起点和终点都是可通行的空地。
+        """
+        # 起点：左上区域 (1 ~ width//4, 1 ~ height//4)
+        start_x = self._random.randint(1, max(1, width // 4))
+        start_y = self._random.randint(1, max(1, height // 4))
+        tile_layer[start_y][start_x] = TileType.GROUND
+
+        # 终点：右下区域 (3*width//4 ~ width-2, 3*height//4 ~ height-2)
+        end_x = self._random.randint(max(width // 2, 3 * width // 4), width - 2)
+        end_y = self._random.randint(max(height // 2, 3 * height // 4), height - 2)
+        tile_layer[end_y][end_x] = TileType.GROUND
+
+        return (start_x, start_y), (end_x, end_y)
+
+    def _bfs_check(
+        self,
+        tile_layer: list[list[int]],
+        start: tuple[int, int],
+        end: tuple[int, int],
+        width: int,
+        height: int,
+    ) -> bool:
+        """
+        使用 BFS 校验起点到终点是否存在通路。
+        只允许在 GROUND 上行走。
+        """
+        if tile_layer[start[1]][start[0]] != TileType.GROUND:
+            return False
+        if tile_layer[end[1]][end[0]] != TileType.GROUND:
+            return False
+
+        visited = [[False for _ in range(width)] for _ in range(height)]
+        queue = [start]
+        visited[start[1]][start[0]] = True
+
+        # 四方向移动
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
         while queue:
-            r, c = queue.popleft()
-            if (r, c) == end:
+            cx, cy = queue.pop(0)
+            if (cx, cy) == end:
                 return True
-            for dr, dc in directions:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and not visited[nr][nc]:
-                    if tile_map[nr][nc] != TileType.WALL.value:
-                        visited[nr][nc] = True
-                        queue.append((nr, nc))
+
+            for dx, dy in directions:
+                nx, ny = cx + dx, cy + dy
+                if 0 <= nx < width and 0 <= ny < height:
+                    if not visited[ny][nx] and tile_layer[ny][nx] == TileType.GROUND:
+                        visited[ny][nx] = True
+                        queue.append((nx, ny))
+
         return False
 
-
-# ============================================================
-# 5. 模板保存加载测试
-# ============================================================
-
-class TestTemplateSaveLoad:
-    """模板保存加载测试"""
-
-    @pytest.fixture
-    def temp_json_path(self, tmp_path):
-        """返回一个临时 JSON 文件路径"""
-        return tmp_path / "test_map_template.json"
-
-    def test_save_result_to_json(self, default_generator, temp_json_path):
-        """生成结果应能保存为 JSON 文件"""
-        result = default_generator.generate()
-        data = {
-            "algorithm": result.algorithm,
-            "rows": len(result.tile_map),
-            "cols": len(result.tile_map[0]),
-            "tile_map": result.tile_map,
-            "start": list(result.start),
-            "end": list(result.end),
-            "rooms": [
-                {
-                    "room_id": r.room_id,
-                    "x": r.x,
-                    "y": r.y,
-                    "width": r.width,
-                    "height": r.height,
-                    "room_type": r.room_type,
-                }
-                for r in result.room_list
-            ],
-        }
-        with open(temp_json_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-
-        assert temp_json_path.exists()
-        assert temp_json_path.stat().st_size > 0
-
-    def test_load_result_from_json(self, default_generator, temp_json_path):
-        """从 JSON 文件加载的数据应与保存前一致"""
-        result = default_generator.generate()
-
-        # 保存
-        data = {
-            "algorithm": result.algorithm,
-            "rows": len(result.tile_map),
-            "cols": len(result.tile_map[0]),
-            "tile_map": result.tile_map,
-            "start": list(result.start),
-            "end": list(result.end),
-            "rooms": [
-                {
-                    "room_id": r.room_id,
-                    "x": r.x,
-                    "y": r.y,
-                    "width": r.width,
-                    "height": r.height,
-                    "room_type": r.room_type,
-                }
-                for r in result.room_list
-            ],
-        }
-        with open(temp_json_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-
-        # 加载
-        with open(temp_json_path, "r", encoding="utf-8") as f:
-            loaded_data = json.load(f)
-
-        # 验证
-        assert loaded_data["algorithm"] == result.algorithm
-        assert loaded_data["rows"] == len(result.tile_map)
-        assert loaded_data["cols"] == len(result.tile_map[0])
-        assert loaded_data["tile_map"] == result.tile_map
-        assert tuple(loaded_data["start"]) == result.start
-        assert tuple(loaded_data["end"]) == result.end
-        assert len(loaded_data["rooms"]) == len(result.room_list)
-
-    def test_save_load_round_trip(self, default_generator, temp_json_path):
-        """保存后再加载，重新构建的地图应与原图一致"""
-        result = default_generator.generate()
-
-        # 保存
-        data = {
-            "tile_map": result.tile_map,
-            "start": list(result.start),
-            "end": list(result.end),
-        }
-        with open(temp_json_path, "w", encoding="utf-8") as f:
-            json.dump(data, f)
-
-        # 加载
-        with open(temp_json_path, "r", encoding="utf-8") as f:
-            loaded = json.load(f)
-
-        # 重建
-        reconstructed_map = loaded["tile_map"]
-        reconstructed_start = tuple(loaded["start"])
-        reconstructed_end = tuple(loaded["end"])
-
-        assert reconstructed_map == result.tile_map
-        assert reconstructed_start == result.start
-        assert reconstructed_end == result.end
+    def _collect_trap_data(
+        self, tile_layer: list[list[int]], width: int, height: int
+    ) -> list[TrapData]:
+        """收集所有陷阱地块数据"""
+        trap_data = []
+        trap_id = 4001
+        for y in range(height):
+            for x in range(width):
+                if tile_layer[y][x] == TileType.TRAP_TILE:
+                    # 根据难度等级计算伤害
+                    damage = 5 * self.config.difficultyLevel
+                    trap_data.append(TrapData(id=trap_id, x=x, y=y, damage=damage))
+                    trap_id += 1
+        return trap_data
 
 
 # ============================================================
-# 6. 超大地图性能测试
+# 7. 工厂模式
 # ============================================================
 
-class TestLargeMapPerformance:
-    """超大地图性能测试"""
+class GeneratorFactory:
+    """
+    生成器工厂，负责注册和创建各类地图生成算法实例。
+    采用工厂模式，四种算法完全解耦。
+    """
 
-    @pytest.mark.parametrize("rows,cols,timeout", [
-        (50, 50, 2.0),
-        (100, 100, 5.0),
-        (200, 200, 10.0),
-    ])
-    def test_large_map_generation_time(self, rows, cols, timeout):
-        """超大地图生成应在规定时间内完成"""
-        gen = GridRandom(rows=rows, cols=cols, wall_ratio=0.3, trap_max_ratio=0.1, seed=42)
-        start_time = time.time()
-        result = gen.generate()
-        elapsed = time.time() - start_time
+    _generators: dict[str, type[BaseGenerator]] = {}
 
-        assert elapsed < timeout, f"生成 {rows}x{cols} 地图耗时 {elapsed:.3f}s，超过 {timeout}s"
-        assert len(result.tile_map) == rows
-        assert len(result.tile_map[0]) == cols
+    @classmethod
+    def register(cls, algorithm_type: str, generator_cls: type[BaseGenerator]) -> None:
+        """注册生成器类"""
+        cls._generators[algorithm_type] = generator_cls
 
-    def test_large_map_path_reachable(self):
-        """超大地图起点到终点仍应可达"""
-        gen = GridRandom(rows=100, cols=100, wall_ratio=0.3, trap_max_ratio=0.1, seed=42)
-        result = gen.generate()
-        assert TestBFSRetry._bfs_check(result.tile_map, result.start, result.end), "超大地图不可达"
+    @classmethod
+    def create(
+        cls,
+        algorithm_type: str,
+        config: MapBasicConfig,
+        seed: Optional[str | int] = None,
+    ) -> BaseGenerator:
+        """创建生成器实例"""
+        if algorithm_type not in cls._generators:
+            raise ValueError(f"Unknown algorithm type: {algorithm_type}. "
+                             f"Available: {list(cls._generators.keys())}")
+        return cls._generators[algorithm_type](config, seed)
+
+    @classmethod
+    def available_algorithms(cls) -> list[str]:
+        """返回所有已注册的算法类型列表"""
+        return list(cls._generators.keys())
 
 
-# ============================================================
-# 7. 压测：1000 次连续生成稳定性
-# ============================================================
-
-class TestStressTest:
-    """压测：1000 次连续生成稳定性"""
-
-    @pytest.mark.slow
-    def test_1000_consecutive_generations(self):
-        """连续生成 1000 次，验证稳定性和正确性"""
-        for i in range(1000):
-            gen = GridRandom(
-                rows=10, cols=10,
-                wall_ratio=0.3, trap_max_ratio=0.1,
-                seed=i  # 每次使用不同种子
-            )
-            result = gen.generate()
-
-            # 基本正确性校验
-            assert len(result.tile_map) == 10
-            assert len(result.tile_map[0]) == 10
-            assert result.start == (0, 0)
-            assert result.end == (9, 9)
-            assert result.tile_map[0][0] == TileType.START.value
-            assert result.tile_map[9][9] == TileType.END.value
-
-            # 通路校验
-            assert TestBFSRetry._bfs_check(result.tile_map, result.start, result.end), \
-                f"seed={i} 生成的地图不可达"
-
-    @pytest.mark.slow
-    def test_1000_generations_performance(self):
-        """1000 次连续生成的总耗时应在合理范围内"""
-        start_time = time.time()
-        for i in range(1000):
-            gen = GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=i)
-            gen.generate()
-        elapsed = time.time() - start_time
-        # 每次生成平均不超过 0.1 秒
-        assert elapsed < 100.0, f"1000 次生成总耗时 {elapsed:.3f}s，平均每次 {elapsed/1000:.3f}s"
+# 注册网格随机算法
+GeneratorFactory.register(AlgorithmTypeEnum.GridRandom, GridRandomGenerator)
 
 
 # ============================================================
-# 8. 非法参数容错测试
+# 8. 对外接口
 # ============================================================
 
-class TestInvalidParameters:
-    """非法参数容错测试"""
+def GenerateMap(
+    algorithm_type: Optional[str] = None,
+    config: Optional[MapBasicConfig] = None,
+    seed: Optional[str | int] = None,
+) -> MapFullData:
+    """
+    生成地图的对外接口。
+    
+    Args:
+        algorithm_type: 算法类型，可选，不传使用默认算法 (GridRandom)
+        config: 地图配置，可选，不传使用默认配置
+        seed: 随机种子，可选，不传自动生成
+        
+    Returns:
+        MapFullData: 完整地图数据
+    """
+    if algorithm_type is None:
+        algorithm_type = AlgorithmTypeEnum.GridRandom
 
-    @pytest.mark.parametrize("rows,cols", [
-        (0, 10),      # rows 为 0
-        (10, 0),      # cols 为 0
-        (-1, 10),     # rows 为负数
-        (10, -5),     # cols 为负数
-        (0, 0),       # 均为 0
-    ])
-    def test_invalid_map_size(self, rows, cols):
-        """非法地图尺寸应抛出异常"""
-        with pytest.raises((ValueError, IndexError, RecursionError)):
-            gen = GridRandom(rows=rows, cols=cols, wall_ratio=0.3, trap_max_ratio=0.1, seed=42)
-            gen.generate()
+    if config is None:
+        config = MapBasicConfig()
 
-    @pytest.mark.parametrize("wall_ratio", [
-        -0.1,   # 负数
-        1.5,    # 大于 1
-        -1.0,   # 负整数
-    ])
-    def test_invalid_wall_ratio(self, wall_ratio):
-        """非法墙壁比例应抛出异常"""
-        with pytest.raises((ValueError, AssertionError)):
-            gen = GridRandom(rows=10, cols=10, wall_ratio=wall_ratio, trap_max_ratio=0.1, seed=42)
-            gen.generate()
+    generator = GeneratorFactory.create(algorithm_type, config, seed)
+    return generator.generate()
 
-    @pytest.mark.parametrize("trap_max_ratio", [
-        -0.1,   # 负数
-        1.5,    # 大于 1
-        -0.5,   # 负数
-    ])
-    def test_invalid_trap_ratio(self, trap_max_ratio):
-        """非法陷阱比例应抛出异常"""
-        with pytest.raises((ValueError, AssertionError)):
-            gen = GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=trap_max_ratio, seed=42)
-            gen.generate()
 
-    def test_non_integer_dimensions(self):
-        """非整数尺寸应抛出 TypeError"""
-        with pytest.raises(TypeError):
-            GridRandom(rows="10", cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=42)
-
-        with pytest.raises(TypeError):
-            GridRandom(rows=10, cols=10.5, wall_ratio=0.3, trap_max_ratio=0.1, seed=42)
-
-    def test_non_float_ratios(self):
-        """非浮点比例应抛出 TypeError"""
-        with pytest.raises(TypeError):
-            GridRandom(rows=10, cols=10, wall_ratio="0.3", trap_max_ratio=0.1, seed=42)
-
-        with pytest.raises(TypeError):
-            GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio="0.1", seed=42)
-
-    def test_unknown_algorithm_type(self):
-        """未知算法类型应抛出 ValueError"""
-        with pytest.raises(ValueError):
-            GeneratorFactory.create_generator("UnknownAlgorithm", rows=10, cols=10)
+def SetMapBasicConfig(config: dict) -> MapBasicConfig:
+    """
+    设置地图基本配置。
+    
+    Args:
+        config: 配置字典
+        
+    Returns:
+        MapBasicConfig: 校验后的配置对象
+    """
+    return MapBasicConfig(**config)
 
 
 # ============================================================
-# 组合测试：多维度参数组合
-# ============================================================
-
-class TestParameterCombinations:
-    """多维度参数组合测试"""
-
-    @pytest.mark.parametrize("rows,cols,wall_ratio,trap_max_ratio", [
-        (5, 5, 0.2, 0.05),
-        (10, 15, 0.3, 0.1),
-        (20, 10, 0.4, 0.15),
-        (15, 20, 0.25, 0.2),
-        (8, 12, 0.35, 0.08),
-    ])
-    def test_various_parameter_combinations(self, rows, cols, wall_ratio, trap_max_ratio):
-        """多种参数组合下生成应正确"""
-        gen = GridRandom(
-            rows=rows, cols=cols,
-            wall_ratio=wall_ratio, trap_max_ratio=trap_max_ratio,
-            seed=42
-        )
-        result = gen.generate()
-
-        assert len(result.tile_map) == rows
-        assert len(result.tile_map[0]) == cols
-        assert result.start == (0, 0)
-        assert result.end == (rows - 1, cols - 1)
-        assert TestBFSRetry._bfs_check(result.tile_map, result.start, result.end)
-
-    def test_different_seeds_same_parameters(self):
-        """相同参数不同种子，地图结构应不同但都合法"""
-        results = []
-        for seed in range(10):
-            gen = GridRandom(rows=10, cols=10, wall_ratio=0.3, trap_max_ratio=0.1, seed=seed)
-            result = gen.generate()
-            results.append(result)
-
-            # 每个结果都应合法
-            assert TestBFSRetry._bfs_check(result.tile_map, result.start, result.end)
-
-        # 至少应有部分地图不同
-        maps = [r.tile_map for r in results]
-        unique_maps = set(tuple(tuple(row) for row in m) for m in maps)
-        assert len(unique_maps) > 1, "所有种子生成的地图完全相同"
-
-
-# ============================================================
-# 入口
+# 9. 主程序入口 / 示例
 # ============================================================
 
 if __name__ == "__main__":
-    pytest.main(["-v", "--tb=short", __file__])
+    # 示例：使用默认配置生成地图
+    print("=== 使用默认配置生成网格随机地图 ===")
+    result = GenerateMap(seed="hello_map")
+    print(f"种子: {result.seed}")
+    print(f"地图尺寸: {result.mapWidth}x{result.mapHeight}")
+    print(f"起点: ({result.startPos.x}, {result.startPos.y})")
+    print(f"终点: ({result.endPos.x}, {result.endPos.y})")
+    print(f"生成耗时: {result.generateCostMs}ms")
+    print(f"重试次数: {result.retryCount}")
+    print(f"通路校验: {'通过' if result.checkPass else '失败'}")
+    print(f"陷阱数量: {len(result.trapData)}")
+    print(f"地图数据 (前5行):")
+    for row in result.tileLayer[:5]:
+        print(f"  {row}")
+
+    # 示例：自定义配置
+    print("\n=== 自定义配置生成地图 ===")
+    custom_config = MapBasicConfig(
+        width=30,
+        height=30,
+        wallRatio=20,
+        trapMaxRatio=10,
+        difficultyLevel=3,
+    )
+    result2 = GenerateMap(
+        algorithm_type="GridRandom",
+        config=custom_config,
+        seed=12345,
+    )
+    print(f"种子: {result2.seed}")
+    print(f"地图尺寸: {result2.mapWidth}x{result2.mapHeight}")
+    print(f"通路校验: {'通过' if result2.checkPass else '失败'}")
+
+    # 示例：确定性复现（相同种子生成相同地图）
+    print("\n=== 确定性复现验证 ===")
+    r1 = GenerateMap(seed="test_seed")
+    r2 = GenerateMap(seed="test_seed")
+    print(f"两次生成 tileLayer 相同: {r1.tileLayer == r2.tileLayer}")
+
+    # 示例：输出 JSON
+    print("\n=== 地图 JSON 输出 (部分) ===")
+    json_str = result.model_dump_json(indent=2)
+    # 只打印前 500 字符
+    print(json_str[:500] + "...")

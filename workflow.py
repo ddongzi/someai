@@ -27,7 +27,8 @@ from human_node import human_node
 from globals import GitAction
 import logging
 from pyright_node import pyright_node
-logger = logging.getLogger(__name__)
+from logger import run_logger
+
 from ready_node import ready_node
 from qa_node import qa_node
 from utils import draw_workflow_png
@@ -61,7 +62,7 @@ class MyWorkflow:
                     return "test_code_patcher"
                 if 'human' in issue_buckets.keys():
                     return "design_patcher"
-                logger.warning(f"Unexpected issue assign: {issue_buckets.keys()}")
+                run_logger.warning(f"Unexpected issue assign: {issue_buckets.keys()}")
                 return 'dropped'
             else:
                 return "dropped"
