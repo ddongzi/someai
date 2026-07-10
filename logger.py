@@ -3,7 +3,8 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 import sys
-def get_file_logger(logger_name: str, filename: str, log_dir: str = 'logs', level=logging.INFO, backup_count: int = 1) -> logging.Logger:
+def get_file_logger(logger_name: str, filename: str, log_dir: str = 'logs', 
+                    level=logging.INFO, backup_count: int = 1, so:bool = False) -> logging.Logger:
     """
     创建并返回一个仅输出到文件的日志对象（自动按天切分，不打印到控制台）。
     
@@ -12,7 +13,8 @@ def get_file_logger(logger_name: str, filename: str, log_dir: str = 'logs', leve
     log_dir: 日志文件存放的目录路径
     filename: 日志文件名（如 'sse_stream.log'）
     level: 日志级别，默认为 logging.INFO
-    backup_count: 历史日志保留天数，默认为 1 天
+    backup_count: 历史日志保留天数，默认为 1 天,
+    so: 是否终端输出
     """
     # 1. 获取或创建 run_logger 实例
     run_logger = logging.getLogger(logger_name)
@@ -46,18 +48,20 @@ def get_file_logger(logger_name: str, filename: str, log_dir: str = 'logs', leve
     # 6. 将 handler 绑定到 run_logger
     run_logger.addHandler(file_handler)
 
-    # 终端也能输出
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(formatter)
-    run_logger.addHandler(console_handler)
-    
+    if so:
+        # 终端也能输出
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        run_logger.addHandler(console_handler)
+        
     return run_logger
 
 
 run_logger = get_file_logger(
     logger_name='run',
     log_dir='./logs',
-    filename='run.log'
+    filename='run.log',
+    so=True
 )
 sse_logger = get_file_logger(
     logger_name='sse',

@@ -4,12 +4,24 @@ from langchain.tools import tool
 @tool
 def apply_search_replace(original: str, diff: str) -> str:
     """
-    使用SEARCH/REPLACE 块来修改文本。
+    使用 SEARCH/REPLACE 块来精确修改目标文本。
     
     参数:
-    original: 需要被修改的完整原始字符串。
-    diff: 包含一个或多个 <<<<<<< SEARCH ... ======= ... >>>>>>> REPLACE 格式的文本块。
+    original (str): 需要被修改的完整原始字符串。
+    diff (str): 包含一个或多个差异比对块的文本，格式如下：
+        <<<<<<< SEARCH
+        [需要被替换的精确原始文本]
+        =======
+        [替换后的新文本]
+        >>>>>>> REPLACE
+
+    返回:
+    str: 修改完成后的完整新字符串。
+
+    异常:
+    ValueError: 当 SEARCH 块在原始文本中不存在、或存在多次导致歧义时抛出。
     """
+
     # 匹配 SEARCH/REPLACE 块，允许块前后有任意空白或换行
     pattern = r"<<<<<<< SEARCH\s*\n([\s\S]*?)\n\s*=======\s*\n([\s\S]*?)\n\s*>>>>>>> REPLACE"
     matches = re.findall(pattern, diff)
