@@ -4,19 +4,19 @@ from langchain_community.cache import SQLiteCache
 from tools.search_replace_tool import apply_search_replace
 from tools.ast import ast_search
 from tools.pyright_client import find_symbol_definition, find_symbol_references
-from tools.filer import read_file, create_file,inspect_project
+from tools.filer import read_file, create_file,inspect_project,write_to_file
 from tools.git import git_tool
 from tools.rag import knowledge_search
 from langchain_deepseek import ChatDeepSeek
 from langchain_ollama import ChatOllama
 import os
 from logging import Logger
-# set_llm_cache(SQLiteCache())
-set_llm_cache(InMemoryCache())
+set_llm_cache(SQLiteCache())
+# set_llm_cache(InMemoryCache())
 
 deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
 
-tools = [git_tool, knowledge_search, 
+tools = [git_tool, knowledge_search, write_to_file,
           apply_search_replace,ast_search,inspect_project,
           find_symbol_references, find_symbol_definition, 
           read_file, create_file]

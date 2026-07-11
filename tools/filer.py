@@ -96,7 +96,6 @@ def create_file(file_path: str, content: str, description:str, runtime:ToolRunti
     参数:
         file_path: 位于项目内部的相对文件路径。
             注意：请直接写文件名或内部子路径，绝对不要包含项目路径
-              正确示例: 'core/main.py', 'test.py'
         content: 写入文件的初始文本内容。
         description: 文件用途描述
         runtime (ToolRuntime): 工具执行时的运行时上下文对象。参数会自动注入
@@ -113,7 +112,7 @@ def create_file(file_path: str, content: str, description:str, runtime:ToolRunti
             
         # 3. 冲突检查：防止意外覆盖已有文件
         if target_path.exists():
-            return f"错误：文件 '{file_path}' 已经存在。如果需要修改内容，请使用相应的更新/写入工具。"
+            return f"错误：文件 '{file_path}' 已经存在。"
             
         # 4. 自动创建父级文件夹（例如传入 'core/main.py' 时自动创建 'core' 目录）
         target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -131,12 +130,12 @@ def create_file(file_path: str, content: str, description:str, runtime:ToolRunti
                 'file_ledger': {
                     mt["path"] : mt
                 },
-                'messages': {
+                'messages': [
                     ToolMessage(
                         content=f"成功：文件 '{file_path}' 已成功创建，并写入了 {len(content)} 个字符。",
                         tool_call_id=runtime.tool_call_id,
                     )
-                }
+                ]
             }
         )
         
@@ -366,12 +365,12 @@ def delete_files(file_paths: Union[str, List[str]], reason: str,state: Annotated
     return Command(
         update={
             'file_ledger': new_file_ledger,
-            'messages': {
+            'messages': [
                     ToolMessage(
                         content='\n'.join(report),
                         tool_call_id=runtime.tool_call_id,
                     )
-                }
+            ]
         }
     )
 
