@@ -4,10 +4,10 @@
 """
 import os
 import json
-from globals import GraphState
 import subprocess
-from logger import run_logger
-
+from globals.state import GraphState, Issue
+from globals.llm import llm,call_llm
+from globals.logger import run_logger
 
 def _do_pyright(code:str) -> dict:
     temp_file = './temp/pyright_code.py'
@@ -50,12 +50,12 @@ def pyright_node(state: GraphState) -> dict:
     """Pyright 静态检查节点, 支持各类coder, test_writer"""
     run_logger.info(f"[pyright] 静态检查....")
     result = {}
-    if 'code' in state['pyright_target']:
+    if 'coder_graph' in state['pyright_target']:
         errors = _do_pyright(state['code'])
         if not errors:
             result['code'] = errors
 
-    if 'test_code' in state['pyright_target']:
+    if 'test_coder_graph' in state['pyright_target']:
         errors = _do_pyright(state['test_code'])
         if not errors:
             result['test_code'] = errors

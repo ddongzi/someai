@@ -5,6 +5,7 @@ import threading
 import queue
 import time
 from pathlib import Path
+from globals.logger import run_logger
 class PyrightLspTool:
     def __init__(self, project_root_path: str):
         self.project_root = os.path.abspath(project_root_path)

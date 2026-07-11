@@ -1,14 +1,15 @@
 # ============================================================
 # Test Judge Node 测试输出 分析判别， 生成issue
 # ============================================================
-from globals import GraphState, Issue,call_llm
 from typing import Dict
 import re
 import uuid
-from globals import llm
 from utils import get_scene_prompt,parse_llm_json
 from langchain_core.messages import SystemMessage, HumanMessage
-from logger import run_logger
+from globals.state import GraphState, Issue
+from globals.llm import llm,call_llm
+from globals.logger import run_logger
+
 def judge_node(state: GraphState) -> Dict:
     run_logger.info("\n⚖️ [Judge] 正在分析失败原因")
     run_logger.info("=" * 60)
@@ -35,15 +36,15 @@ def judge_node(state: GraphState) -> Dict:
         type = issue['type']
         assign = 'unknown'
         if type == 'CODE_BUG':
-            assign = 'coder'
+            assign = 'coder_graph'
         if type == 'TEST_BUG':
-            assign = 'test_coder'
+            assign = 'test_coder_graph'
         if type == "DESIGN_BUG":
-            assign = 'human'
+            assign = 'human_node'
 
         issues.append(Issue(
                 issue_id=uuid.uuid4(),
-                source='judger',
+                source='judge_node',
                 type= issue['type'],
                 review=issue['review'],
                 assign=assign
@@ -51,6 +52,6 @@ def judge_node(state: GraphState) -> Dict:
     return {
         "issues": issues,
         "test_output": '', # 我们已经转化为issue了，所以test_output为空字符串
-        'issue_manager_wait':{'judger'},
+        'issue_manager_wait':{'judge_node'},
         'messages':[full_content]
     }

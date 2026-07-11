@@ -1,8 +1,4 @@
-from globals import (
-    GraphStatus,
-    create_initial_state,
-    get_graph_status,
-)
+from globals.state import create_initial_state
 import asyncio
 from langgraph.types import Command
 import traceback
@@ -12,7 +8,7 @@ import json
 from pprint import pprint
 import logging
 from workflow import MyWorkflow
-from logger import run_logger
+from globals.logger import run_logger
 
 
 

@@ -14,22 +14,21 @@ from datetime import datetime
 from pathlib import Path
 from fastapi.sse import EventSourceResponse
 
-from globals import (
-    GraphStatus,
-    create_initial_state,
-    get_graph_status,
-)
 from langgraph.types import Command
 from collections.abc import AsyncIterable, Iterable
 from fastapi.responses import StreamingResponse
-from logger import run_logger
-
+from globals.logger import run_logger
 import asyncio
 from thread import Thread
 from workflow import MyWorkflow
-from rag.rag import get_knowledge
-from logger import sse_logger
+from tools.rag import get_knowledge
+from utils import get_file_logger
 
+sse_logger = get_file_logger(
+    logger_name='sse',
+    log_dir='./logs',
+    filename='sse.log'
+)
 my_workflow = MyWorkflow()
 knowledge = None
 thread = Thread(workflow=my_workflow)

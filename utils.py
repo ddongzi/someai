@@ -3,6 +3,12 @@ import tiktoken
 import logging
 import json
 
+import os
+from typing import Dict, Any, Tuple
+from langchain_core.messages import SystemMessage, HumanMessage
+import yaml
+from jinja2 import Template
+from langchain_core.prompts import ChatPromptTemplate
 
 def extract_python_code(llm_output: str) -> str:
     # 匹配 ```python 开头，``` 结尾的代码块
@@ -28,7 +34,7 @@ import os
 from pathlib import Path
 
 def draw_workflow_png(graph, name, dir='./art'):
-    from logger import run_logger
+    from globals.logger import run_logger
 
     # 1. 确保目标目录存在，如果不存在则自动创建（包括多层嵌套目录）
     output_dir = Path(dir)
@@ -61,6 +67,8 @@ def calculate_total_tokens_for_pyobj(dict_values: dict, model="gpt-4o") -> int:
     """
     1. 【模型角度】计算当前 Python 字典对象（State）转化为 JSON 文本后的总 token 数量
     """
+    from globals.logger import run_logger
+    
     try:
         # 为了防止某些特殊对象（如 LangChain 的 Message 对象）在 json.dumps 时报错，
         # 可以加上 default=str 将其强转为字符串，确保统计不中断
@@ -129,12 +137,6 @@ def get_first_pending_task(file_path: str ='todo_tasks.json' ) -> dict | None:
         return None
     
 
-import os
-from typing import Dict, Any, Tuple
-from langchain_core.messages import SystemMessage, HumanMessage
-import yaml
-from jinja2 import Template
-from langchain_core.prompts import ChatPromptTemplate
 # 假设你的所有 prompt yaml 文件都放在当前目录的 prompts 文件夹下
 PROMPT_DIR = "./prompts"
 
@@ -189,6 +191,7 @@ def parse_llm_json(llm_output: str):
     """
     清洗并解析 LLM 输出的 JSON 字符串，支持带有 Markdown 标记或前后废话的情况
     """
+    from globals.logger import run_logger
     # 1. 去除两端的空白字符
     text = llm_output.strip()
     
@@ -227,3 +230,60 @@ def json_serializer(obj):
     # 如果实在无法解析，将其转为字符串，防止整个流崩掉
     return str(obj)
 
+
+import os
+import logging
+from logging.handlers import RotatingFileHandler
+import sys
+def get_file_logger(logger_name: str, filename: str, log_dir: str = 'logs', 
+                    level=logging.INFO, backup_count: int = 1, so:bool = False) -> logging.Logger:
+    """
+    创建并返回一个仅输出到文件的日志对象（自动按天切分，不打印到控制台）。
+    
+    参数:
+    logger_name: 日志对象的名称（全局唯一，如 'sse_logger'、'chat_logger'）
+    log_dir: 日志文件存放的目录路径
+    filename: 日志文件名（如 'sse_stream.log'）
+    level: 日志级别，默认为 logging.INFO
+    backup_count: 历史日志保留天数，默认为 1 天,
+    so: 是否终端输出
+    """
+    # 1. 获取或创建 run_logger 实例
+    run_logger = logging.getLogger(logger_name)
+    run_logger.setLevel(level)
+    
+    # ⭐ 核心：关闭日志向父级传播，彻底阻止其打印到控制台
+    run_logger.propagate = False
+
+    # 2. 健壮性检查：如果该 run_logger 已经配置过 handler，直接返回，避免重复添加导致重复打印
+    if run_logger.handlers:
+        return run_logger
+
+    # 3. 自动创建不存在的日志目录
+    os.makedirs(log_dir, exist_ok=True)
+    log_file_path = os.path.join(log_dir, filename)
+
+    file_handler = RotatingFileHandler(
+        log_file_path, 
+        maxBytes=0, 
+        backupCount=backup_count, 
+        encoding="utf-8"
+    )
+        # 2. 【核心】如果日志文件已经存在，说明是上次运行留下的，立即强制切分
+    if os.path.exists(log_file_path) and os.path.getsize(log_file_path) > 0:
+        file_handler.doRollover()
+    # 5. 设置统一的日志格式
+
+    formatter = logging.Formatter('%(asctime)s [%(levelname)s] [%(name)s] [%(filename)s:%(lineno)d] %(message)s')
+    file_handler.setFormatter(formatter)
+    
+    # 6. 将 handler 绑定到 run_logger
+    run_logger.addHandler(file_handler)
+
+    if so:
+        # 终端也能输出
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        run_logger.addHandler(console_handler)
+        
+    return run_logger

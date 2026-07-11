@@ -1,8 +1,10 @@
 from langgraph.types import interrupt
-from globals import GraphState,GitAction, MAX_ATTAMPTS
 from typing import Dict
 from tools.git import git_tool
-from logger import run_logger
+from globals import MAX_ATTAMPTS
+from globals.state import GraphState, Issue
+from globals.llm import llm,call_llm
+from globals.logger import run_logger
 
 def human_node(state: GraphState) -> Dict:
     run_logger.info(f"进入人工干预节点, {state['attempts']}")
@@ -18,8 +20,8 @@ def human_node(state: GraphState) -> Dict:
         run_logger.info(f"人工干预输入: {human_input}")
         return {}
     
-    if  state['issue_buckets'].get('human', []):
-        tip = f'有issue相关问题。{state['issue_buckets']['human']}. 请修改设计相关部分部文档，或其他未知。然后会自动结束此次流程。重新运行。'
+    if  state['issue_buckets'].get('human_node', []):
+        tip = f'有issue相关问题。{state['issue_buckets']['human_node']}. 请修改设计相关部分部文档，或其他未知。然后会自动结束此次流程。重新运行。'
         human_input = interrupt({
             'tip': tip,
             'type': 'modify_design',
@@ -28,7 +30,7 @@ def human_node(state: GraphState) -> Dict:
         run_logger.info(f"人工干预输入: {human_input}")
         return {
             'issue_buckets': {
-                'human':[]
+                'human_node':[]
             }
         }
 
@@ -41,7 +43,7 @@ def human_node(state: GraphState) -> Dict:
         })
         if human_input == 'approved':
             git_tool.invoke({
-                'action': GitAction.commit,
+                'action': 'commit',
                     'reason': 'Human approved, commit.',
                     'target': ''
             })

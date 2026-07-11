@@ -1,10 +1,10 @@
-from rag.rag import get_knowledge
-from globals import GraphState
+from tools.rag import get_knowledge
 from typing import Dict
 from tools.git import git_tool
 from utils import get_first_pending_task
-from logger import run_logger
-
+from globals.state import GraphState, Issue, FileMetadata
+from globals.logger import run_logger
+from globals.llm import llm,call_llm
 prod_file_path = "prod.md"
 spec_file_path = "spec.md"
 dd_file_path = "dd.md"
@@ -25,8 +25,23 @@ def ready_node(state: GraphState) -> Dict:
     run_logger.info(f'git result: {result}')
     # 设置requirement
     task = get_first_pending_task()
-    state['requirement'] = task['description']
+
+    # file_ledger
+    app_meta = FileMetadata(
+        path='app.py',
+        description='应用主文件.',
+        permission='none'
+    )
+    test_meta = FileMetadata(
+        path='test.py',
+        description='测试文件.',
+        permission='none'
+    )
 
     return {
-        'requirement': state['requirement']
+        'requirement': task['description'],
+        'file_ledger':{
+            app_meta['path']: app_meta,
+            test_meta['path']: test_meta
+        }
     }

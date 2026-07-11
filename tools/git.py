@@ -10,9 +10,9 @@ from dotenv import load_dotenv
 from enum import Enum
 from langchain.tools import tool
 from typing import Optional
+from globals.logger import run_logger
 load_dotenv()
 project_path = os.getenv("PROJECT_PATH", os.getcwd())
-from logger import run_logger
 
 branch_name = 'ai'
 class GitAction(str, Enum):

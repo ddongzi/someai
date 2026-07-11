@@ -5,10 +5,10 @@ from pymilvus import MilvusClient, DataType,AnnSearchRequest, RRFRanker
 from FlagEmbedding import BGEM3FlagModel
 from langchain_core.documents import Document
 from langchain_text_splitters import MarkdownHeaderTextSplitter,RecursiveCharacterTextSplitter
-
+from typing import List
 from tools import web_search
 
-from logger import run_logger
+from globals.logger import run_logger
 
 URI = "./knowledge.db"
 
@@ -51,6 +51,7 @@ class KnowledgeManager:
             run_logger.warning("Milvus 不可用，跳过初始化")
             return
         if self.client.has_collection(collection_name=self.collection_name):
+            run_logger.info(f'drop: {self.collection_name} ...')
             self.client.drop_collection(collection_name=self.collection_name)
 
         if not self.client.has_collection(collection_name=self.collection_name):
@@ -94,21 +95,20 @@ class KnowledgeManager:
         self.client.load_collection(collection_name=self.collection_name)
 
 
-    def search_hybrid(self, query: str, k: int = 5):
+    def search_hybrid(self, queries: List[str], k: int = 5):
         """只进行混合搜索"""
         if not self.client or not self.embedding:
-            run_logger.warning(f"Milvus 不可用，无法搜索: {query}")
+            run_logger.warning(f"Milvus 不可用，无法搜索: {queries}")
             return []
             
         try:
             # 1. 同时生成查询词的 稠密 和 稀疏 向量
-            vec = self.embedding.encode(query, return_dense=True, return_sparse=True)
-            dense_vec = vec['dense_vecs'].tolist()
-            sparse_vec = vec["lexical_weights"]
+            vec = self.embedding.encode(queries, return_dense=True, return_sparse=True)
+            dense_vec,sparse_vec = vec['dense_vecs'], vec["lexical_weights"]
             
             # 2. 构建稠密向量（语义）检索请求
             req_dense = AnnSearchRequest(
-                data=[dense_vec], 
+                data=dense_vec, 
                 anns_field="dense_vec", 
                 param={"metric_type": "COSINE"}, 
                 limit=k * 2  # 放大召回范围供后续融合
@@ -116,7 +116,7 @@ class KnowledgeManager:
             
             # 3. 构建稀疏向量（关键词/Header）检索请求
             req_sparse = AnnSearchRequest(
-                data=[sparse_vec], 
+                data=sparse_vec, 
                 anns_field="sparse_vec", 
                 param={"metric_type": "IP"}, 
                 limit=k * 2
@@ -180,7 +180,7 @@ class KnowledgeManager:
             return
             
         try:
-            run_logger.info(f'add text !{source}, {type}')
+            run_logger.info(f'add text. {source}, {type}')
             md_chunks = self.md_text_splitter.split_text(text=text)
             
             # 组装符合 MilvusClient 格式的字典列表
@@ -208,10 +208,10 @@ class KnowledgeManager:
     # =====================================================
     # Hybrid Search 逻辑优化
     # =====================================================
-    def retrieve(self, query: str, local_k: int = 5) -> list[Document]:
+    def retrieve(self,queries: List[str], local_k: int = 5) -> list[Document]:
         """检索文档"""
             
-        docs = self.search_hybrid(query=query, k=local_k)
+        docs = self.search_hybrid(queries=queries, k=local_k)
         run_logger.info(f"本地检索到 {len(docs)} 条相关文档")
         
         return docs
@@ -240,24 +240,27 @@ def get_knowledge():
 
 
 @tool
-def knowledge_search(query: str) -> str:
+def knowledge_search(queries: List[str]) -> str:
     """
-    在 CodeTeam 内部技术知识库中检索开发文档、API 接口说明及架构设计方案。
+    在内部技术知识库中检索开发文档、API 接口说明及架构设计方案。
     
-    当用户询问团队内部的接口定义、部署流程、代码规范、组件使用方法
-    或历史技术沉淀时，应调用此工具获取权威解答。
-
     Args:
-        query (str): 针对开发文档的检索词。应包含具体的组件名、接口名或技术关键字。
+        queries (List[str]):  一些检索词句
 
     Returns:
         str: 包含相关文档片段、MDN/内部链接及代码示例的 Markdown 或 JSON 字符串。
+
+    Note：
+        1. 不要过度依赖：知识库仅提供了一些部分关键要求。有一些细节内容知识库可能没有收录，应该由外部合理推导。
+        2. 禁止重复检索：不要使用相似的query多次检索，而应该使用过往的查询记录。
+        3. 优质的查询：检索知识库是耗时操作，应该尽可能组织优质的queries一次查询出来,避免多次查询.
     """
+
     run_logger.info('knowledge_search tool called..')
     knowledge = get_knowledge()  # 确保知识库已初始化
 
     try:
-        docs = knowledge.retrieve(query=query)
+        docs = knowledge.retrieve(queries=queries)
         if not docs:
             return "未找到相关知识。"
         return "\n\n".join(doc.get("text", doc) if isinstance(doc, dict) else doc.page_content for doc in docs[:5])
@@ -265,51 +268,61 @@ def knowledge_search(query: str) -> str:
         run_logger.error(f"搜索失败: {e}")
         return "搜索失败，请稍后重试。"
 
+
+
+
 # with open('./prod.md', mode='r') as f:
 #     content = f.read()
+#     knowledge = get_knowledge()
 #     knowledge.add_text(content, 'prod.md', 'local')
-#     docs = knowledge.retrieve(query='实现网格随机算法')
-#     run_logger.info(docs)
+#     result = knowledge.retrieve(
+#         queries=[
+#                 '算法',
+#                 'seed',
+#                 '怪物生成'
+#         ]
+#     )
+#     print(result)
+# # 直接调用来加载知识。
+# import argparse
 
-# 直接调用来加载知识。
-import argparse
-
-if __name__ == "__main__":
-    # 1. 创建参数解析器
-    parser = argparse.ArgumentParser(description="CodeTeam 知识库本地文件导入工具")
+# if __name__ == "__main__":
     
-    # 2. 添加必填的文件路径参数
-    parser.add_argument(
-        'file_path', 
-        type=str, 
-        help='要导入的 Markdown 文件路径 (例如: ./prod.md)'
-    )
+#     # 1. 创建参数解析器
+#     parser = argparse.ArgumentParser(description="CodeTeam 知识库本地文件导入工具")
     
-    # 解析命令行参数
-    args = parser.parse_args()
+#     # 2. 添加必填的文件路径参数
+#     parser.add_argument(
+#         'file_path', 
+#         type=str, 
+#         help='要导入的 Markdown 文件路径 (例如: ./prod.md)'
+#     )
+    
+#     # 解析命令行参数
+#     args = parser.parse_args()
 
-    # 3. 校验文件是否存在
-    if not os.path.exists(args.file_path):
-        run_logger.error(f"文件未找到: {args.file_path}")
-        exit(1)
+#     # 3. 校验文件是否存在
+#     if not os.path.exists(args.file_path):
+#         run_logger.error(f"文件未找到: {args.file_path}")
+#         exit(1)
 
-    # 4. 自动获取文件名（例如从 './docs/prod.md' 中提取出 'prod.md'）
-    file_name = os.path.basename(args.file_path)
+#     # 4. 自动获取文件名（例如从 './docs/prod.md' 中提取出 'prod.md'）
+#     file_name = os.path.basename(args.file_path)
 
-    try:
-        # 5. 初始化知识库并读取文件
-        knowledge = get_knowledge()
+#     try:
+#         # 5. 初始化知识库并读取文件
+#         knowledge = get_knowledge()
         
-        with open(args.file_path, mode='r', encoding='utf-8') as f:
-            content = f.read()
+#         with open(args.file_path, mode='r', encoding='utf-8') as f:
+#             content = f.read()
             
-            # 动态传入文件内容和文件名
-            knowledge.add_text(content, file_name, 'local')
-            run_logger.info(f"成功将文件 [{file_name}] 加载到知识库！")
+#             # 动态传入文件内容和文件名
+#             knowledge.add_text(content, file_name, 'local')
+#             run_logger.info(f"成功将文件 [{file_name}] 加载到知识库！")
             
-            # 测试检索效果
-            docs = knowledge.retrieve(query='实现网格随机算法')
-            run_logger.info(f"检索测试结果: {docs}")
+#             # 测试检索效果
+#             docs = knowledge.retrieve(query='实现网格随机算法')
+#             run_logger.info(f"检索测试结果: {docs}")
             
-    except Exception as e:
-        run_logger.error(f"加载知识库失败: {str(e)}")
+#     except Exception as e:
+#         run_logger.error(f"加载知识库失败: {str(e)}")

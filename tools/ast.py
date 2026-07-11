@@ -2,8 +2,9 @@ import ast
 import os
 from typing import Dict, List, Any, Optional
 import logging
-from logger import run_logger
+from pathlib import Path
 
+GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 class ASTNodeType:
     """
     AST 节点类型.
@@ -219,16 +220,22 @@ def ast_search(file_path:str, name, type, **kwargs) -> dict:
     在指定的 Python 文件中，搜索特定类型-名字的 代码片段信息。
     
     Args:
-        file_path (str): 目标 Python 文件的绝对或相对路径。
+        file_path: 位于项目内部的相对文件路径。
+            注意：请直接写文件名或内部子路径，绝对不要包含项目路径
+                正确示例: 'test.py', 'src/utils.py'
+                错误示例: 'generated/test.py'
         name (str): 想要查找标识名（例如 'get_user'）。
         type (str): 标识名的类型，可选值包括: 'async_function', 'global_variable', 'function', 'class','import','from_import','executable_statement'
         **kwargs: 可选参数        
     Returns:
         Dict: 返回包含匹配的字典，字典包含 name, type, start_line, end_line, docstring 等字段。
     """
+    base_path = Path(GENERATED_DIR).resolve()
+    target_path = Path(base_path, file_path).resolve()
+        
     # cache
     # 1. 传入待解析的文件
-    formatter = ASTParser(file_path=file_path)
+    formatter = ASTParser(file_path=target_path)
 
     # 2. 转换为全结构化 JSON
     result_json = formatter.to_structured_json()
@@ -271,47 +278,9 @@ def ast_search(file_path:str, name, type, **kwargs) -> dict:
 
     return search_result
 
-
-import linecache
-import os
-from typing import List
-
-def read_file_lines(filepath: str, start_line: int, end_line: int) -> List[str]:
-    """
-    读取指定文件中 [start_line, end_line] 区间内的所有行（闭区间，基于 1 开始计数）。
-    
-    Args:
-        filepath (str): 文件的路径。
-        start_line (int): 起始行号（从 1 开始）。
-        end_line (int): 结束行号（包含该行）。
-        
-    Returns:
-        List[str]: 包含读取到的每行内容的字符串列表。
-    """
-    # 基础边界安全检查
-    if not os.path.exists(filepath):
-        raise FileNotFoundError(f"找不到文件: {filepath}")
-    if start_line < 1 or end_line < start_line:
-        return []
-    
-    lines = []
-    # linecache.getline 是从 1 开始计数的
-    for line_num in range(start_line, end_line + 1):
-        line = linecache.getline(filepath, line_num)
-        if not line:
-            # 如果读到空字符串，说明已经超过了文件的最大行数，直接提前结束
-            break
-        lines.append(line)
-        
-    return lines
-
-
-# file_path = "./tools/ast_test.py"
-# formatter = ASTParser(file_path=file_path)
-# result_json = formatter.to_structured_json()
-
-# # 按理来说，智能有一
-# search_result = ast_search(file_path=file_path, name='hello', type='function')
-
-# read_result = read_file_lines(filepath=file_path, start_line=search_result['start_line'],end_line= search_result['end_line'])
-# run_logger.info(read_result)
+# result = ast_search.invoke({
+#     'file_path':'app.py',
+#     'name': 'GridRandom',
+#     'type':'class'
+# })
+# print(result)

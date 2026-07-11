@@ -15,19 +15,15 @@ from langgraph.graph.state import RunnableConfig
 from qa_node import qa_node
 
 from langgraph.prebuilt import ToolNode
-from globals import GraphState, Issue, tools
 from utils import extract_python_code
-from coder import coder_graph
-from test_writer import test_coder_graph
+from graphs.coder_graph import graph as coder_graph
+from graphs.test_coder_graph import graph as test_coder_graph
 from issue.issue_manager import issue_manager_node
 from test_tool import test_code_node
 from test_judge import judge_node
-from globals import llm
 from human_node import human_node
-from globals import GitAction
 import logging
 from pyright_node import pyright_node
-from logger import run_logger
 
 from ready_node import ready_node
 from qa_node import qa_node
@@ -37,8 +33,12 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from contextlib import asynccontextmanager
 from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_core.messages import AIMessage
-
 from dotenv import load_dotenv
+
+from globals.state import GraphState, Issue
+from globals.llm import llm,call_llm
+from globals.logger import run_logger
+
 
 load_dotenv()
 
@@ -94,7 +94,7 @@ class MyWorkflow:
 
 
         def decide_after_test_coder_graph(state: GraphState):
-
+            run_logger.info(f'test coder graph done!')
 
             if state['attempts'] > MAX_ATTAMPTS:
                 return 'max_attempts'
@@ -104,6 +104,7 @@ class MyWorkflow:
         
 
         def decide_after_coder_graph(state: GraphState):
+            run_logger.info(f'coder graph done!')
 
             if state['attempts'] > MAX_ATTAMPTS:
                 return 'max_attempts'
@@ -194,16 +195,8 @@ class MyWorkflow:
         async with AsyncSqliteSaver.from_conn_string("checkpoints.db") as saver:
             # Your code here
             self.graph  = self.graph.compile(checkpointer=saver)
-            draw_workflow_png(self.graph.get_graph(), __name__)
+            draw_workflow_png(self.graph.get_graph(), 'workflow')
             yield saver
-
-
-
-# ============================================================
-# Build Graph
-# ============================================================
-
-
 
 
 

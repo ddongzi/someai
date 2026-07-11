@@ -1,15 +1,15 @@
 # ============================================================
 # Test QA Node 测试代码审计
 # ============================================================
-from globals import GraphState
 import re
-from globals import llm,call_llm
 from typing import Dict
 from utils import get_scene_prompt,parse_llm_json
-from globals import Issue
 from langchain_core.messages import SystemMessage, HumanMessage
 import uuid
-from logger import run_logger
+from globals.state import GraphState, Issue
+from globals.llm import llm,call_llm
+from globals.logger import run_logger
+
 
 def qa_node(state: GraphState) -> Dict:
     """
@@ -41,18 +41,18 @@ def qa_node(state: GraphState) -> Dict:
         type = item['type']
         assign = 'unknown'
         if type == 'code':
-            assign = 'coder'
+            assign = 'coder_graph'
         if type == 'test_code':
-            assign = 'test_coder'
+            assign = 'test_coder_graph'
         issues.append(Issue(
             issue_id=uuid.uuid4(),
-            source='qaer',
+            source='qa_node',
             type= item['type'],
             review=item['review'],
             assign=assign
         ))
     return {
         'issues': issues,
-        'issue_manager_wait':{'qaer'}, 
+        'issue_manager_wait':{'qa_node'}, 
         'messages': full_content
         }

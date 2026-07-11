@@ -1,4 +1,3 @@
-from globals import GraphState, Issue,call_llm,tools,any_write,merge_dicts, run_logger
 from typing import Dict
 import re
 from utils import extract_python_code,get_scene_prompt,draw_workflow_png
@@ -14,13 +13,25 @@ import operator
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
 
+from globals import MAX_ATTAMPTS
+from globals.state import GraphState, Issue,any_write,merge_dicts,FileMetadata
+from globals.llm import llm,call_llm,tools
+from utils import get_file_logger
 load_dotenv()
 
+GRAPH_NAME = 'coder_graph'
+
+CODER_NODE_NAME = "coder_node"
+
+PROMPT_FILE_NAME ='coder'
+
+graph_logger = get_file_logger(
+    logger_name=f'{GRAPH_NAME}',
+    filename=f'{GRAPH_NAME}.log',
+    so=True
+)
 # 读取环境变量，如果 .env 里没配，则自动降级使用默认值 "generated"
 GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
-llm_type = __name__
-
-
 
 class CoderGraphState(TypedDict,total=False):
     # 共享 with parent
@@ -33,10 +44,12 @@ class CoderGraphState(TypedDict,total=False):
     code:  Annotated[str, any_write] 
     pyright_target: Annotated[set[str], operator.or_] # code, test_code
 
+    file_ledger: Annotated[dict[str, FileMetadata], merge_dicts]
 
     issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts]
 
     coder_subgraph_status: Annotated[str, any_write] 
+
 
     # 私有
     messages:Annotated[list[AnyMessage], add_messages]
@@ -46,7 +59,7 @@ class CoderGraphState(TypedDict,total=False):
 def _do_first_write(state:CoderGraphState) -> Dict:
         # 提取代码
     system_prompt, user_prompt  = get_scene_prompt(
-            file_name='coder',
+            file_name=PROMPT_FILE_NAME,
             scene_name='write_code',
             requirement = state['requirement']
         )
@@ -60,8 +73,8 @@ def _do_first_write(state:CoderGraphState) -> Dict:
         messages.append(msg)
 
 
-    full_content, full_chunk = call_llm(messages)
-    full_chunk.name = 'coder'
+    full_content, full_chunk = call_llm(messages, logger=graph_logger)
+    full_chunk.name = CODER_NODE_NAME
 
     if full_chunk.tool_calls:
         # 
@@ -77,7 +90,7 @@ def _do_first_write(state:CoderGraphState) -> Dict:
         f.write(clean_code)
     
     return {
-        'pyright_target':{'code'},
+        'pyright_target':{GRAPH_NAME},
         "code": clean_code.strip(),
         'messages': [full_chunk],
             'attempts':1,
@@ -87,7 +100,7 @@ def _do_first_write(state:CoderGraphState) -> Dict:
 
 def _do_pyright_repair(state: CoderGraphState) -> Dict:
     system_prompt, user_prompt  = get_scene_prompt(
-        file_name='coder',
+        file_name=PROMPT_FILE_NAME,
         scene_name='pyright_error',
         pyright_result = state['pyright_result']['code']
     )
@@ -98,8 +111,8 @@ def _do_pyright_repair(state: CoderGraphState) -> Dict:
     for msg in state['messages']:
         messages.append(msg)
  
-    full_content, full_chunk = call_llm(messages)
-    full_chunk.name = 'coder'
+    full_content, full_chunk = call_llm(messages, logger=graph_logger)
+    full_chunk.name = CODER_NODE_NAME
 
     code = state['code']
     modified_code = apply_search_replace.invoke({
@@ -121,7 +134,7 @@ def _do_fix_bug(state: CoderGraphState)->Dict:
     reviews = [iss.review for iss in issues]
 
     system_prompt, user_prompt = get_scene_prompt(
-        file_name='coder',
+        file_name=PROMPT_FILE_NAME,
         scene_name='fix_bug',
         review = '\n'.join(reviews)
     )
@@ -133,8 +146,8 @@ def _do_fix_bug(state: CoderGraphState)->Dict:
     for msg in state['messages']:
         messages.append(msg)
 
-    full_content, full_chunk = call_llm(messages)
-    full_chunk.name = 'coder'
+    full_content, full_chunk = call_llm(messages, logger=graph_logger)
+    full_chunk.name = CODER_NODE_NAME
 
     code = state['code']
     modified_code = apply_search_replace.invoke({
@@ -153,19 +166,19 @@ def _do_fix_bug(state: CoderGraphState)->Dict:
 
 
 def write_code_node(state: CoderGraphState) -> Dict:
-    run_logger.info("🤖 [Coder] 开始生成或重构业务代码")
+    graph_logger.info("🤖 [Coder] 开始生成或重构业务代码")
     state['coder_subgraph_status'] = 'failed'
 
     # 1. 处理pyright 静态 错误up
-    if  state['pyright_result'].get('code', None):
+    if  state['pyright_result'].get(GRAPH_NAME, None):
         return _do_pyright_repair(state=state)
     
     # 2. 是否有issue
-    issues = state['issue_buckets'].get('coder', [])
+    issues = state['issue_buckets'].get(GRAPH_NAME, [])
     if issues:
         return _do_fix_bug(state)
 
-    run_logger.info("[Coder] 第一次写代码")
+    graph_logger.info("[Coder] 第一次写代码")
     return _do_first_write(state)
 
 
@@ -176,28 +189,28 @@ def router_node(state: CoderGraphState) :
         'messages':[]
     }
 
-coder_graph = StateGraph(CoderGraphState)
-coder_graph.add_node('router_node', router_node)
+graph = StateGraph(CoderGraphState)
+graph.add_node('router_node', router_node)
 
-coder_graph.add_node('writer', write_code_node)
+graph.add_node(CODER_NODE_NAME, write_code_node)
 
-coder_graph.add_node('tools_node', ToolNode(tools=tools, handle_tool_errors=True))
+graph.add_node('tools_node', ToolNode(tools=tools, handle_tool_errors=True))
 
-coder_graph.set_entry_point('router_node')
+graph.set_entry_point('router_node')
 
-coder_graph.add_edge('router_node', 'writer')
+graph.add_edge('router_node', CODER_NODE_NAME)
 def decide_after_writer(state:CoderGraphState):
     if tools_condition(state) != END:
-        run_logger.info('after writer. goto tools exec.')
+        graph_logger.info('after writer. goto tools exec.')
         return 'tools_executor'
     return 'success'     
 
-coder_graph.add_edge(
+graph.add_edge(
     'tools_node', 
-        'writer'
+        CODER_NODE_NAME
     )
-coder_graph.add_conditional_edges(
-     'writer',
+graph.add_conditional_edges(
+     CODER_NODE_NAME,
      decide_after_writer,
      {
           'tools_executor':'tools_node',
@@ -207,5 +220,5 @@ coder_graph.add_conditional_edges(
 )
 
 
-coder_graph = coder_graph.compile()
-draw_workflow_png(coder_graph.get_graph(), __name__)
+graph = graph.compile()
+draw_workflow_png(graph.get_graph(), GRAPH_NAME)

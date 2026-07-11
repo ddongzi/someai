@@ -1,14 +1,13 @@
-from globals import llm
 from typing import Dict
 import re   
 from langchain_ollama import ChatOllama
-from globals import GraphState, Issue
 import subprocess
 import sys
 from dotenv import load_dotenv
 import os
-from logger import run_logger
-
+from globals.state import GraphState, Issue
+from globals.llm import llm,call_llm
+from globals.logger import run_logger
 
 load_dotenv()
 
