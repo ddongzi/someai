@@ -17,12 +17,15 @@ from langgraph.graph.message import add_messages,AnyMessage
 from typing import Annotated, List, TypedDict
 from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolNode
 from langgraph.prebuilt import ToolNode, tools_condition
 from globals.state import GraphState, Issue,any_write,merge_dicts,FileMetadata
-from globals.llm import llm,call_llm,tools
-from globals.logger import run_logger
+from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
+from tools.rag import knowledge_search
+from tools.filer import write_to_file,create_file,read_file, inspect_file_summary,inspect_project,delete_files
+from tools.ast import ast_search
+from tools.pyright_client import find_symbol_definition, find_symbol_references
+
 
 load_dotenv()
 
@@ -31,7 +34,13 @@ GRAPH_NAME = 'test_coder_graph'
 TEST_CODER_NODE_NAME = "test_coder_node"
 
 PROMPT_FILE_NAME ='test_coder'
-
+tools=[
+    knowledge_search, write_to_file,
+    apply_search_replace,ast_search,inspect_project,
+    find_symbol_references, find_symbol_definition, 
+    read_file, create_file,inspect_file_summary, delete_files
+]
+llm = get_llm_with_tools(tools)
 graph_logger = get_file_logger(
     logger_name=f'{GRAPH_NAME}',
     filename=f'{GRAPH_NAME}.log',
@@ -75,7 +84,7 @@ def _do_first_write(state:TestCoderGraphState) -> Dict:
     for msg in state['messages']:
         messages.append(msg)
             
-    full_content, full_chunk = call_llm(messages, logger=graph_logger)
+    full_content, full_chunk = call_llm(llm,messages, logger=graph_logger)
     full_chunk.name = TEST_CODER_NODE_NAME
     if full_chunk.tool_calls:
         # 
@@ -108,7 +117,7 @@ def _do_pyright_repair(state: TestCoderGraphState) -> Dict:
     for msg in state['messages']:
         messages.append(msg)
 
-    full_content, full_chunk = call_llm(messages, logger=graph_logger)
+    full_content, full_chunk = call_llm(llm,messages, logger=graph_logger)
     full_chunk.name = TEST_CODER_NODE_NAME
     if full_chunk.tool_calls:
         # 
@@ -148,7 +157,7 @@ def _do_fix_bug(state: TestCoderGraphState)->Dict:
         messages.append(msg)   
 
 
-    full_content, full_chunk = call_llm(messages, logger=graph_logger)
+    full_content, full_chunk = call_llm(llm,messages, logger=graph_logger)
     full_chunk.name = TEST_CODER_NODE_NAME
     if full_chunk.tool_calls:
         # 
@@ -194,7 +203,8 @@ def router_node(state: TestCoderGraphState) :
     # if start at node a
 
     return {
-        'messages':[]
+        'messages':[],
+        'attempts':1,
     }
 
 graph = StateGraph(TestCoderGraphState)

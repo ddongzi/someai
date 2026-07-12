@@ -47,10 +47,8 @@ class GraphState(TypedDict):
 
     requirement: Annotated[str, any_write]  # 需求，原始文本
 
-    code: Annotated[str, any_write]
     attempts: Annotated[int, operator.add] # 重试次数，目前是只看tester的重试次数的，因为目前都会跑到tester
 
-    test_code: Annotated[str, any_write]  # 测试代码
     test_output: str # 测试代码输出
 
     is_issueing: bool # 是否正在处理修复建议

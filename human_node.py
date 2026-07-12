@@ -3,7 +3,6 @@ from typing import Dict
 from tools.git import git_tool
 from globals import MAX_ATTAMPTS
 from globals.state import GraphState, Issue
-from globals.llm import llm,call_llm
 from globals.logger import run_logger
 
 def human_node(state: GraphState) -> Dict:

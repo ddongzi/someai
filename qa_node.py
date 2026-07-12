@@ -7,9 +7,19 @@ from utils import get_scene_prompt,parse_llm_json
 from langchain_core.messages import SystemMessage, HumanMessage
 import uuid
 from globals.state import GraphState, Issue
-from globals.llm import llm,call_llm
 from globals.logger import run_logger
+from globals.llm import get_llm_with_tools,call_llm
+from utils import get_file_logger
+from tools.rag import knowledge_search
+from tools.filer import write_to_file,create_file,read_file, inspect_file_summary,inspect_project,delete_files
+from tools.ast import ast_search
+from tools.pyright_client import find_symbol_definition, find_symbol_references
 
+llm = get_llm_with_tools(tools=[
+    ast_search,inspect_project,
+    find_symbol_references, find_symbol_definition, 
+    read_file,inspect_file_summary
+])
 
 def qa_node(state: GraphState) -> Dict:
     """
@@ -32,7 +42,7 @@ def qa_node(state: GraphState) -> Dict:
         HumanMessage(content=user_prompt)
     ]
 
-    full_content, full_chunk = call_llm(messages)
+    full_content, full_chunk = call_llm(llm,messages, logger=run_logger)
 
     issues = []
 

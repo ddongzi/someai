@@ -60,10 +60,12 @@ def read_file(file_path: str) -> str:
         return f"读取文件时发生未知错误: {str(e)}"
 
 
+from pathlib import Path
+
 @tool
 def write_to_file(file_path: str, content: str) -> str:
     """
-    完全覆盖重写文件内容
+    完全覆盖重写已存在的文件内容。如果文件或其所在的目录不存在，将返回错误。
     
     Args:
         file_path: 位于项目内部的相对文件路径。
@@ -75,17 +77,28 @@ def write_to_file(file_path: str, content: str) -> str:
         写入成功/失败响应。
     """
     try:
-        # 自动创建不存在的父级目录
-        dir_name = os.path.dirname(file_path)
-        if dir_name and not os.path.exists(dir_name):
-            os.makedirs(dir_name)
-            
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(content)
+        base_path = Path(GENERATED_DIR).resolve()
+        target_path = Path(base_path, file_path).resolve()
+        
+        # 1. 安全性检查：防止通过 ../ 路径遍历逃逸出目标根目录
+        if not str(target_path).startswith(str(base_path)):
+            return f"错误：拒绝访问。路径 '{file_path}' 超出了允许的项目根目录。"
+
+        # 2. 检查父级目录是否存在
+        if not target_path.parent.exists() or not target_path.parent.is_dir():
+            return f"错误：写入失败。目录 '{file_path}' 的上级文件夹不存在。"
+
+        # 3. 检查文件本身是否存在（既然是“覆盖重写”，文件必须先存在）
+        if not target_path.exists() or not target_path.is_file():
+            return f"错误：写入失败。文件 '{file_path}' 不存在。如需新建文件，请使用创建文件的工具。"
+
+        # 4. 执行覆盖写入
+        target_path.write_text(content, encoding="utf-8")
             
         return f"成功：文件 '{file_path}' 已被重新写入，共 {len(content)} 个字符。"
     except Exception as e:
         return f"错误：写入文件失败。原因：{str(e)}"
+
 
 
 @tool
@@ -171,110 +184,107 @@ def inspect_project(state: Annotated[dict, InjectedState]) -> str:
     return "\n".join(output_lines)
 
 
+import os
+import ast
+from pathlib import Path
+from langchain_core.tools import tool
+
 @tool
-def inspect_file_summary(file_path: str, max_preview_lines: int = 20) -> str:
+def inspect_file_summary(file_path: str, max_preview_lines: int = 15) -> str:
     """
-    获取文件摘要信息：文件完整性、行数、首尾预览行数，以及内部关键注释内容。
-    
+    获取python文件摘要信息：1. 文件完整性、行数、首尾预览行数.  2. 结构大纲信息
+
     Args:
         file_path: 位于项目内部的相对文件路径。
-            注意：请直接写文件名或内部子路径，绝对不要包含项目路径
-                正确示例: 'core/main.py', 'test.py'
-                错误示例: 'generated/test.py'
-        max_preview_lines: 头尾切片采样预览的最大行数，默认20行。
+        max_preview_lines: 头尾切片采样预览的最大行数，默认15行。
+    Return:
+        文件摘要信息
     """
-    if not os.path.exists(file_path):
-        return f"错误：文件 '{file_path}' 不存在。"
+    base_path = Path(GENERATED_DIR).resolve()
+    target_path = Path(base_path, file_path).resolve()
+    
+    # 🌟 路径防逃逸安全校验
+    if not str(target_path).startswith(str(base_path)):
+        return f"❌ 错误：拒绝访问。路径 '{file_path}' 超出了允许的项目根目录。"
         
+    if not target_path.exists() or not target_path.is_file():
+        return f"❌ 错误：未找到文件 '{file_path}'，请确认路径是否正确。"
+
     try:
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-            lines = f.readlines()
-            
+        # 1. 读取基础物理数据
+        content = target_path.read_text(encoding="utf-8", errors="ignore")
+        lines = content.splitlines()
         total_lines = len(lines)
-        file_size_kb = os.path.getsize(file_path) / 1024
-        
-        # --- 核心：多语言关键注释与架构大纲提取 ---
+        file_size_kb = os.path.getsize(target_path) / 1024
+
+        # 2. 核心改进：结合 AST 构建高密度代码大纲
         structures = []
         
-        # 1. 匹配大板块横幅或分割线注释 (如: # === 用户管理 === 或 // ----------)
-        banner_pattern = re.compile(r'^\s*(#|//|/\*)\s*([-*=_]{3,}|[【★■#===].*[】★■#===])')
-        
-        # 2. 匹配关键高亮标签 (TODO, FIXME, NOTE, IMPORTANT)
-        alert_pattern = re.compile(r'\b(TODO|FIXME|NOTE|IMPORTANT|警告|注意)\b[:：]?\s*(.*)', re.IGNORECASE)
-        
-        # 3. 匹配常见语言定义行的下一行（捕获紧随其后的单行函数说明或文档字串占位）
-        # 比如 Python 的 def 下一行的 '''说明'''，或者 JS/Go 的函数上一行/下一行的简短注释
-        definition_pattern = re.compile(r'^\s*(def|class|function|struct|impl|interface)\s+[a-zA-Z_]')
+        # 只有 Python 文件支持原生的 ast 解析
+        if target_path.suffix.lower() == '.py':
+            try:
+                tree = ast.parse(content)
+                
+                # 遍历顶层节点（类和函数）
+                for node in tree.body:
+                    # 场景 A: 处理类定义
+                    if isinstance(node, ast.ClassDef):
+                        # 获取类的内置 Docstring 摘要
+                        class_doc = ast.get_docstring(node)
+                        class_doc_str = f" -> \"{class_doc.splitlines()[0][:40]}\"" if class_doc else " (无文档字符串)"
+                        structures.append(f"  🏢 [Class] 行 {node.lineno}: class {node.name}{class_doc_str}")
+                        
+                        # 深度遍历类内部的方法
+                        for sub_node in node.body:
+                            if isinstance(sub_node, ast.FunctionDef):
+                                func_doc = ast.get_docstring(sub_node)
+                                func_doc_str = f" -> \"{func_doc.splitlines()[0][:30]}\"" if func_doc else ""
+                                structures.append(f"      └─ ⚙️ [Method] 行 {sub_node.lineno}: def {sub_node.name}(){func_doc_str}")
+                                
+                    # 场景 B: 处理顶层独立函数定义
+                    elif isinstance(node, ast.FunctionDef):
+                        func_doc = ast.get_docstring(node)
+                        func_doc_str = f" -> \"{func_doc.splitlines()[0][:40]}\"" if func_doc else " (无文档字符串)"
+                        structures.append(f"  ⚙️ [Function] 行 {node.lineno}: def {node.name}(){func_doc_str}")
+                        
+            except SyntaxError:
+                structures.append("  ⚠️ [警告] 该 Python 文件当前存在语法错误，无法完成 AST 树解析。")
+        else:
+            structures.append(f"  ℹ️ [非Python文件] 该工具目前针对 {target_path.suffix} 文件仅支持物理属性和头尾切片预览。")
 
-        for idx, line in enumerate(lines):
-            clean_line = line.strip()
-            if not clean_line:
-                continue
-                
-            line_num = idx + 1
-            
-            # 策略 A: 捕捉模块横幅/分割线（帮助 AI 划分代码大板块）
-            if banner_pattern.match(line):
-                structures.append(f"  - Line {line_num} [板块划分]: {clean_line[:60]}")
-                continue
-                
-            # 策略 B: 捕捉关键提醒标签
-            alert_match = alert_pattern.search(clean_line)
-            if alert_match and (clean_line.startswith('#') or clean_line.startswith('//') or clean_line.startswith('*')):
-                structures.append(f"  - Line {line_num} [{alert_match.group(1).upper()}提示]: {alert_match.group(2)[:50]}")
-                continue
-            
-            # 策略 C: 智能捕捉上下文文档——如果当前行是核心定义，看它周围是否有业务注释
-            if definition_pattern.match(line):
-                doc_found = ""
-                # 向前看 1 行 (常用于 JS/TS/Go/Java 的单行函数头注释)
-                if idx > 0 and (lines[idx-1].strip().startswith('//') or lines[idx-1].strip().startswith('#')):
-                    doc_found = lines[idx-1].strip().lstrip('#/ \t*')
-                # 向后看 1 行 (常用于 Python 的 docstring 摘要)
-                elif idx < total_lines - 1 and ('"""' in lines[idx+1] or "'''" in lines[idx+1] or lines[idx+1].strip().startswith('#')):
-                    doc_found = lines[idx+1].strip().replace('"""', '').replace("'''", "").strip()
-                
-                # 提取当前的定义名简写（去掉大括号或冒号）
-                def_name = clean_line.split('{')[0].split(':')[0].strip()
-                
-                if doc_found:
-                    structures.append(f"  - Line {line_num} [{def_name}]: 👇 注释说明 -> \"{doc_found[:40]}\"")
-                else:
-                    structures.append(f"  - Line {line_num} [{def_name}]: (无明文注释说明)")
-
-        # --- 极致安全的头尾切片采样 ---
+        # 3. 极致安全的头尾切片采样（压缩预览行数，降低 Token 开销）
         head_preview = ""
         tail_preview = ""
         
         if total_lines <= max_preview_lines * 2:
-            head_preview = "".join(lines)
+            head_preview = "\n".join(lines)
         else:
-            head_preview = "".join(lines[:max_preview_lines])
-            tail_preview = "".join(lines[-max_preview_lines:])
-            
-        # --- 组装高密度、高实用性的摘要报告 ---
+            head_preview = "\n".join(lines[:max_preview_lines])
+            tail_preview = "\n".join(lines[-max_preview_lines:])
+
+        # 4. 组装摘要报告
         summary_report = [
-            f"=== 文件信息 ===",
-            f"路径: {file_path}",
-            f"大小: {file_size_kb:.2f} KB",
-            f"总行数: {total_lines} 行",
-            f"\n=== 内容大致摘要===",
-            "\n".join(structures) if structures else "无内容摘要",
-            f"\n=== 文件头部预览 (前 {max_preview_lines} 行) ===",
+            f"=== 📄 文件元信息 ===",
+            f"文件路径: {file_path}",
+            f"文件大小: {file_size_kb:.2f} KB",
+            f"总代码行: {total_lines} 行",
+            f"\n=== 🌲 架构大纲 ===",
+            "\n".join(structures) if structures and any(s.strip() for s in structures) else "  (未提取到明显的类或函数结构)",
+            f"\n=== 🔍 代码头部预览 (前 {max_preview_lines} 行) ===",
             head_preview.strip(),
         ]
         
         if tail_preview:
             summary_report.extend([
-                f"\n... (中间数据省略 {total_lines - max_preview_lines * 2} 行) ...",
-                f"\n=== 文件尾部预览 (后 {max_preview_lines} 行) ===",
+                f"\n... (中间隐去 {total_lines - max_preview_lines * 2} 行代码) ...",
+                f"\n=== 🔍 代码尾部预览 (后 {max_preview_lines} 行) ===",
                 tail_preview.strip(),
             ])
             
         return "\n".join(summary_report)
         
     except Exception as e:
-        return f"错误：分析文件失败。原因：{str(e)}"
+        return f"❌ 错误：分析文件失败。原因：{str(e)}"
 
 
 
@@ -374,3 +384,7 @@ def delete_files(file_paths: Union[str, List[str]], reason: str,state: Annotated
         }
     )
 
+# result = inspect_file_summary.invoke({
+#     'file_path': 'test.py'
+# })
+# print(result)

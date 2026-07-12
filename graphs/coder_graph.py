@@ -15,8 +15,13 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from globals import MAX_ATTAMPTS
 from globals.state import GraphState, Issue,any_write,merge_dicts,FileMetadata
-from globals.llm import llm,call_llm,tools
+from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
+from tools.rag import knowledge_search
+from tools.filer import write_to_file,create_file,read_file, inspect_file_summary,inspect_project,delete_files
+from tools.ast import ast_search
+from tools.pyright_client import find_symbol_definition, find_symbol_references
+
 load_dotenv()
 
 GRAPH_NAME = 'coder_graph'
@@ -24,6 +29,14 @@ GRAPH_NAME = 'coder_graph'
 CODER_NODE_NAME = "coder_node"
 
 PROMPT_FILE_NAME ='coder'
+
+tools=[
+    knowledge_search, write_to_file,
+    apply_search_replace,ast_search,inspect_project,
+    find_symbol_references, find_symbol_definition, 
+    read_file, create_file,inspect_file_summary, delete_files
+]
+llm = get_llm_with_tools(tools)
 
 graph_logger = get_file_logger(
     logger_name=f'{GRAPH_NAME}',
@@ -41,7 +54,6 @@ class CoderGraphState(TypedDict,total=False):
 
     pyright_result: Annotated[dict, merge_dicts] # {'code':[.., ..], 'test_code':[..,..]} 
 
-    code:  Annotated[str, any_write] 
     pyright_target: Annotated[set[str], operator.or_] # code, test_code
 
     file_ledger: Annotated[dict[str, FileMetadata], merge_dicts]
@@ -73,7 +85,7 @@ def _do_first_write(state:CoderGraphState) -> Dict:
         messages.append(msg)
 
 
-    full_content, full_chunk = call_llm(messages, logger=graph_logger)
+    full_content, full_chunk = call_llm(llm, messages, logger=graph_logger)
     full_chunk.name = CODER_NODE_NAME
 
     if full_chunk.tool_calls:
@@ -81,20 +93,12 @@ def _do_first_write(state:CoderGraphState) -> Dict:
         graph_logger.info(f'there are some tool calls. {full_chunk.tool_calls}')
         return {
             'messages': [full_chunk],
-            'attempts':1
         }
     
-    
-    clean_code = extract_python_code(full_content)
 
-    with open(f"{GENERATED_DIR}/app.py", "w") as f:
-        f.write(clean_code)
-    
     return {
         'pyright_target':{GRAPH_NAME},
-        "code": clean_code.strip(),
         'messages': [full_chunk],
-            'attempts':1,
             'coder_subgraph_status': 'success'
 
     }
@@ -112,7 +116,7 @@ def _do_pyright_repair(state: CoderGraphState) -> Dict:
     for msg in state['messages']:
         messages.append(msg)
  
-    full_content, full_chunk = call_llm(messages, logger=graph_logger)
+    full_content, full_chunk = call_llm(llm, messages, logger=graph_logger)
     full_chunk.name = CODER_NODE_NAME
 
     code = state['code']
@@ -147,7 +151,7 @@ def _do_fix_bug(state: CoderGraphState)->Dict:
     for msg in state['messages']:
         messages.append(msg)
 
-    full_content, full_chunk = call_llm(messages, logger=graph_logger)
+    full_content, full_chunk = call_llm(llm, messages, logger=graph_logger)
     full_chunk.name = CODER_NODE_NAME
 
     code = state['code']
@@ -187,7 +191,9 @@ def router_node(state: CoderGraphState) :
     # 状态初始化
 
     return {
-        'messages':[]
+        'messages':[],
+        'attempts':1,
+
     }
 
 graph = StateGraph(CoderGraphState)

@@ -6,7 +6,6 @@ import os
 import json
 import subprocess
 from globals.state import GraphState, Issue
-from globals.llm import llm,call_llm
 from globals.logger import run_logger
 
 def _do_pyright(code:str) -> dict:

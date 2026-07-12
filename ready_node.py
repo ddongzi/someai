@@ -4,7 +4,6 @@ from tools.git import git_tool
 from utils import get_first_pending_task
 from globals.state import GraphState, Issue, FileMetadata
 from globals.logger import run_logger
-from globals.llm import llm,call_llm
 prod_file_path = "prod.md"
 spec_file_path = "spec.md"
 dd_file_path = "dd.md"
@@ -12,10 +11,10 @@ dd_file_path = "dd.md"
 
 def ready_node(state: GraphState) -> Dict:
     knowledge = get_knowledge()
-    # 1. 加载prod, dd, spec 到向量库
-    for file_path in [prod_file_path, spec_file_path, dd_file_path]:
-        with open(file_path, mode='r') as f:
-            knowledge.add_text(f.read(), source=file_path, type='local')
+    # # 1. 加载prod, dd, spec 到向量库
+    # for file_path in [prod_file_path, spec_file_path, dd_file_path]:
+    #     with open(file_path, mode='r') as f:
+    #         knowledge.add_text(f.read(), source=file_path, type='local')
     # 切换到分支 git
     result = git_tool.invoke({
         'action': '',
@@ -29,7 +28,7 @@ def ready_node(state: GraphState) -> Dict:
     # file_ledger
     app_meta = FileMetadata(
         path='app.py',
-        description='应用主文件.',
+        description='应用文件.',
         permission='none'
     )
     test_meta = FileMetadata(

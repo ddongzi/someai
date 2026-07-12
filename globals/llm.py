@@ -10,9 +10,10 @@ from tools.rag import knowledge_search
 from langchain_deepseek import ChatDeepSeek
 from langchain_ollama import ChatOllama
 import os
+from langchain.messages import AnyMessage
 from logging import Logger
-set_llm_cache(SQLiteCache())
-# set_llm_cache(InMemoryCache())
+# set_llm_cache(SQLiteCache())
+set_llm_cache(InMemoryCache())
 
 deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
 
@@ -36,17 +37,85 @@ tools = [git_tool, knowledge_search, write_to_file,
 #     presence_penalty=1.0         # 🌟 辅助：惩罚重复的话题
 # )
 # llm = llm.bind_tools(tools=tools)
-llm = ChatDeepSeek(
+base_llm = ChatDeepSeek(
     api_key=deepseek_key,
     base_url="https://api.deepseek.com",
-    model="deepseek-chat",  # 云端代码模型
+    model="deepseek-chat",
     temperature=0,
-    #   frequency_penalty=2
 )
-llm = llm.bind_tools(tools=tools)
 
-def call_llm(prompt: str, logger: Logger) -> str:
-    logger.info(f'prompt :{prompt}')
+# 2. 编写动态绑定工具的函数
+def get_llm_with_tools(tools: list):
+    """
+    为传入的 LLM 实例动态绑定不同的 tool 能力。
+    """
+    return base_llm.bind_tools(tools=tools)
+
+from langchain_core.messages import AnyMessage, SystemMessage, HumanMessage, AIMessage, ToolMessage
+import json
+
+def fmt_messages(messages: list[AnyMessage]) -> str:
+    """
+    格式化消息列表. (一般就是历史, 作为prompt)
+    """
+    msgs = []
+    for msg in messages:
+        # 1. 获取基础角色标签（System, Human, AI, Tool 等）
+        role = msg.__class__.__name__.replace("Message", "").replace("Chunk", "")
+        
+        # 2. 初始化单条消息的文本段落
+        msg_lines = []
+        
+        # 3. 针对不同类型的消息提取核心特征
+        if isinstance(msg, SystemMessage):
+            msg_lines.append(f"🤖 [{role}]: {msg.content}")
+            
+        elif isinstance(msg, HumanMessage):
+            msg_lines.append(f"👤 [{role}]: {msg.content}")
+            
+        elif isinstance(msg, AIMessage):
+            # 💡 提取 DeepSeek 特有的思维链思考过程
+            reasoning = msg.additional_kwargs.get("reasoning_content", "")
+            if reasoning:
+                msg_lines.append(f"🤔 [AI 思考过程]:\n{reasoning.strip()}")
+            
+            # 💡 提取最终文本回答
+            if msg.content:
+                msg_lines.append(f"✨ [{role} 回答]:\n{msg.content.strip()}")
+                
+            # 💡 提取工具调用请求 (关键点)
+            if msg.tool_calls:
+                msg_lines.append(f"⚙️ [{role} 请求调用工具]:")
+                for tool in msg.tool_calls:
+                    # 美化格式化参数字典，使其在日志中易读
+                    try:
+                        args_str = json.dumps(tool.get('args', {}), ensure_ascii=False, indent=2)
+                    except Exception:
+                        args_str = str(tool.get('args', {}))
+                    msg_lines.append(f"   - 工具名: {tool.get('name')}\n   - 唯一ID: {tool.get('id')}\n   - 参  数:\n{args_str}")
+                    
+        elif isinstance(msg, ToolMessage):
+            # 💡 提取工具执行结果，并关联它是对哪一个 call_id 的回应
+            tool_name = getattr(msg, 'name', '未知工具')
+            msg_lines.append(f"🛠️ [{role} 结果返回] (关联ID: {msg.tool_call_id} | 工具名: {tool_name}):")
+            # 裁剪过长的执行结果，防止日志刷屏（可选）
+            content_preview = msg.content if len(msg.content) < 1000 else f"{msg.content[:1000]}\n... (此处省略 {len(msg.content)-1000} 字)"
+            msg_lines.append(content_preview)
+            
+        else:
+            # 兜底通用解析
+            msg_lines.append(f"❓ [{role}]: {msg.content}")
+            
+        # 组合成当前单条消息的完整文本
+        if msg_lines:
+            msgs.append("\n".join(msg_lines))
+            
+    # 用双虚线分隔每一轮对话，极大提升日志的可读性与排版美感
+    return "\n\n" + "="*50 + " 📜 消息列表 " + "="*50 + "\n" + "\n\n--------------------------------------------------------------------------------\n\n".join(msgs) + "\n\n" + "="*124 + "\n"
+
+def call_llm(llm, prompt: list[AnyMessage], logger: Logger) -> str:
+    logger.info(f'prompt: {fmt_messages(prompt)}')
+
     full_content = ""
     full_chunk = None
     
@@ -85,6 +154,7 @@ def call_llm(prompt: str, logger: Logger) -> str:
                 current_mode = 'tool_calling'
             # 流式过程中不重复打印未组装完成的 chunk.tool_calls 结构，保持控制台整洁
             print(".", end="", flush=True) 
-
+    logger.info(f'full chunk:\n {full_chunk}')
+    logger.info(f'full content:\n {full_content}')
     logger.info('====LLM done ====')
     return full_content, full_chunk

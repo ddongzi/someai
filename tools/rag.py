@@ -50,9 +50,6 @@ class KnowledgeManager:
         if not self.client:
             run_logger.warning("Milvus 不可用，跳过初始化")
             return
-        if self.client.has_collection(collection_name=self.collection_name):
-            run_logger.info(f'drop: {self.collection_name} ...')
-            self.client.drop_collection(collection_name=self.collection_name)
 
         if not self.client.has_collection(collection_name=self.collection_name):
             run_logger.info(f"正在创建集合: {self.collection_name} ...")
@@ -93,6 +90,12 @@ class KnowledgeManager:
             run_logger.info("集合创建并加载完成。")
             
         self.client.load_collection(collection_name=self.collection_name)
+
+    def clear_data(self):
+        if self.client.has_collection(collection_name=self.collection_name):
+            run_logger.info(f'drop: {self.collection_name} ...')
+            self.client.drop_collection(collection_name=self.collection_name)
+
 
     def search_dense(self, queries: List[str], k: int = 5) -> list:
         """
@@ -323,47 +326,68 @@ def knowledge_search(queries: List[str]) -> str:
 
 
 
+import os
+import argparse
+from pathlib import Path
 
-# # 直接调用来加载知识。
-# import argparse
+if __name__ == "__main__":
+    # 1. 创建参数解析器（允许用户通过 -d 自定义目录，默认就是 'knowledges'）
+    parser = argparse.ArgumentParser(description="CodeTeam 知识库批量文件导入工具")
+    parser.add_argument(
+        '--dir', 
+        type=str, 
+        default='knowledges',
+        help='存放知识库文件的目标目录路径 (默认: knowledges)'
+    )
+    args = parser.parse_args()
 
-# if __name__ == "__main__":
-    
-#     # 1. 创建参数解析器
-#     parser = argparse.ArgumentParser(description="CodeTeam 知识库本地文件导入工具")
-    
-#     # 2. 添加必填的文件路径参数
-#     parser.add_argument(
-#         'file_path', 
-#         type=str, 
-#         help='要导入的 Markdown 文件路径 (例如: ./prod.md)'
-#     )
-    
-#     # 解析命令行参数
-#     args = parser.parse_args()
+    # 2. 校验目标知识库文件夹是否存在
+    target_dir = Path(args.dir)
+    if not target_dir.exists() or not target_dir.is_dir():
+        run_logger.error(f"❌ 目标目录不存在或不是有效的文件夹: {target_dir.absolute()}")
+        exit(1)
 
-#     # 3. 校验文件是否存在
-#     if not os.path.exists(args.file_path):
-#         run_logger.error(f"文件未找到: {args.file_path}")
-#         exit(1)
+    # 3. 扫描该目录下所有的文本文件 (支持 .md 和 .txt)
+    # rglob 表示递归扫描子文件夹，如果只想扫描当前层级可以换成 glob
+    valid_extensions = {'.md', '.txt', '.markdown'}
+    all_files = [f for f in target_dir.rglob('*') if f.is_file() and f.suffix.lower() in valid_extensions]
 
-#     # 4. 自动获取文件名（例如从 './docs/prod.md' 中提取出 'prod.md'）
-#     file_name = os.path.basename(args.file_path)
+    if not all_files:
+        run_logger.warning(f"⚠️ 文件夹 [{target_dir}] 内未找到任何有效的文本文件 (.md, .txt)。")
+        exit(0)
 
-#     try:
-#         # 5. 初始化知识库并读取文件
-#         knowledge = get_knowledge()
-        
-#         with open(args.file_path, mode='r', encoding='utf-8') as f:
-#             content = f.read()
+    run_logger.info(f"📂 发现待导入的知识文件共 {len(all_files)} 个，开始批量加载...")
+
+    try:
+        # 4. 初始化知识库
+        knowledge = get_knowledge()
+        success_count = 0
+
+        # 5. 循环处理每一个文件
+        for file_path in all_files:
+            file_name = file_path.name
             
-#             # 动态传入文件内容和文件名
-#             knowledge.add_text(content, file_name, 'local')
-#             run_logger.info(f"成功将文件 [{file_name}] 加载到知识库！")
+            try:
+                # 使用 Path 自动处理编码和读取，更安全健壮
+                content = file_path.read_text(encoding='utf-8')
+                
+                # 动态传入文件内容和文件名
+                knowledge.add_text(content, file_name, 'local')
+                run_logger.info(f"✅ 成功加载文件: {file_name}")
+                success_count += 1
+                
+            except Exception as file_err:
+                run_logger.error(f"❌ 读取文件 [{file_name}] 失败，跳过该文件。原因: {str(file_err)}")
+
+        run_logger.info(f"📊 批量加载完成！成功: {success_count}/{len(all_files)}")
+
+        # 6. 测试检索效果
+        if success_count > 0:
+            print("\n" + "="*30 + " 🔍 检索效果测试 " + "="*30)
+            test_query = '实现网格随机算法'
+            docs = knowledge.retrieve(queries=[test_query])
+            run_logger.info(f"针对关键词 [{test_query}] 的检索测试结果: {docs}")
+            print("="*75 + "\n")
             
-#             # 测试检索效果
-#             docs = knowledge.retrieve(query='实现网格随机算法')
-#             run_logger.info(f"检索测试结果: {docs}")
-            
-#     except Exception as e:
-#         run_logger.error(f"加载知识库失败: {str(e)}")
+    except Exception as e:
+        run_logger.error(f"💥 知识库处理过程中发生全局异常: {str(e)}")

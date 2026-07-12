@@ -1,6 +1,6 @@
 from globals.state import GraphState, Issue
-from globals.llm import llm,call_llm
 from globals.logger import run_logger
+
 
 def issue_manager_node(state: GraphState) -> dict:
     """

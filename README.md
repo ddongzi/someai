@@ -35,6 +35,8 @@ recrusion limit 就是一个prompt 不超过多少条.
 必须严格要求相似度和topk
 RRFRanker策略 下面: 稀疏向量很容易完虐稠密向量, 导致排名后, 稠密向量是none
 
+llm 公用 tools, 导致给予每个角色 冗余tool , 这是不合理的!!
+
 ### 0710
 现在状态：
 - prompt不优，导致llm思维宽广，频繁调用工具，在coder/testcoder 子图出不来。这违背了角色分明：比如不应该git提交。

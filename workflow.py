@@ -14,12 +14,11 @@ from globals import MAX_ATTAMPTS
 from langgraph.graph.state import RunnableConfig
 from qa_node import qa_node
 
-from langgraph.prebuilt import ToolNode
 from utils import extract_python_code
 from graphs.coder_graph import graph as coder_graph
 from graphs.test_coder_graph import graph as test_coder_graph
-from issue.issue_manager import issue_manager_node
-from test_tool import test_code_node
+from issue_manager import issue_manager_node
+from test_exec_node import test_exec_node
 from test_judge import judge_node
 from human_node import human_node
 import logging
@@ -36,7 +35,6 @@ from langchain_core.messages import AIMessage
 from dotenv import load_dotenv
 
 from globals.state import GraphState, Issue
-from globals.llm import llm,call_llm
 from globals.logger import run_logger
 
 
@@ -120,7 +118,7 @@ class MyWorkflow:
         self.graph.add_node('test_coder_graph', test_coder_graph)
 
         self.graph.add_node('pyright_node', pyright_node)
-        self.graph.add_node("tester", test_code_node)
+        self.graph.add_node("tester", test_exec_node)
         self.graph.add_node("human_node", human_node)
         self.graph.add_node('qa_node',qa_node )
 

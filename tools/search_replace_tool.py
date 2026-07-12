@@ -1,61 +1,66 @@
 import re
-from langchain.tools import tool
+from pathlib import Path
+from langchain_core.tools import tool
+from globals import GENERATED_DIR
 
 @tool
-def apply_search_replace(original: str, diff: str) -> str:
+def apply_search_replace(file_path: str, diff: str) -> str:
     """
-    使用 SEARCH/REPLACE 块来精确修改目标文本。
+    使用一个或多个短小精悍的 SEARCH/REPLACE 块精确修改指定的本地文件。
     
-    参数:
-    original (str): 需要被修改的完整原始字符串。
-    diff (str): 包含一个或多个差异比对块的文本，格式如下：
-        <<<<<<< SEARCH
-        [需要被替换的精确原始文本]
-        =======
-        [替换后的新文本]
-        >>>>>>> REPLACE
-
-    返回:
-    str: 修改完成后的完整新字符串。
-
-    异常:
-    ValueError: 当 SEARCH 块在原始文本中不存在、或存在多次导致歧义时抛出。
+    Args:
+        file_path: 位于项目内部的相对文件路径。
+        diff: 包含一个或多个差异比对块的文本，格式严格如下：
+            <<<<<<< SEARCH
+            [需要被替换的精确原始文本]
+            =======
+            [替换后的新文本]
+            >>>>>>> REPLACE
+    Return:
+        修改成功提示，或具体的错误原因。
+    Note:
+        1. search块尽量局部短小.
+        2. 如果需要大面积修改,也应该将其拆分多个块,
     """
-
-    # 匹配 SEARCH/REPLACE 块，允许块前后有任意空白或换行
-    pattern = r"<<<<<<< SEARCH\s*\n([\s\S]*?)\n\s*=======\s*\n([\s\S]*?)\n\s*>>>>>>> REPLACE"
-    matches = re.findall(pattern, diff)
-    
-    if not matches:
-        raise ValueError("未在 diff 中检测到任何符合格式的 SEARCH/REPLACE 块。")
+    try:
+        # 1. 路径安全解析与校验
+        base_path = Path(GENERATED_DIR).resolve()
+        target_path = Path(base_path, file_path).resolve()
         
-    modified = original
-    for search_text, replace_text in matches:
-        # 移除部分 LLM 生成时可能多带的头尾空行/空格干扰（保留核心缩进）
-        search_cleaned = search_text.rstrip('\r\n')
-        replace_cleaned = replace_text.rstrip('\r\n')
+        if not str(target_path).startswith(str(base_path)):
+            return f"❌ 错误：拒绝访问。路径 '{file_path}' 超出了项目根目录。"
+            
+        if not target_path.exists() or not target_path.is_file():
+            return f"❌ 错误：未找到文件 '{file_path}'，请确认路径是否正确或文件是否已创建。"
+
+        # 2. 读取本地最新文件内容
+        content = target_path.read_text(encoding="utf-8")
+
+        # 3. 解析所有的 SEARCH/REPLACE 块
+        # 使用正向预查和非贪婪匹配捕获所有的块
+        pattern = r"<<<<<<< SEARCH\n(.*?)\n=======\n(.*?)\n>>>>>>> REPLACE"
+        blocks = re.findall(pattern, diff, re.DOTALL)
         
-        # 极端情况：如果 SEARCH 块为空，代表在文件头插入
-        if not search_cleaned:
-            modified = replace_text + modified
-            continue
+        if not blocks:
+            return "❌ 错误：未在 diff 参数中检测到符合格式的 <<<<<<< SEARCH ... ======= ... >>>>>>> REPLACE 块。"
 
-        # 检查搜索块在源码中的出现次数
-        count = modified.count(search_cleaned)
-        if count == 0:
-            raise ValueError(
-                f"【匹配失败】无法在源码中找到对应的搜索块。请检查缩进或断句是否完全一致：\n"
-                f"=======[期望搜索的内容]=======\n{search_cleaned}\n=============================="
-            )
-        elif count > 1:
-            raise ValueError(
-                f"【歧义错误】搜索块在源码中出现了 {count} 次。请提供更长、更具唯一性的上下文：\n"
-                f"=======[存在歧义的内容]=======\n{search_cleaned}\n=============================="
-            )
+        # 4. 逐个块进行匹配和替换
+        modified_content = content
+        for idx, (search_text, replace_text) in enumerate(blocks, 1):
+            # 严格检查是否存在且唯一
+            count = modified_content.count(search_text)
+            if count == 0:
+                return f"❌ 错误：第 {idx} 个 SEARCH 块匹配失败。找不到指定的原始文本，请检查空格、换行或拼写是否完全一致。"
+            if count > 1:
+                return f"❌ 错误：第 {idx} 个 SEARCH 块存在歧义。在文件中找到了 {count} 处相同的文本，请扩大 SEARCH 块的范围以确保唯一性。"
             
-        # 确定性精准替换
-        modified = modified.replace(search_cleaned, replace_cleaned, 1)
-            
-    return modified
+            # 执行精确替换
+            modified_content = modified_content.replace(search_text, replace_text)
 
+        # 5. 将修改后的内容写回磁盘
+        target_path.write_text(modified_content, encoding="utf-8")
+        
+        return f"✅ 成功：文件 '{file_path}' 已成功应用 {len(blocks)} 个代码块的修改。"
 
+    except Exception as e:
+        return f"❌ 错误：修改文件时发生异常。原因：{str(e)}"
