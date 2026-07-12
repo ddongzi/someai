@@ -45,34 +45,46 @@ llm = ChatDeepSeek(
 )
 llm = llm.bind_tools(tools=tools)
 
-
-def call_llm(prompt:str, logger:Logger)->str:
+def call_llm(prompt: str, logger: Logger) -> str:
     logger.info(f'prompt :{prompt}')
     full_content = ""
     full_chunk = None
+    
+    # 状态标记：'thinking', 'answering', 'tool_calling', None
+    current_mode = None 
+    
     logger.info('====LLM stream ..====')
     for chunk in llm.stream(prompt):
         if full_chunk is None:
             full_chunk = chunk
         else:
             full_chunk += chunk
-        # 1. 如果有思考内容（思维链），打印出来
-        if 'reasoning_content' in chunk.additional_kwargs and chunk.additional_kwargs['reasoning_content']:
-            print(chunk.additional_kwargs['reasoning_content'], end="", flush=True)
-            
-        # 2. 如果思考结束，开始输出真正的文本回答
+
+        # 1. 处理思考过程 (Reasoning)
+        reasoning = chunk.additional_kwargs.get('reasoning_content', '')
+        if reasoning:
+            if current_mode != 'thinking':
+                print("\n🤔 [思考中] ", end="", flush=True)
+                current_mode = 'thinking'
+            print(reasoning, end="", flush=True)
+            continue  
+
+        # 2. 处理最终答案 (Content)
         if chunk.content:
-            # 如果是刚从思考切换到正文，可以加个换行（选加）
-            # print("\n\n🤖 最终回答：") 
+            if current_mode != 'answering':
+                print("\n✨ [给出回答] ", end="", flush=True)
+                current_mode = 'answering'
             print(chunk.content, end="", flush=True)
             full_content += chunk.content
 
-        # 3. 如果触发了工具调用
+        # 3. 处理工具调用 (Tool Calls)
+        # 注意：流式传输中 tool_calls 的首帧可能为空，后续帧只包含参数碎片
         if chunk.tool_calls:
-            print(f"⚙️ 命中工具: {chunk.tool_calls}")
+            if current_mode != 'tool_calling':
+                print("\n⚙️ [命中工具,构建工具]", end="", flush=True)
+                current_mode = 'tool_calling'
+            # 流式过程中不重复打印未组装完成的 chunk.tool_calls 结构，保持控制台整洁
+            print(".", end="", flush=True) 
 
-    logger.info(f'llm full chunks.\n{full_chunk}')
-    logger.info(f'llm full content.\n{full_content}')
     logger.info('====LLM done ====')
     return full_content, full_chunk
-

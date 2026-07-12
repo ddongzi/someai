@@ -1,210 +1,229 @@
 """
-网格随机算法 (GridRandom)
-适用：小型闯关、小游戏地图
-逻辑：根据 wallRatio / trapMaxRatio 逐地块随机生成，保证基础通路，最后 BFS 校验通路。
+种子管理器 SeedManager
+
+功能：
+- 自动生成随机种子（6-16位数字/字符串）
+- 手动设置种子（数字 1-999999999，字符串 1-32 位字母数字）
+- 种子保存与读取
+- 相同种子 + 相同配置可生成 100% 一致的关卡
 """
 
 import random
-from typing import List, Tuple, Optional
-from collections import deque
+import string
+import json
+import os
+from typing import Optional, Union
 
 
-class GridRandomGenerator:
-    """网格随机地图生成器"""
+class SeedManager:
+    """种子管理器，负责种子的生成、设置、保存与读取。"""
 
-    TILE_EMPTY = 0  # 空地
-    TILE_WALL = 1   # 障碍物
-    TILE_TRAP = 2   # 陷阱
-    TILE_RESOURCE = 3  # 资源
+    # 种子持久化文件路径
+    _PERSIST_FILE = "seed_data.json"
 
-    def __init__(self, seed: Optional[int] = None):
-        """
-        初始化生成器
-        Args:
-            seed: 随机种子，用于确定性复现。None 则使用系统随机。
-        """
-        if seed is not None:
-            self.seed = self._normalize_seed(seed)
-            random.seed(self.seed)
-        else:
-            self.seed = None
+    def __init__(self):
+        self._seed: Optional[Union[int, str]] = None
+        self._history: list = []
+
+    # ──────────────────────────────────────────────
+    # 种子生成
+    # ──────────────────────────────────────────────
 
     @staticmethod
-    def _normalize_seed(seed: int) -> int:
-        """标准化种子，确保在合法范围内"""
-        if not isinstance(seed, int):
-            raise TypeError(f"种子必须是整数，收到 {type(seed).__name__}")
-        if seed < 1 or seed > 999999999:
-            raise ValueError(f"种子范围: 1 ~ 999999999，收到 {seed}")
-        return seed
-
-    def generate(
-        self,
-        width: int,
-        height: int,
-        wall_ratio: float = 0.3,
-        trap_max_ratio: float = 0.1,
-        resource_ratio: float = 0.05,
-        ensure_path: bool = True,
-    ) -> Tuple[List[List[int]], Tuple[int, int], Tuple[int, int], List[Tuple[int, int]]]:
-        """
-        生成网格随机地图
+    def generate_random_seed(length: int = 8) -> str:
+        """生成一个随机种子（字母+数字组合）。
 
         Args:
-            width: 地图宽度（列数）
-            height: 地图高度（行数）
-            wall_ratio: 障碍物比例 (0.0 ~ 1.0)
-            trap_max_ratio: 陷阱最大比例 (0.0 ~ 1.0)
-            resource_ratio: 资源比例 (0.0 ~ 1.0)
-            ensure_path: 是否确保起点到终点有通路
+            length: 种子长度，范围 6-16，默认 8。
 
         Returns:
-            tile_map: 二维网格地图 (height x width)
-            start: 起点坐标 (row, col)
-            end: 终点坐标 (row, col)
-            room_list: 空地格子列表
+            随机生成的字符串种子。
         """
-        # 参数校验
-        if width < 3 or height < 3:
-            raise ValueError(f"地图尺寸至少为 3x3，收到 {width}x{height}")
-        if not (0.0 <= wall_ratio <= 1.0):
-            raise ValueError(f"wall_ratio 必须在 [0, 1] 范围内，收到 {wall_ratio}")
-        if not (0.0 <= trap_max_ratio <= 1.0):
-            raise ValueError(f"trap_max_ratio 必须在 [0, 1] 范围内，收到 {trap_max_ratio}")
-        if not (0.0 <= resource_ratio <= 1.0):
-            raise ValueError(f"resource_ratio 必须在 [0, 1] 范围内，收到 {resource_ratio}")
+        length = max(6, min(16, length))
+        chars = string.ascii_letters + string.digits
+        return "".join(random.choices(chars, k=length))
 
-        total_cells = width * height
+    @staticmethod
+    def generate_numeric_seed(length: int = 6) -> int:
+        """生成一个纯数字随机种子。
 
-        # 计算各类格子数量
-        wall_count = int(total_cells * wall_ratio)
-        trap_count = int(total_cells * trap_max_ratio)
-        resource_count = int(total_cells * resource_ratio)
+        Args:
+            length: 数字位数，范围 6-16，默认 6。
 
-        # 初始化全空地地图
-        tile_map = [[self.TILE_EMPTY for _ in range(width)] for _ in range(height)]
+        Returns:
+            随机生成的数字种子。
+        """
+        length = max(6, min(16, length))
+        lower = 10 ** (length - 1)
+        upper = 10**length - 1
+        return random.randint(lower, upper)
 
-        # 收集所有格子坐标
-        all_positions = [(r, c) for r in range(height) for c in range(width)]
+    # ──────────────────────────────────────────────
+    # 种子设置
+    # ──────────────────────────────────────────────
 
-        # 随机打乱
-        random.shuffle(all_positions)
+    def set_seed(self, seed: Optional[Union[str, int]] = None) -> "SeedManager":
+        """设置种子。
 
-        # 放置障碍物
-        idx = 0
-        for _ in range(wall_count):
-            r, c = all_positions[idx]
-            tile_map[r][c] = self.TILE_WALL
-            idx += 1
+        规则：
+        - 数字类型：范围 [1, 999999999]
+        - 字符串类型：长度 [1, 32]，仅允许大小写字母+数字，特殊字符自动过滤
+        - 入参为 None：自动生成 8 位随机字符串种子
 
-        # 放置陷阱
-        for _ in range(trap_count):
-            r, c = all_positions[idx]
-            tile_map[r][c] = self.TILE_TRAP
-            idx += 1
+        Args:
+            seed: 种子值。
 
-        # 放置资源
-        for _ in range(resource_count):
-            r, c = all_positions[idx]
-            tile_map[r][c] = self.TILE_RESOURCE
-            idx += 1
+        Returns:
+            self，支持链式调用。
 
-        # 确定起点（左上角空地）和终点（右下角空地）
-        start = self._find_start(tile_map)
-        end = self._find_end(tile_map)
+        Raises:
+            ValueError: 种子不符合规则时抛出。
+        """
+        if seed is None:
+            self._seed = self.generate_random_seed()
+            return self
 
-        # 如果起点或终点是障碍物，强制设为空地
-        if tile_map[start[0]][start[1]] == self.TILE_WALL:
-            tile_map[start[0]][start[1]] = self.TILE_EMPTY
-        if tile_map[end[0]][end[1]] == self.TILE_WALL:
-            tile_map[end[0]][end[1]] = self.TILE_EMPTY
+        if isinstance(seed, int):
+            if seed < 1 or seed > 999999999:
+                raise ValueError(
+                    f"数字种子必须在 [1, 999999999] 范围内，收到: {seed}"
+                )
+            self._seed = seed
+            return self
 
-        # BFS 校验通路
-        if ensure_path:
-            path_exists = self._bfs_check(tile_map, start, end)
-            if not path_exists:
-                # 如果无通路，尝试打通一条路径
-                self._carve_path(tile_map, start, end)
+        if isinstance(seed, str):
+            # 过滤特殊字符，仅保留字母和数字
+            filtered = "".join(ch for ch in seed if ch.isalnum())
+            if len(filtered) < 1:
+                raise ValueError("字符串种子过滤后为空，请提供至少一个字母或数字")
+            if len(filtered) > 32:
+                filtered = filtered[:32]
+            self._seed = filtered
+            return self
 
-        # 收集空地格子列表
-        room_list = [
-            (r, c)
-            for r in range(height)
-            for c in range(width)
-            if tile_map[r][c] != self.TILE_WALL
-        ]
+        raise TypeError(f"不支持的种子类型: {type(seed)}")
 
-        return tile_map, start, end, room_list
+    # ──────────────────────────────────────────────
+    # 种子获取
+    # ──────────────────────────────────────────────
 
-    def _find_start(self, tile_map: List[List[int]]) -> Tuple[int, int]:
-        """找到起点（左上角区域）"""
-        height = len(tile_map)
-        width = len(tile_map[0])
-        # 从左上角开始找空地
-        for r in range(height):
-            for c in range(width):
-                if tile_map[r][c] != self.TILE_WALL:
-                    return (r, c)
-        return (0, 0)
+    def get_seed(self) -> Optional[Union[int, str]]:
+        """获取当前种子。
 
-    def _find_end(self, tile_map: List[List[int]]) -> Tuple[int, int]:
-        """找到终点（右下角区域）"""
-        height = len(tile_map)
-        width = len(tile_map[0])
-        # 从右下角开始找空地
-        for r in range(height - 1, -1, -1):
-            for c in range(width - 1, -1, -1):
-                if tile_map[r][c] != self.TILE_WALL:
-                    return (r, c)
-        return (height - 1, width - 1)
+        Returns:
+            当前种子值，未设置时返回 None。
+        """
+        return self._seed
 
-    def _bfs_check(
-        self,
-        tile_map: List[List[int]],
-        start: Tuple[int, int],
-        end: Tuple[int, int],
-    ) -> bool:
-        """BFS 检查起点到终点是否有通路"""
-        height = len(tile_map)
-        width = len(tile_map[0])
-        visited = [[False] * width for _ in range(height)]
-        queue = deque([start])
-        visited[start[0]][start[1]] = True
+    def get_seed_str(self) -> str:
+        """获取当前种子的字符串表示。
 
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        Returns:
+            种子字符串，未设置时返回空字符串。
+        """
+        if self._seed is None:
+            return ""
+        return str(self._seed)
 
-        while queue:
-            r, c = queue.popleft()
-            if (r, c) == end:
-                return True
-            for dr, dc in directions:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < height and 0 <= nc < width:
-                    if not visited[nr][nc] and tile_map[nr][nc] != self.TILE_WALL:
-                        visited[nr][nc] = True
-                        queue.append((nr, nc))
-        return False
+    # ──────────────────────────────────────────────
+    # 种子持久化（保存与读取）
+    # ──────────────────────────────────────────────
 
-    def _carve_path(
-        self,
-        tile_map: List[List[int]],
-        start: Tuple[int, int],
-        end: Tuple[int, int],
-    ) -> None:
-        """打通一条从起点到终点的路径（简单直线+随机偏移）"""
-        height = len(tile_map)
-        width = len(tile_map[0])
-        r1, c1 = start
-        r2, c2 = end
+    def save(self, filepath: Optional[str] = None) -> str:
+        """保存当前种子到文件。
 
-        # 先水平方向打通
-        step_c = 1 if c2 >= c1 else -1
-        for c in range(c1, c2 + step_c, step_c):
-            if tile_map[r1][c] == self.TILE_WALL:
-                tile_map[r1][c] = self.TILE_EMPTY
+        Args:
+            filepath: 保存路径，默认为 'seed_data.json'。
 
-        # 再垂直方向打通
-        step_r = 1 if r2 >= r1 else -1
-        for r in range(r1, r2 + step_r, step_r):
-            if tile_map[r][c2] == self.TILE_WALL:
-                tile_map[r][c2] = self.TILE_EMPTY
+        Returns:
+            实际保存的文件路径。
+        """
+        if self._seed is None:
+            raise RuntimeError("当前种子未设置，无法保存")
+
+        path = filepath or self._PERSIST_FILE
+        data = {
+            "seed": self._seed,
+            "seed_type": "int" if isinstance(self._seed, int) else "str",
+        }
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return path
+
+    def load(self, filepath: Optional[str] = None) -> "SeedManager":
+        """从文件加载种子。
+
+        Args:
+            filepath: 加载路径，默认为 'seed_data.json'。
+
+        Returns:
+            self，支持链式调用。
+
+        Raises:
+            FileNotFoundError: 文件不存在时抛出。
+            ValueError: 文件格式错误时抛出。
+        """
+        path = filepath or self._PERSIST_FILE
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"种子文件不存在: {path}")
+
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        seed_type = data.get("seed_type", "int")
+        seed = data["seed"]
+
+        if seed_type == "int":
+            self._seed = int(seed)
+        else:
+            self._seed = str(seed)
+
+        return self
+
+    # ──────────────────────────────────────────────
+    # 历史记录
+    # ──────────────────────────────────────────────
+
+    def push_history(self) -> "SeedManager":
+        """将当前种子压入历史记录。
+
+        Returns:
+            self，支持链式调用。
+        """
+        if self._seed is not None and self._seed not in self._history:
+            self._history.append(self._seed)
+        return self
+
+    def get_history(self) -> list:
+        """获取历史种子列表。
+
+        Returns:
+            历史种子列表。
+        """
+        return list(self._history)
+
+    def clear_history(self) -> "SeedManager":
+        """清空历史记录。
+
+        Returns:
+            self，支持链式调用。
+        """
+        self._history.clear()
+        return self
+
+    # ──────────────────────────────────────────────
+    # 工具方法
+    # ──────────────────────────────────────────────
+
+    def reset(self) -> "SeedManager":
+        """重置种子管理器（清空种子和历史）。
+
+        Returns:
+            self，支持链式调用。
+        """
+        self._seed = None
+        self._history.clear()
+        return self
+
+    def __repr__(self) -> str:
+        return f"SeedManager(seed={self._seed!r}, history_count={len(self._history)})"

@@ -78,6 +78,7 @@ def _do_first_write(state:CoderGraphState) -> Dict:
 
     if full_chunk.tool_calls:
         # 
+        graph_logger.info(f'there are some tool calls. {full_chunk.tool_calls}')
         return {
             'messages': [full_chunk],
             'attempts':1

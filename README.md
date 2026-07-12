@@ -10,7 +10,7 @@ npm run dev
 ```
 
 ## 节点
-### 0711
+### 0712
 - file工具不够，需要一个检查信息工具， 文件是否完整，行数，就是缩略工具。而非完全readfile ，token 过大
 - 不合理。AIMessage(content='文件已存在，我需要使用 `apply_search_replace` 来更新它。由于文件内容非常长，我将用 SEARCH/REPLACE 替换整个文件内容。',
 
@@ -23,6 +23,17 @@ test prompt却一直在写app
 inspect project 不应该存在. 我们不应该过度依赖于 工具, 这个完全可以通过state为支持. cuowu . llm不能直接调用state, 要么我们传入message, 要么tool
 
 应该为各个角色分配文件权限,  角色应该知道自己用那些文件
+
+改善后, 基本上会调用三次知识库,是合理的.
+
+现在看起来都是合理的.越小越好
+1. 我们的需求不够精,
+2. prompt职责不够严格
+
+现在就是 因为 从需求检索知识库, 得到很多内容,  这侧面就增大了  广度, 会导致llm 进行更多操作.
+recrusion limit 就是一个prompt 不超过多少条.
+必须严格要求相似度和topk
+RRFRanker策略 下面: 稀疏向量很容易完虐稠密向量, 导致排名后, 稠密向量是none
 
 ### 0710
 现在状态：

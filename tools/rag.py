@@ -7,7 +7,7 @@ from langchain_core.documents import Document
 from langchain_text_splitters import MarkdownHeaderTextSplitter,RecursiveCharacterTextSplitter
 from typing import List
 from tools import web_search
-
+from pprint import pprint
 from globals.logger import run_logger
 
 URI = "./knowledge.db"
@@ -94,6 +94,39 @@ class KnowledgeManager:
             
         self.client.load_collection(collection_name=self.collection_name)
 
+    def search_dense(self, queries: List[str], k: int = 5) -> list:
+        """
+        专职：单独进行稠密向量检索（纯语义匹配）
+        
+        Args:
+            query: 用户的查询文本字符串
+            k: 需要返回的最相关结果数量
+        """
+        if not self.client or not self.embedding:
+            run_logger.warning(f"Milvus 不可用，无法进行稠密搜索: {query}")
+            return []
+            
+        try:
+            # 1. 生成查询词的稠密向量 (只提取 dense_vecs)
+            vec = self.embedding.encode(queries, return_dense=True, return_sparse=False)
+            dense_vec = vec['dense_vecs'] # 取出第一条查询的向量
+            
+            # 2. 执行标准的向量相似度搜索
+            search_results = self.client.search(
+                collection_name=self.collection_name,
+                data=dense_vec,
+                anns_field="dense_vec",       # 确保与你集合中的稠密向量字段名一致
+                limit=k,
+                output_fields=["text"] # 显式带回你需要的业务字段
+            )
+            # pprint(f'dense results: {search_results}')
+            
+            return search_results[0] if search_results else []
+            
+        except Exception as e:
+            run_logger.error(f"单独稠密搜索发生异常: {str(e)}")
+            return []
+
 
     def search_hybrid(self, queries: List[str], k: int = 5):
         """只进行混合搜索"""
@@ -135,6 +168,7 @@ class KnowledgeManager:
             for hits in search_results:
                 # 内层循环：遍历当前查询词召回的 Top-K 条相似数据段
                 for hit in hits:
+                    distance = hit.get('distance', 0)
                     # 1. 核心提取：直接获取 entity 字典
                     entity = hit.get("entity", {})
 
@@ -162,6 +196,7 @@ class KnowledgeManager:
                         "header": full_header,
                         "source": source,
                         "type": doc_type,
+                        'distance':distance
                     })
 
             return results
@@ -260,7 +295,8 @@ def knowledge_search(queries: List[str]) -> str:
     knowledge = get_knowledge()  # 确保知识库已初始化
 
     try:
-        docs = knowledge.retrieve(queries=queries)
+        # 不会引入太多的知识
+        docs = knowledge.retrieve(queries=queries, local_k=2)
         if not docs:
             return "未找到相关知识。"
         return "\n\n".join(doc.get("text", doc) if isinstance(doc, dict) else doc.page_content for doc in docs[:5])
@@ -275,14 +311,19 @@ def knowledge_search(queries: List[str]) -> str:
 #     content = f.read()
 #     knowledge = get_knowledge()
 #     knowledge.add_text(content, 'prod.md', 'local')
+#     # result = knowledge.search_dense(queries=['seedManager'])
+#     # print(result)
 #     result = knowledge.retrieve(
 #         queries=[
-#                 '算法',
-#                 'seed',
-#                 '怪物生成'
-#         ]
+#                 'seedManager',
+#         ],
+#         local_k=2
 #     )
 #     print(result)
+
+
+
+
 # # 直接调用来加载知识。
 # import argparse
 

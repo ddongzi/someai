@@ -79,6 +79,7 @@ def _do_first_write(state:TestCoderGraphState) -> Dict:
     full_chunk.name = TEST_CODER_NODE_NAME
     if full_chunk.tool_calls:
         # 
+        graph_logger.info(f'there are some tool calls. {full_chunk.tool_calls}')
         return {
             'messages': [full_chunk],
         }

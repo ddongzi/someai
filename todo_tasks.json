@@ -1,8 +1,8 @@
 [
   {
     "id": 1,
-    "task_name": "实现网格随机算法",
-    "description": "根据知识库文档，实现网格随机算法",
+    "task_name": "实现SeedManager",
+    "description": "实现种子管理器,SeedManager. 具备最小化完整功能即可.",
     "dependencies": [],
     "status": "pending"
   }

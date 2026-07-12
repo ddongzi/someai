@@ -44,19 +44,22 @@ def draw_workflow_png(graph, name, dir='./art'):
     mmd_path = output_dir / f"{name}.mmd"
     png_path = output_dir / f"{name}.png"
 
-    # 3. 导出原始mermaid字符串
-    mermaid_text = graph.draw_mermaid()
-    # 4. 写入 mmd 文件到指定目录
-    with open(mmd_path, "w", encoding="utf-8") as f:
-        f.write(mermaid_text)
-        run_logger.info(f"已生成 {mmd_path}")
+    try:
 
-    # 5. 写入 png 文件到指定目录
-    png_data = graph.draw_mermaid_png()
-    with open(png_path, "wb") as f:
-        f.write(png_data)
-        run_logger.info(f"{png_path} saved.")
+        # 3. 导出原始mermaid字符串
+        mermaid_text = graph.draw_mermaid()
+        # 4. 写入 mmd 文件到指定目录
+        with open(mmd_path, "w", encoding="utf-8") as f:
+            f.write(mermaid_text)
+            run_logger.info(f"已生成 {mmd_path}")
 
+        # 5. 写入 png 文件到指定目录
+        png_data = graph.draw_mermaid_png()
+        with open(png_path, "wb") as f:
+            f.write(png_data)
+            run_logger.info(f"{png_path} saved.")
+    except Exception as e:
+        run_logger.exception(f'png mmd failed!. {e}')
 
 
 import json
