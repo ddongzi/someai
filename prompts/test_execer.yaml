@@ -4,5 +4,5 @@ system_base: |
 
 scenes:
   base: |
-    执行测试.
+    执行测试. 输出测试结果
         

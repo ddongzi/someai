@@ -27,13 +27,13 @@ def ready_node(state: GraphState) -> Dict:
 
     # file_ledger
     app_meta = FileMetadata(
-        path='app.py',
-        description='应用文件.',
+        path='app/app.py',
+        description='源代码.',
         permission='none'
     )
     test_meta = FileMetadata(
-        path='test.py',
-        description='测试文件.',
+        path='test/test.py',
+        description='测试代码.',
         permission='none'
     )
 

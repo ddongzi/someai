@@ -166,12 +166,6 @@ async def fork_workflow(body: Dict[str, Any]):
     checkpoint_id = body.get("checkpoint_id")
     state = body.get("state")
 
-    # 前端传来的一些list 要转为set
-    if 'pyright_target' in state and isinstance(state['pyright_target'], list):
-        state['pyright_target'] = set(state['pyright_target'])
-    if 'issue_manager_wait' in state and isinstance(state['issue_manager_wait'], list):
-        state['issue_manager_wait'] = set(state['issue_manager_wait'])
-
     if not checkpoint_id:
         raise HTTPException(status_code=400, detail="缺少 checkpoint_id 参数")
     

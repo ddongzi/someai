@@ -6,6 +6,7 @@ from tools.ast import ast_search
 from tools.pyright_client import find_symbol_definition, find_symbol_references
 from tools.filer import read_file, create_file,inspect_project,write_to_file
 from tools.git import git_tool
+from tools.pyright_check import static_check
 from tools.rag import knowledge_search
 from langchain_deepseek import ChatDeepSeek
 from langchain_ollama import ChatOllama
@@ -17,7 +18,7 @@ set_llm_cache(InMemoryCache())
 
 deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
 
-tools = [git_tool, knowledge_search, write_to_file,
+tools = [git_tool, knowledge_search, write_to_file,static_check,
           apply_search_replace,ast_search,inspect_project,
           find_symbol_references, find_symbol_definition, 
           read_file, create_file]
@@ -113,6 +114,71 @@ def fmt_messages(messages: list[AnyMessage]) -> str:
     # 用双虚线分隔每一轮对话，极大提升日志的可读性与排版美感
     return "\n\n" + "="*50 + " 📜 消息列表 " + "="*50 + "\n" + "\n\n--------------------------------------------------------------------------------\n\n".join(msgs) + "\n\n" + "="*124 + "\n"
 
+from functools import wraps
+from datetime import datetime
+import queue
+import threading
+import sqlite3
+
+LOG_FILE_PATH = "llm_token_logs.jsonl" 
+_telemetry_queue = queue.Queue()
+
+def _background_worker():
+    """后台消费者线程：常驻，专门负责把队列里的数据追加到本地文件中"""
+    while True:
+        try:
+            # 1. 从队列里拿数据（没有数据时会在这里挂起，不吃 CPU）
+            log_data = _telemetry_queue.get()
+            
+            # 毒丸机制：收到 None 说明要关机，退出线程
+            if log_data is None: 
+                break
+                
+            # 2. 核心改动：使用 'a' (append) 模式直接追加到文件末尾
+            # 这种写法极其高效，哪怕文件以后长到几个G，写入也只需要不到 1 毫秒
+            with open(LOG_FILE_PATH, 'a', encoding='utf-8') as f:
+                # 将你的 log_entry 转成单行 json 字符串，并加上换行符 \n
+                f.write(json.dumps(log_data, ensure_ascii=False) + "\n")
+                
+        except Exception as e:
+            print(f"❌ 后台持久化 Token 失败: {e}")
+        finally:
+            # 告诉队列，这个任务我处理完了
+            _telemetry_queue.task_done()
+
+# 启动后台守护线程（服务一启动就会常驻在后台，随时等待入队）
+worker_thread = threading.Thread(target=_background_worker, daemon=True)
+worker_thread.start()
+
+def track_llm_usage(func):
+    """
+    无侵入式的 Token 统计装饰器
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        full_content, full_chunk = func(*args, **kwargs)
+        
+        try:
+            llm = args[0] if args else None
+            model_name = "unknown_model"
+            if llm:
+                model_name = getattr(llm, "model_name", getattr(llm, "model", "unknown_model"))
+            log_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "model_name": model_name,
+                'usage': full_chunk.usage_metadata
+            }
+            
+            _telemetry_queue.put(log_entry)
+            
+        except Exception as e:
+            print(f"❌ 装饰器解析 Token 失败: {e}")
+            
+        return full_content, full_chunk
+        
+    return wrapper
+
+@track_llm_usage
 def call_llm(llm, prompt: list[AnyMessage], logger: Logger) -> str:
     logger.info(f'prompt: {fmt_messages(prompt)}')
 

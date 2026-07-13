@@ -9,15 +9,7 @@ system_base: |
 scenes:
   # 场景 审查code,test code
   base: |
-    审查下面源代码和测试代码。最多输出10条意见。
-    - 源代码
-    ```python
-    {{code}}    
-    ```
-    - 测试代码
-    ```python
-    {{test_code}}
-    ```
+    审查源代码和测试代码。最多输出10条意见。
 
     输出格式要求：
     ```json

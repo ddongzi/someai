@@ -11,6 +11,7 @@ from langgraph.types import Command
 from langchain.tools import ToolRuntime, tool
 from globals.state import FileMetadata
 from langchain.messages import ToolMessage
+from globals.logger import run_logger
 GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 
 @tool
@@ -169,6 +170,7 @@ def inspect_project(state: Annotated[dict, InjectedState]) -> str:
     Returns:
         str: 包含所有文件路径和描述的 Markdown 格式文本。
     """
+    run_logger.info(f'inspect project !..{state}')
     # 从自动注入的全局 State 中获取 file_ledger
     file_ledger = state.get("file_ledger", {})
     

@@ -49,17 +49,13 @@ class GraphState(TypedDict):
 
     attempts: Annotated[int, operator.add] # 重试次数，目前是只看tester的重试次数的，因为目前都会跑到tester
 
-    test_output: str # 测试代码输出
+    test_output: Annotated[str, any_write] # 测试代码输出
 
     is_issueing: bool # 是否正在处理修复建议
 
-    issue_manager_wait: Annotated[set[str], operator.or_] # judger, qaer
     issues: Annotated[list[Issue], operator.add] # 修复建议列表
 
     issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts] # {'coder' [], 'test_coder':}
-
-    pyright_target: Annotated[set[str], operator.or_] # code, test_code
-    pyright_result:  Annotated[dict, merge_dicts]  # {'code':[.., ..], 'test_code':[..,..]} 
 
     human_source: str # human 来源，比如max_attempts, no issue
 
@@ -84,11 +80,6 @@ def create_initial_state() -> GraphState:
         },
         is_issueing=False,
         issues=[],
-        pyright_result={
-            'code':[],
-            'test_code':[]
-        },
-        pyright_target=set(),
         file_ledger={}
     )
 

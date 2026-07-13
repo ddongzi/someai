@@ -21,7 +21,7 @@ from tools.rag import knowledge_search
 from tools.filer import write_to_file,create_file,read_file, inspect_file_summary,inspect_project,delete_files
 from tools.ast import ast_search
 from tools.pyright_client import find_symbol_definition, find_symbol_references
-
+from tools.pyright_check import static_check
 load_dotenv()
 
 GRAPH_NAME = 'coder_graph'
@@ -31,7 +31,7 @@ CODER_NODE_NAME = "coder_node"
 PROMPT_FILE_NAME ='coder'
 
 tools=[
-    knowledge_search, write_to_file,
+    knowledge_search, write_to_file,static_check,
     apply_search_replace,ast_search,inspect_project,
     find_symbol_references, find_symbol_definition, 
     read_file, create_file,inspect_file_summary, delete_files
@@ -51,10 +51,6 @@ class CoderGraphState(TypedDict,total=False):
     requirement: Annotated[str, any_write] # 需求，原始文本
 
     attempts: Annotated[int, operator.add] # 重试次数，目前是只看tester的重试次数的，因为目前都会跑到tester
-
-    pyright_result: Annotated[dict, merge_dicts] # {'code':[.., ..], 'test_code':[..,..]} 
-
-    pyright_target: Annotated[set[str], operator.or_] # code, test_code
 
     file_ledger: Annotated[dict[str, FileMetadata], merge_dicts]
 
@@ -97,46 +93,15 @@ def _do_first_write(state:CoderGraphState) -> Dict:
     
 
     return {
-        'pyright_target':{GRAPH_NAME},
         'messages': [full_chunk],
             'coder_subgraph_status': 'success'
 
     }
 
-def _do_pyright_repair(state: CoderGraphState) -> Dict:
-    system_prompt, user_prompt  = get_scene_prompt(
-        file_name=PROMPT_FILE_NAME,
-        scene_name='pyright_error',
-        pyright_result = state['pyright_result']['code']
-    )
-    messages = [
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=user_prompt)
-    ]
-    for msg in state['messages']:
-        messages.append(msg)
- 
-    full_content, full_chunk = call_llm(llm, messages, logger=graph_logger)
-    full_chunk.name = CODER_NODE_NAME
-
-    code = state['code']
-    modified_code = apply_search_replace.invoke({
-        'original':code,
-        'diff':full_content
-    })
-    state['code'] = modified_code
-    return {
-        'code': state['code'],
-        'messages': [full_chunk],
-            'attempts':1,
-            'coder_subgraph_status': 'success'
-
-
-    }
 
 def _do_fix_bug(state: CoderGraphState)->Dict:
-    issues = state['issue_buckets'].get('coder', [])
-    reviews = [iss.review for iss in issues]
+    issues = state['issue_buckets'].get(GRAPH_NAME, [])
+    reviews = [iss['review'] for iss in issues]
 
     system_prompt, user_prompt = get_scene_prompt(
         file_name=PROMPT_FILE_NAME,
@@ -153,15 +118,14 @@ def _do_fix_bug(state: CoderGraphState)->Dict:
 
     full_content, full_chunk = call_llm(llm, messages, logger=graph_logger)
     full_chunk.name = CODER_NODE_NAME
-
-    code = state['code']
-    modified_code = apply_search_replace.invoke({
-        'original':code,
-        'diff':full_content
-    })
-    state['code'] = modified_code
+    if full_chunk.tool_calls:
+        # 
+        graph_logger.info(f'there are some tool calls. {full_chunk.tool_calls}')
+        return {
+            'messages': [full_chunk],
+        }
+    
     return {
-        'code': state['code'],
         'issue_buckets':{'coder':[]},
         'messages': [full_chunk],
             'attempts':1,
@@ -174,11 +138,6 @@ def write_code_node(state: CoderGraphState) -> Dict:
     graph_logger.info("🤖 [Coder] 开始生成或重构业务代码")
     state['coder_subgraph_status'] = 'failed'
 
-    # 1. 处理pyright 静态 错误up
-    if  state['pyright_result'].get(GRAPH_NAME, None):
-        return _do_pyright_repair(state=state)
-    
-    # 2. 是否有issue
     issues = state['issue_buckets'].get(GRAPH_NAME, [])
     if issues:
         return _do_fix_bug(state)
