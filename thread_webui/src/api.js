@@ -64,7 +64,10 @@ export const clear = async () => {
   });
   return handleResponse(response); 
 }
-
+export const getLLMStat = async () => {
+    const response = await fetch(`${API_BASE_URL}/api/stat`,);
+  return handleResponse(response); 
+}
 export const interruptSubmit = async (checkpointId, interruptId, data) => {
   const response = await fetch(`${API_BASE_URL}/api/human_input`, {
     method: 'POST',

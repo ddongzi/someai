@@ -120,7 +120,7 @@ import queue
 import threading
 import sqlite3
 
-LOG_FILE_PATH = "llm_token_logs.jsonl" 
+LLM_TOKEN_LOGS_PATH = "llm_token_logs.jsonl" 
 _telemetry_queue = queue.Queue()
 
 def _background_worker():
@@ -136,7 +136,7 @@ def _background_worker():
                 
             # 2. 核心改动：使用 'a' (append) 模式直接追加到文件末尾
             # 这种写法极其高效，哪怕文件以后长到几个G，写入也只需要不到 1 毫秒
-            with open(LOG_FILE_PATH, 'a', encoding='utf-8') as f:
+            with open(LLM_TOKEN_LOGS_PATH, 'a', encoding='utf-8') as f:
                 # 将你的 log_entry 转成单行 json 字符串，并加上换行符 \n
                 f.write(json.dumps(log_data, ensure_ascii=False) + "\n")
                 
@@ -159,13 +159,9 @@ def track_llm_usage(func):
         full_content, full_chunk = func(*args, **kwargs)
         
         try:
-            llm = args[0] if args else None
-            model_name = "unknown_model"
-            if llm:
-                model_name = getattr(llm, "model_name", getattr(llm, "model", "unknown_model"))
             log_entry = {
                 "timestamp": datetime.now().isoformat(),
-                "model_name": model_name,
+                "model_name": full_chunk.model_name,
                 'usage': full_chunk.usage_metadata
             }
             

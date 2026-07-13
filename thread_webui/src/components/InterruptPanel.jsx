@@ -67,7 +67,7 @@ export default function InterruptPanel({ interrupts = [], onSubmit }) {
       {/* 顶部指示栏 */}
       <div className="font-bold text-amber-600 mb-3 flex items-center space-x-2 shrink-0 border-b border-amber-100 pb-2">
         <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
-        <span>⚡ 独立干预终端 ｜ 剩余待解密中断: {interrupts.length}</span>
+        <span>⚡ 中断 共{interrupts.length}个</span>
       </div>
 
       {/* 选项卡：在并行的多个中断之间顺畅切流 */}

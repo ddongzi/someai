@@ -23,7 +23,9 @@ from thread import Thread
 from workflow import MyWorkflow
 from tools.rag import get_knowledge
 from utils import get_file_logger
-
+import os
+from globals.llm import LLM_TOKEN_LOGS_PATH
+ 
 sse_logger = get_file_logger(
     logger_name='sse',
     log_dir='./logs',
@@ -200,6 +202,43 @@ async def human_input(body: Dict[str, Any]):
 async def get_history(limit: int = 20):
     """获取工作流历史"""
     return await thread.get_history(limit)
+
+
+@app.get("/api/stat/")
+async def get_llm_stats():
+    """
+    读取本地 llm_token_logs.jsonl 文件，返回所有大模型的历史用量统计
+    """
+    # 检查文件是否存在，防止服务崩溃
+    if not os.path.exists(LLM_TOKEN_LOGS_PATH):
+        return []  # 如果还没有日志，直接返回空列表
+
+    stats_list = []
+    
+    try:
+        # 打开并逐行读取 jsonl 文件
+        with open(LLM_TOKEN_LOGS_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue  # 跳过空行
+                
+                # 将单行字符串反序列化为 Python 字典
+                log_data = json.loads(line)
+                stats_list.append(log_data)
+                
+    except json.JSONDecodeError as e:
+        # 如果文件不幸损坏，抛出 500 错误或记录日志
+        raise HTTPException(status_code=500, detail=f"日志文件格式损坏: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"读取日志失败: {str(e)}")
+
+    # 默认返回最新调用的记录在最前面（逆序）
+    # 如果想按时间正序，把 .reverse() 删掉即可
+    stats_list.reverse() 
+    
+    return stats_list
+
 
 
 import subprocess
