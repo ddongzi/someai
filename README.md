@@ -12,6 +12,9 @@ cd thread_webui
 npm run dev
 ```
 
+![thread ui](<thread_webui/截图 2026-07-14 21-00-27.png>)
+![workflow](art/workflow.png)
+
 ## 节点
 0713
 
