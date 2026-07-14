@@ -124,7 +124,7 @@ def _do_fix_bug(state: TestCoderGraphState)->Dict:
     return {
         'messages': [full_chunk],
         'test_coder_subgraph_status':'success',
-        'issue_buckets':{'coder':[]},
+        'issue_buckets':{'test_coder_graph':[]},
 
     }
 def test_writer_node(state: TestCoderGraphState) -> Dict:

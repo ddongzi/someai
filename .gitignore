@@ -25,3 +25,5 @@ models/
 
 logs/
 *.log
+*.jsonl
+llm_token_logs.jsonl

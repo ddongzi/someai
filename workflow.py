@@ -45,22 +45,17 @@ class MyWorkflow:
     def build(self):
 
         def decide_after_issue_manager_node(state: GraphState):
-            # 由于这里默认不是并发等待，必须只有齐全了才可以，其余情况下直接pass
-            issues = state['issues']
-            if not issues:
-                return "no_issue"
-            
+
             issue_buckets = state['issue_buckets']
-            if 'coder' in issue_buckets.keys():
+
+            if 'coder_graph' in issue_buckets.keys() and issue_buckets['coder_graph']:
                 return "code_patcher"
-            if 'test_coder' in issue_buckets.keys():
+            if 'test_coder_graph' in issue_buckets.keys() and issue_buckets['test_coder_graph']:
                 return "test_code_patcher"
-            if 'human' in issue_buckets.keys():
+            if 'human_node' in issue_buckets.keys() and issue_buckets['human_node']:
                 return "design_patcher"
-            run_logger.warning(f"Unexpected issue assign: {issue_buckets.keys()}")
-            return 'dropped'
 
-
+            return 'no_issue'
 
         def decide_after_test_coder_graph(state: GraphState):
             run_logger.info(f'test coder graph done!')
@@ -138,7 +133,6 @@ class MyWorkflow:
             "issue_manager_node",
             decide_after_issue_manager_node,
             {
-                "dropped": END,
                 'no_issue': 'human_node', 
                 'test_code_patcher': 'test_coder_graph',
                 "code_patcher": "coder_graph",

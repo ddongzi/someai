@@ -202,7 +202,6 @@ class Thread:
 
         run_logger.info(f"从 Checkpoint ID: {checkpoint_id} 开始分叉并更新状态...")
 
-        # 1. 使用 update_state 将用户传入的 state 写入到该 checkpoint 上
         # 这会在底层自动生成一个处于新分叉分支的 fork_config,  这是一个新的checkpoint。复制而来类似
         fork_config = await self.workflow.graph.aupdate_state(
             target.config, 

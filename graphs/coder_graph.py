@@ -126,10 +126,9 @@ def _do_fix_bug(state: CoderGraphState)->Dict:
         }
     
     return {
-        'issue_buckets':{'coder':[]},
+        'issue_buckets':{'coder_graph':[]},
         'messages': [full_chunk],
-            'attempts':1,
-            'coder_subgraph_status': 'success'
+        'coder_subgraph_status': 'success'
 
     }
 

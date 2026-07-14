@@ -161,7 +161,7 @@ def track_llm_usage(func):
         try:
             log_entry = {
                 "timestamp": datetime.now().isoformat(),
-                "model_name": full_chunk.model_name,
+                "model_name": getattr(full_chunk, 'model_name', None) or getattr(base_llm, 'model'),
                 'usage': full_chunk.usage_metadata
             }
             

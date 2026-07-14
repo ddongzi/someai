@@ -37,7 +37,7 @@ def human_node(state: GraphState) -> Dict:
         run_logger.info(f"人工干预输入: {human_input}")
         return {}
     
-    if not state['issues']:
+    if not state['issue_buckets']['human_node'] and not state['issue_buckets']['coder_graph'] and not state['issue_buckets']['test_coder_graph'] :
         tip = f'no issue. 成功完成。请人工确认是否提交代码。如果拒绝，提供理由。'
         human_input = interrupt({
             'tip': tip,
@@ -47,7 +47,7 @@ def human_node(state: GraphState) -> Dict:
         if human_input == 'approved':
             git_tool.invoke({
                 'action': 'commit',
-                    'reason': 'Human approved, commit.',
+                    'reason': 'No issue.! Human approved, commit.',
                     'target': ''
             })
         run_logger.info(f"人工干预输入: {human_input}")

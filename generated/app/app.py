@@ -12,7 +12,7 @@ from typing import Any, Optional, Union
 class SeedManager:
     """种子管理器，管理随机种子的生成、存储与重置。
 
-    支持数字种子（1 ~ 999999999）和字符串种子（1~32 位字母数字）。
+    支持数字种子（任何整数）和字符串种子（1~32 位字母数字）。
     非法种子会自动生成 6 位随机数字兜底。
     所有随机行为统一绑定同一个种子，保证全局确定性。
     """
@@ -141,10 +141,6 @@ class SeedManager:
             raise TypeError(f"不支持的种子类型: bool")
 
         if isinstance(seed, int):
-            if seed < self.MIN_INT_SEED or seed > self.MAX_INT_SEED:
-                raise ValueError(
-                    f"超出范围: {seed}，允许范围 {self.MIN_INT_SEED} ~ {self.MAX_INT_SEED}"
-                )
             self._seed = seed
             self._random.seed(seed)
             return self

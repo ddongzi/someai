@@ -19,7 +19,6 @@ graph TD;
 	coder_graph -. &nbsp;max_attempts&nbsp; .-> human_node;
 	coder_graph -. &nbsp;success&nbsp; .-> qa_graph;
 	human_node -. &nbsp;success&nbsp; .-> __end__;
-	issue_manager_node -. &nbsp;dropped&nbsp; .-> __end__;
 	issue_manager_node -. &nbsp;code_patcher&nbsp; .-> coder_graph;
 	issue_manager_node -. &nbsp;design_patcher&nbsp; .-> human_node;
 	issue_manager_node -. &nbsp;test_code_patcher&nbsp; .-> test_coder_graph;

@@ -161,7 +161,7 @@ export default function InterruptPanel({ interrupts = [], onSubmit }) {
             type="submit" 
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded transition shadow-xs cursor-pointer w-full text-center"
           >
-            ⚡ 单项解锁：提交中断 #{activeIntIdx + 1} 响应
+            ⚡ 提交中断 #{activeIntIdx + 1} 响应
           </button>
         </div>
       </form>

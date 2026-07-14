@@ -55,7 +55,7 @@ class GraphState(TypedDict):
 
     issues: Annotated[list[Issue], operator.add] # 修复建议列表
 
-    issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts] # {'coder' [], 'test_coder':}
+    issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts] # 
 
     human_source: str # human 来源，比如max_attempts, no issue
 
@@ -74,9 +74,9 @@ def create_initial_state() -> GraphState:
         test_code="",
         test_output="",
         issue_buckets = {
-            'coder':[],
-            'test_coder':[],
-            'human':[]
+            'coder_graph':[],
+            'test_coder_graph':[],
+            'human_node':[]
         },
         is_issueing=False,
         issues=[],
