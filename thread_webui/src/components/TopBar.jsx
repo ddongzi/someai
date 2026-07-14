@@ -15,11 +15,6 @@ export default function TopBar({
   return (
     <div className="w-full h-14 bg-white px-4 flex items-center justify-between text-xs border-b border-slate-200 shrink-0 shadow-sm relative">
       <div className="flex items-center space-x-6">
-        {/* SSE 状态 */}
-        <div className="flex items-center space-x-2">
-          <span className={`h-2.5 w-2.5 rounded-full ${sseConnected ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-rose-500'}`}></span>
-          <span className="font-bold text-slate-700">SSE: {sseConnected ? 'CONNECTED' : 'DISCONNECTED'}</span>
-        </div>
 
         {/* Thread 信息 */}
         <div className="bg-blue-50 border border-blue-200 px-3 py-1 rounded">
