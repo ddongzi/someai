@@ -65,8 +65,7 @@ from utils import json_serializer
 
 # 允许 React 开发服务器的端口访问
 origins = [
-    "http://localhost:5173",
-    "http://localhost:3000",
+    "*",
 ]
 
 app.add_middleware(

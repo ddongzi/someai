@@ -16,7 +16,15 @@ npm run dev
 ![workflow](art/workflow.png)
 
 ## 节点
-0713
+0725
+引入speckit 规范驱动开发,  应该更好做出spec plan tasks.
+/speckit.specify
+/speckit.plan
+/speckit.tasks
+
+/speckit.implement (对于实现节点)
+/speckit.converge (对应judge节点)
+
 
 ## 技术扩展：
 - 角色文件权限
@@ -36,11 +44,8 @@ npm run dev
 Q1. 在涉及多轮对话时候，历史消息需要组织吗？
    目前仍然是messages字段，一味的增加。
    这可能涉及到Transfromer框架的注意力机制，对不同Message
-Q2. 知识库与state的边界？
-   比如PROD,SPEC是否放在state更快更广泛。 但是知识库更加精准。
 
 ## 一些理念：
 1. 人机边界和协同。
 - llm发散，会很喜欢调用工具，这使得在初期要跟着llm的ToolMessage请求补充我们的工具。至少对新项目来说，人决策、模型执行是模糊的。
-- PRD需求稳定, SPEC接口/数据边界 都应该由human完全控制，DD技术文档由模型，他有着更好的经验技术。
 - 因为文档可能过大，human规划控制todo_tasks，每次执行只实现一个小功能

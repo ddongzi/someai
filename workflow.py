@@ -20,6 +20,7 @@ from graphs.qa_graph import graph as qa_graph
 from issue_manager import issue_manager_node
 from graphs.test_exec_graph import graph as test_execer_graph
 from graphs.judge_graph import graph as judge_graph
+from graphs.spec_graph import graph as spec_graph
 from human_node import human_node
 import logging
 
@@ -78,6 +79,9 @@ class MyWorkflow:
         def decide_after_human_node(state: GraphState):
             return "success"
 
+        def decide_after_spec_graph(state:GraphState):
+            return 'failed'
+
         self.graph.add_node('ready_node', ready_node)
 
         self.graph.add_node('coder_graph', coder_graph)
@@ -88,12 +92,28 @@ class MyWorkflow:
         self.graph.add_node('qa_graph',qa_graph )
 
         self.graph.add_node("judge_graph", judge_graph)
+        self.graph.add_node("spec_graph", spec_graph)
         self.graph.add_node("issue_manager_node", issue_manager_node)
 
         self.graph.set_entry_point("ready_node")
-        self.graph.add_edge('ready_node', 'coder_graph')
-        self.graph.add_edge('ready_node', 'test_coder_graph')
+
+        self.graph.add_edge('ready_node', 'spec_graph')
+
+        ## 为了测试spec 图, 先连接到 end
+        self.graph.add_edge('spec_graph', END)
+
+        # self.graph.add_edge('spec_graph', 'coder_graph')
+        # self.graph.add_edge('spec_graph', 'test_coder_graph')
         
+        self.graph.add_conditional_edges(
+            'spec_graph',
+            decide_after_spec_graph,
+            {
+                    'go_coder': 'coder_graph',      
+                    'go_test_coder': 'test_coder_graph', 
+                    'failed': END                 
+            }   
+        )
 
         self.graph.add_conditional_edges(
             'coder_graph', 
@@ -147,7 +167,5 @@ class MyWorkflow:
             self.graph  = self.graph.compile(checkpointer=saver)
             draw_workflow_png(self.graph.get_graph(), 'workflow')
             yield saver
-
-
 
 
