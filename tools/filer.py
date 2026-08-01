@@ -5,17 +5,31 @@ from dotenv import load_dotenv
 import logging
 import re
 import shutil
-load_dotenv()
 from pathlib import Path
 from langgraph.types import Command
 from langchain.tools import ToolRuntime, tool
-from globals.state import FileMetadata
+from globals.state import FileSnapshot
 from langchain.messages import ToolMessage
 from globals.logger import run_logger
+from typing import Annotated
+from langchain_core.tools import tool
+from langgraph.prebuilt import InjectedState
+from utils import calculate_file_hash
+from datetime import datetime, timezone
+import json
+
+from pathlib import Path
+from datetime import datetime, timezone
+from langchain_core.tools import tool
+from langchain_core.messages import ToolMessage, RemoveMessage
+from langgraph.types import Command
+from typing_extensions import Annotated
+from langgraph.prebuilt import InjectedState
+load_dotenv()
 GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 
 @tool
-def read_file(file_path: str) -> str:
+def read_file(file_path: str, state: Annotated[dict, InjectedState], runtime: ToolRuntime) -> str:
     """
     读取指定文本文件的完整内容。
     
@@ -26,45 +40,84 @@ def read_file(file_path: str) -> str:
               错误示例: 'generated/test.py'
     """
     try:
-        # 1. 安全检查：防止路径穿越漏洞（Path Traversal）
-        # 将工作目录和目标路径转为绝对路径
+        # 1. 安全检查：防止路径穿越漏洞
         base_path = Path(GENERATED_DIR).resolve()
         target_path = Path(base_path, file_path).resolve()
         
-        # 确保目标路径在工作目录之内
         if not target_path.is_relative_to(base_path):
             return f"错误：拒绝访问。路径 '{file_path}' 超出了允许的工作目录范围。"
             
-        # 2. 存在性与类型检查
         if not target_path.exists():
             return f"错误：文件 '{file_path}' 不存在。请核对路径是否正确。"
         if not target_path.is_file():
             return f"错误：'{file_path}' 是一个目录，不是文件。无法读取内容。"
-            
-        # 3. 读取内容（带编码容错）
-        # 优先使用 utf-8，失败时使用 gbk（兼容 Windows），彻底失败时报错
-        try:
-            with open(target_path, "r", encoding="utf-8") as f:
-                content = f.read()
-        except UnicodeDecodeError:
-            with open(target_path, "r", encoding="gbk") as f:
-                content = f.read()
-                
-        # 4. 返回成功结果（如果文件为空，给予明确提示）
+
+        current_file_hash = calculate_file_hash(target_path)
+        
+        # 稳妥获取旧快照，如果不存在则初始化
+        files_dict = state.get('files', {})
+        file_snapshot: FileSnapshot = files_dict.get(file_path, {
+            'file_name': Path(file_path).name,
+            'file_path': file_path,
+            'last_read_time': '',
+            'last_modified_time': '',
+            'file_hash': '',
+            'allowed_read_nodes': [],  # 根据您之前的设计可选
+            'allowed_write_nodes': []
+        })
+
+        if file_snapshot['file_hash'] == current_file_hash:
+            return f"提示：文件 '{file_path}' 自上次读取后未发生变化，内容未更新。请直接从当前记忆上下文中获取内容。"
+
+        with open(target_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
         if not content.strip():
             return f"提示：文件 '{file_path}' 内容为空。"
-            
-        return content
+
+        # 🌟 4. 核心优化：消息“除旧”逻辑
+        messages_to_update = []
+        history_messages = state.get("messages", [])
+
+        for msg in history_messages:
+            if isinstance(msg, ToolMessage) and msg.name == "read_file":
+                if isinstance(msg.artifact, dict) and msg.artifact.get("file_path") == file_path:
+                    diluted_message = ToolMessage(
+                        id=msg.id, #
+                        tool_call_id=msg.tool_call_id,
+                        content="[系统提示：此处的旧文件内容已被清理，请参考后续最新的读取结果]" # 清空之前旧的消息.
+                    )
+                    messages_to_update.append(diluted_message)
+
+        # 5. 更新快照数据
+        file_snapshot.update({
+            'file_hash': current_file_hash,
+            'last_read_time': datetime.now(timezone.utc).isoformat(),
+        })
+
+        # 🌟 6. 放入新消息，
+        new_tool_message = ToolMessage(
+            content=content,
+            artifact={
+                'file_path': file_path,
+            },
+            tool_call_id=runtime.tool_call_id,
+        )
+        messages_to_update.append(new_tool_message)
+
+        # 7. 统一提交更新
+        return Command(
+            update={
+                'files': {file_path: file_snapshot},  # 更新快照字典
+                'messages': messages_to_update         # [OldToolMessage, ..., NewToolMessage]
+            }
+        )
 
     except Exception as e:
-        # 捕获其他未知异常，并返回友好的错误信息给 Agent
         return f"读取文件时发生未知错误: {str(e)}"
 
-
-from pathlib import Path
-
 @tool
-def write_to_file(file_path: str, content: str) -> str:
+def write_to_file(file_path: str, description: str, content: str, state:Annotated[dict, InjectedState],runtime: ToolRuntime) -> str:
     """
     完全覆盖重写已存在的文件内容。如果文件或其所在的目录不存在，将返回错误。
     
@@ -74,6 +127,10 @@ def write_to_file(file_path: str, content: str) -> str:
               正确示例: 'core/main.py', 'test.py'
               错误示例: 'generated/test.py'
         content: 写入的全部内容。
+        description: 文件摘要描述
+
+        state: 无需传入,会自动注入
+        runtime (ToolRuntime): 工具执行时的运行时上下文对象。参数会自动注入
     Return:
         写入成功/失败响应。
     """
@@ -95,15 +152,42 @@ def write_to_file(file_path: str, content: str) -> str:
 
         # 4. 执行覆盖写入
         target_path.write_text(content, encoding="utf-8")
-            
-        return f"成功：文件 '{file_path}' 已被重新写入，共 {len(content)} 个字符。"
+
+        # 5. 更新文件快照
+        current_file_hash = calculate_file_hash(target_path)
+        files_dict = state.get('files', {})
+        file_snapshot: FileSnapshot = files_dict.get(file_path, {
+            'file_name': Path(file_path).name,
+            'file_path': file_path,
+            'last_read_time': '',
+            'last_modified_time': '',
+            'file_hash': '',
+        })
+
+        file_snapshot.update({
+            'file_hash': current_file_hash,
+            'description': description,
+            'last_modified_time': datetime.now(timezone.utc).isoformat(),
+        })
+
+        return Command(
+            update={
+                'files': {file_path: file_snapshot},  # 更新快照字典
+                'messages': [
+                    ToolMessage(
+                        content=f"成功：文件 '{file_path}' 已成功覆盖重写，并写入了 {len(content)} 个字符。",
+                        tool_call_id=runtime.tool_call_id,
+                    )
+                ]
+            }
+        )
     except Exception as e:
         return f"错误：写入文件失败。原因：{str(e)}"
 
 
 
 @tool
-def create_file(file_path: str, content: str, description:str, runtime:ToolRuntime) -> str:
+def create_file(file_path: str, content: str, description:str, state:Annotated[dict, InjectedState],runtime:ToolRuntime) -> str:
     """
     在目录中创建一个新文件，并写入初始内容。如果文件已存在，则会报错。
     
@@ -111,9 +195,9 @@ def create_file(file_path: str, content: str, description:str, runtime:ToolRunti
         file_path: 位于项目内部的相对文件路径。
             注意：请直接写文件名或内部子路径，绝对不要包含项目路径
         content: 写入文件的初始文本内容。
-        description: 文件用途描述
+        description: 文件摘要描述
         runtime (ToolRuntime): 工具执行时的运行时上下文对象。参数会自动注入
-
+        state: 无需传入,会自动注入
     """
     try:
             
@@ -134,16 +218,27 @@ def create_file(file_path: str, content: str, description:str, runtime:ToolRunti
         # 5. 写入内容
         target_path.write_text(content, encoding="utf-8")
 
-        mt = FileMetadata(
-            path=file_path,
-            description=description,
-            permission='none'
-        )
+        # 6. 更新文件快照
+        current_file_hash = calculate_file_hash(target_path)
+        files_dict = state.get('files', {})
+        file_snapshot: FileSnapshot = files_dict.get(file_path, {
+            'file_name': Path(file_path).name,
+            'file_path': file_path,
+            'last_read_time': '',
+            'last_modified_time': '',
+            'file_hash': '',
+            'description': description,
+            'allowed_read_nodes': [],  # 根据您之前的设计可选
+            'allowed_write_nodes': []
+        })
+        
+        file_snapshot.update({
+            'file_hash': current_file_hash,
+            'last_modified_time': datetime.now(timezone.utc).isoformat(),
+        })
         return Command(
             update={
-                'file_ledger': {
-                    mt["path"] : mt
-                },
+                'file_ledger': {file_path: file_snapshot},  # 更新快照字典 
                 'messages': [
                     ToolMessage(
                         content=f"成功：文件 '{file_path}' 已成功创建，并写入了 {len(content)} 个字符。",
@@ -156,9 +251,7 @@ def create_file(file_path: str, content: str, description:str, runtime:ToolRunti
     except Exception as e:
         return f"创建文件时发生未知错误: {str(e)}"
     
-from typing import Annotated
-from langchain_core.tools import tool
-from langgraph.prebuilt import InjectedState
+
 
 @tool
 def inspect_project(state: Annotated[dict, InjectedState]) -> str:
@@ -358,6 +451,7 @@ def delete_files(file_paths: Union[str, List[str]], reason: str,state: Annotated
             else:
                 target_real_path.unlink()
 
+            # 更新file_ledger状态，移除已删除的文件条目
             if path in new_file_ledger:
                 new_file_ledger[path] = None
 
@@ -373,7 +467,7 @@ def delete_files(file_paths: Union[str, List[str]], reason: str,state: Annotated
     if failed_results:
         report.append("\n❌ 遭拦截/失败的项目:")
         report.extend([f"  - {item}" for item in failed_results])
-        
+
     return Command(
         update={
             'file_ledger': new_file_ledger,

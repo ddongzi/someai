@@ -18,7 +18,7 @@ import os
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from utils import draw_workflow_png
-from globals.state import GraphState, Issue,any_write,merge_dicts,FileMetadata
+from globals.state import GraphState, Issue,any_write,merge_dicts,FileSnapshot
 GRAPH_NAME = 'judge_graph'
 
 JUDGE_NODE_NAME = "judge_node"
@@ -37,7 +37,7 @@ graph_logger = get_file_logger(
 )
 class JudgeGraphState(TypedDict):
     test_output: str # 测试代码输出
-    file_ledger: Annotated[dict[str, FileMetadata], merge_dicts]
+    file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
 
     # 私有
     messages:Annotated[list[AnyMessage], add_messages]

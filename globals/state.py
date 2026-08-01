@@ -1,6 +1,6 @@
 from typing import Annotated, List, TypedDict,Dict
 import operator
-
+from pathlib import Path
 # reducer for shared state
 
 def any_write(left, right):
@@ -11,16 +11,13 @@ def any_write(left, right):
     """
     return right if right is not None else left
 def merge_dicts(left: dict, right: dict) -> dict:
-    # 强力容错：防止其中一方为 None
     left = left or {}
     right = right or {}
     new_dict = left.copy()
     
     for k, v in right.items():
-        # 模式一：【删除】如果新传进来的值明确是 None，直接把这个键拔掉
         if v is None:
             new_dict.pop(k, None)
-        # 模式三：【新增 或 整体覆盖】如果是新文件，或者不是字典类型，直接赋值
         else:
             new_dict[k] = v
             
@@ -38,10 +35,15 @@ class Issue(TypedDict):
     assign: str # coder, test_coder, human
     review: str # 修复建议
 
-class FileMetadata(TypedDict):
-    path:str
-    description: str  
-    permission: str   
+class FileSnapshot(TypedDict):
+    file_name: str
+    file_path: str
+    last_read_time: str
+    last_modified_time: str
+    file_hash: str
+    description: str
+    allowed_read_nodes: List[str] = []   # 哪些节点（角色）可以读取此文件
+    allowed_write_nodes: List[str] = []  # 哪些节点（角色）可以修改/写入此文件
 
 class GraphState(TypedDict):
 
@@ -59,7 +61,7 @@ class GraphState(TypedDict):
 
     human_source: str # human 来源，比如max_attempts, no issue
 
-    file_ledger: Annotated[dict[str, FileMetadata], merge_dicts]
+    file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
 
     # 子图状态
     coder_subgraph_status: Annotated[str, any_write] # success

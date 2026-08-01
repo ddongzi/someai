@@ -6,14 +6,27 @@ config:
 graph TD;
 	__start__([<p>__start__</p>]):::first
 	router_node(router_node)
+	constitution_node(constitution_node)
 	spec_node(spec_node)
+	plan_node(plan_node)
+	tasks_node(tasks_node)
 	tools_node(tools_node)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> router_node;
-	router_node --> spec_node;
-	spec_node -. &nbsp;success&nbsp; .-> __end__;
+	constitution_node -. &nbsp;success&nbsp; .-> spec_node;
+	constitution_node -. &nbsp;tools_executor&nbsp; .-> tools_node;
+	plan_node -. &nbsp;success&nbsp; .-> tasks_node;
+	plan_node -. &nbsp;tools_executor&nbsp; .-> tools_node;
+	router_node --> constitution_node;
+	spec_node -. &nbsp;success&nbsp; .-> plan_node;
 	spec_node -. &nbsp;tools_executor&nbsp; .-> tools_node;
-	tools_node --> spec_node;
+	tasks_node -. &nbsp;success&nbsp; .-> __end__;
+	tasks_node -. &nbsp;tools_executor&nbsp; .-> tools_node;
+	tools_node -. &nbsp;unexpected&nbsp; .-> __end__;
+	tools_node -.-> constitution_node;
+	tools_node -.-> plan_node;
+	tools_node -.-> spec_node;
+	tools_node -.-> tasks_node;
 	classDef default fill:#f2f0ff,line-height:1.2
 	classDef first fill-opacity:0
 	classDef last fill:#bfb6fc

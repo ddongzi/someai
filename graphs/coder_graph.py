@@ -14,7 +14,7 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from globals import MAX_ATTAMPTS
-from globals.state import GraphState, Issue,any_write,merge_dicts,FileMetadata
+from globals.state import GraphState, Issue,any_write,merge_dicts,FileSnapshot
 from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
 from tools.rag import knowledge_search
@@ -52,7 +52,7 @@ class CoderGraphState(TypedDict,total=False):
 
     attempts: Annotated[int, operator.add] # 重试次数，目前是只看tester的重试次数的，因为目前都会跑到tester
 
-    file_ledger: Annotated[dict[str, FileMetadata], merge_dicts]
+    file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
 
     issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts]
 

@@ -60,7 +60,7 @@ def apply_search_replace(file_path: str, diff: str) -> str:
         # 5. 将修改后的内容写回磁盘
         target_path.write_text(modified_content, encoding="utf-8")
         
-        return f"✅ 成功：文件 '{file_path}' 已成功应用 {len(blocks)} 个代码块的修改。"
+        return f"✅ 成功：文件 '{file_path}' 已成功应用 {len(blocks)} 个块的修改。"
 
     except Exception as e:
         return f"❌ 错误：修改文件时发生异常。原因：{str(e)}"

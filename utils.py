@@ -290,3 +290,35 @@ def get_file_logger(logger_name: str, filename: str, log_dir: str = 'logs',
         run_logger.addHandler(console_handler)
         
     return run_logger
+
+
+import hashlib
+from pathlib import Path
+from typing import Union
+
+def calculate_file_hash(file_path: Union[str, Path], chunk_size: int = 8192) -> str:
+    """
+    分块计算文件的 MD5 哈希值，防止大文件撑爆内存。
+    
+    Args:
+        file_path: 绝对文件路径
+        chunk_size: 每次读取的字节数，默认 8KB
+        
+    Returns:
+        str: 32位的十六进制 MD5 哈希字符串
+    """
+    # 确保路径格式正确
+    path = Path(file_path).resolve()
+    
+    if not path.is_file():
+        raise FileNotFoundError(f"文件不存在: {path}")
+        
+    md5_hash = hashlib.md5()
+    
+    # 使用二进制模式 ('rb') 读取，确保对所有类型文件（文本、二进制）的通用性
+    with open(path, "rb") as f:
+        # 循环分块读取
+        while chunk := f.read(chunk_size):
+            md5_hash.update(chunk)
+            
+    return md5_hash.hexdigest()

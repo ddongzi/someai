@@ -16,7 +16,17 @@ npm run dev
 ![workflow](art/workflow.png)
 
 ## 节点
-0725
+0730
+- [ ] 上下文历史消息内容重复,比如多次重复调用toool,readfile等，导致token消耗大. 这也直接导致了 recursion limit 容易达到:
+  1. prompt提示?
+  2. 工具提示: 检查hash,如果没有变化 通知使用记忆
+  3. 历史消息 除旧?
+- [ ] 提示词工程:  总会偶尔发疯
+- [ ] recrusion limit 25 图内节点执行次数,全图累计.  50次都容易达到 
+- [ ] 文件权限
+- [ ] 子图内检查点
+- [ ] 
+
 引入speckit 规范驱动开发,  应该更好做出spec plan tasks.
 /speckit.specify
 /speckit.plan

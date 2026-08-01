@@ -18,7 +18,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from utils import draw_workflow_png
 import operator
 from langgraph.graph.message import add_messages,AnyMessage
-from globals.state import GraphState, Issue,any_write,merge_dicts,FileMetadata
+from globals.state import GraphState, Issue,any_write,merge_dicts,FileSnapshot
 GRAPH_NAME = 'qa_graph'
 
 QA_NODE_NAME = "qa_node"
@@ -41,7 +41,7 @@ GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 
 class QAGraphState(TypedDict):
     issues: Annotated[list[Issue], operator.add] # 修复建议列表
-    file_ledger: Annotated[dict[str, FileMetadata], merge_dicts]
+    file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
 
     # 私有
     messages:Annotated[list[AnyMessage], add_messages]

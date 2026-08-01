@@ -2,7 +2,7 @@ from tools.rag import get_knowledge
 from typing import Dict
 from tools.git import git_tool
 from utils import get_first_pending_task
-from globals.state import GraphState, Issue, FileMetadata
+from globals.state import GraphState, Issue, FileSnapshot
 from globals.logger import run_logger
 prod_file_path = "prod.md"
 spec_file_path = "spec.md"
@@ -25,22 +25,7 @@ def ready_node(state: GraphState) -> Dict:
     # 设置requirement
     task = get_first_pending_task()
 
-    # file_ledger
-    app_meta = FileMetadata(
-        path='app/app.py',
-        description='源代码.',
-        permission='none'
-    )
-    test_meta = FileMetadata(
-        path='test/test.py',
-        description='测试代码.',
-        permission='none'
-    )
 
     return {
         'requirement': task['description'],
-        'file_ledger':{
-            app_meta['path']: app_meta,
-            test_meta['path']: test_meta
-        }
     }
