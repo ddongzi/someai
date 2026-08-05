@@ -11,7 +11,8 @@ from tools.rag import knowledge_search
 from langchain_deepseek import ChatDeepSeek
 from langchain_ollama import ChatOllama
 import os
-from langchain.messages import AnyMessage
+from langchain_core.tools import tool
+from langchain_core.messages import messages_to_dict,AnyMessage, SystemMessage, HumanMessage, AIMessage, ToolMessage
 from logging import Logger
 # set_llm_cache(SQLiteCache())
 set_llm_cache(InMemoryCache())
@@ -176,7 +177,14 @@ def track_llm_usage(func):
 
 @track_llm_usage
 def call_llm(llm, prompt: list[AnyMessage], logger: Logger) -> str:
-    logger.info(f'prompt: {fmt_messages(prompt)}')
+    # logger.info(f'prompt: {fmt_messages(prompt)}')
+
+    dict_list = messages_to_dict(prompt)
+
+    # 3. 转换为 JSON 字符串（处理好中文编码）
+    json_str = json.dumps(dict_list, ensure_ascii=False, indent=2)
+    logger.info(f'prompt:\n{json_str}')
+
 
     full_content = ""
     full_chunk = None

@@ -1,7 +1,10 @@
 ---
-description: Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts.
+description: Generate or update an actionable, dependency-ordered tasks.md for the feature based on available design artifacts.
 
 ---
+
+The update action must be cautious and rigorous; update the file ONLY when absolutely necessary, otherwise keep the original file unchanged.
+
 
 
 You **MUST** consider the user input before proceeding (if not empty).

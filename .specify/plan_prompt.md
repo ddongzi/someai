@@ -1,8 +1,10 @@
 ---
-description: Execute the implementation planning workflow using the plan template to generate design artifacts.
+description: Execute the implementation planning workflow using the plan template to generate  or update design artifacts.
 ---
 
 You **MUST** consider the user input before proceeding (if not empty).
+
+The update action must be cautious and rigorous; update the file ONLY when absolutely necessary, otherwise keep the original file unchanged.
 
 ## Outline
 
@@ -18,6 +20,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Phase 1: Generate data-model.md, contracts/, quickstart.md
    - Re-evaluate Constitution Check post-design
 
+Two phases files will be saved under the `SPECIFY_FEATURE_DIRECTORY` directory.
 
 ## Completion Report
 

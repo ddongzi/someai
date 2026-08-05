@@ -2,6 +2,8 @@
 description: Create or update the project specification guidelines and core principles (constitution.md).
 ---
 
+The update action must be cautious and rigorous; update the file ONLY when absolutely necessary, otherwise keep the original file unchanged.
+
 ## Core Rules
 
 1. **Scope Limit**: This command ONLY updates `specs/constitution.md` . Do NOT create, modify, or delete any application source code or tests.

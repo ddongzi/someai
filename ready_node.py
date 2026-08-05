@@ -4,10 +4,34 @@ from tools.git import git_tool
 from utils import get_first_pending_task
 from globals.state import GraphState, Issue, FileSnapshot
 from globals.logger import run_logger
-prod_file_path = "prod.md"
-spec_file_path = "spec.md"
-dd_file_path = "dd.md"
+import os
+import sys
+from dotenv import load_dotenv
+from pathlib import Path
+load_dotenv()
+GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 
+
+def init_file_ledger() -> Dict[str, FileSnapshot]:
+    base_path = Path(GENERATED_DIR).resolve()
+    generated_ledger = {}
+    
+    # 定义需要排除的目录名
+    exclude_dirs = {'.git', '.idea', '.vscode', 'node_modules', 'venv', '__pycache__', 'dist'}
+    
+    # rglob('*') 会递归遍历所有文件和文件夹
+    for path in base_path.rglob('*'):
+        if any(part.startswith('.') or part in exclude_dirs for part in path.relative_to(base_path).parts):
+            continue
+            
+        if path.is_file():
+            rel_path = str(path.relative_to(base_path))
+                
+            generated_ledger[rel_path] = FileSnapshot(
+                file_name=path.name,
+                file_path=str(rel_path),
+            )
+    return generated_ledger
 
 def ready_node(state: GraphState) -> Dict:
     knowledge = get_knowledge()
@@ -25,7 +49,9 @@ def ready_node(state: GraphState) -> Dict:
     # 设置requirement
     task = get_first_pending_task()
 
-
+    file_ledger = init_file_ledger()
+            
     return {
         'requirement': task['description'],
+        'file_ledger': file_ledger,
     }

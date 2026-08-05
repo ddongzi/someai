@@ -5,10 +5,9 @@ from langchain_tavily import TavilySearch  # 最新推荐的官方标准导入�
 
 
 @tool
-def query_python_docs(query: str = "python最新版本中注解有什么变化？") -> str:
+def web_search(query: str = "python最新版本中注解有什么变化？") -> str:
     """
-    专门用于在 Python 官方文档中搜索与查询技术细节（如注解变化、语法特性、标准库）。
-    当 Agent 需要核实最新的 Python 特性或查阅官方文档指导时，应调用此工具。
+    网络搜索工具
     
     参数:
         query: 具体的中文或英文自然语言搜索词。

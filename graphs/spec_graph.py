@@ -7,8 +7,7 @@
 """
 from typing import Dict
 from globals.llm import get_llm_with_tools,call_llm
-from tools.setup_spec_environment import setup_spec_environment
-from tools.filer import write_to_file, create_file, read_file,delete_files
+from tools.filer import write_to_file, create_file, read_file,delete_files,inspect_project
 from tools.search_replace_tool import apply_search_replace
 from pathlib import Path
 from langchain.messages import SystemMessage, HumanMessage, AnyMessage,ToolMessage
@@ -24,6 +23,7 @@ import operator
 from langgraph.graph.message import add_messages,AnyMessage,RemoveMessage
 from globals.state import GraphState, Issue,any_write,merge_dicts,FileSnapshot
 from tools.environment import get_environment_variable
+from tools.setup_spec_environment import setup_spec_environment
 from tools.time import get_current_time
 from globals.state import merge_dicts, FileSnapshot
 GRAPH_NAME = 'spec'
@@ -35,16 +35,18 @@ graph_logger = get_file_logger(
 tools= [
      setup_spec_environment, write_to_file, 
          create_file, read_file, apply_search_replace,delete_files, 
-         get_environment_variable, get_current_time   
+         get_environment_variable, get_current_time, inspect_project
 ]
-llm = get_llm_with_tools( [write_to_file, 
+llm = get_llm_with_tools( [
+    write_to_file, 
          create_file, read_file, apply_search_replace,delete_files, 
-         get_environment_variable, get_current_time])
+         get_environment_variable, get_current_time,inspect_project])
 
 spec_llm = get_llm_with_tools([
-    setup_spec_environment, write_to_file, 
+    setup_spec_environment, 
+    write_to_file, 
          create_file, read_file, apply_search_replace,delete_files, 
-         get_environment_variable, get_current_time
+         get_environment_variable, get_current_time,inspect_project
 ])
 
 WAIT_FOR_USER_RESPONSE = '_[Wait for user response]_'

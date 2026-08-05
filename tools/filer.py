@@ -251,12 +251,10 @@ def create_file(file_path: str, content: str, description:str, state:Annotated[d
     except Exception as e:
         return f"创建文件时发生未知错误: {str(e)}"
     
-
-
 @tool
 def inspect_project(state: Annotated[dict, InjectedState]) -> str:
     """
-    查看项目结构,包括文件路径,文件描述
+    查看当前项目结构,包括文件路径,文件描述
 
     Args: None (此工具不需要任何输入参数，由系统自动读取状态)
 
@@ -272,9 +270,9 @@ def inspect_project(state: Annotated[dict, InjectedState]) -> str:
         
     # 格式化输出给大模型
     output_lines = ["项目文件列表:"]
-    for path, meta in file_ledger.items():
-        description = meta.get("description", "暂无描述")
-        output_lines.append(f"- `{path}`: {description}")
+    for file_path, sp in file_ledger.items():
+        description = sp.get("description", "暂无描述")
+        output_lines.append(f"- `{file_path}`: {description}")
         
     return "\n".join(output_lines)
 

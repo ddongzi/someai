@@ -38,10 +38,10 @@ class Issue(TypedDict):
 class FileSnapshot(TypedDict):
     file_name: str
     file_path: str
-    last_read_time: str
-    last_modified_time: str
-    file_hash: str
-    description: str
+    last_read_time: str = ''
+    last_modified_time: str = ''
+    file_hash: str = ''
+    description: str = ''
     allowed_read_nodes: List[str] = []   # 哪些节点（角色）可以读取此文件
     allowed_write_nodes: List[str] = []  # 哪些节点（角色）可以修改/写入此文件
 

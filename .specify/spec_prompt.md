@@ -2,6 +2,8 @@
 description: Create or update the feature specification from a natural language feature description.
 ---
 
+The update action must be cautious and rigorous; update the file ONLY when absolutely necessary, otherwise keep the original file unchanged.
+
 
 ## Outline
 1. **Generate a concise short name** (2-4 words) for the feature:

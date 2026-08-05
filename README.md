@@ -1,61 +1,101 @@
-# 一个code team.
+# 一个 Code Team.
 
-## qucikstart
-1. knowledges下面添加文档,使用rag主动创建知识库
-2. 后端
+基于 LangGraph 的多 Agent 协作开发系统.
+
+![workflow](art/workflow.png)
+
+---
+
+## Quickstart
+### 1. 后端
+
 ```shell
+uv sync
 python user_server.py
 ```
-3. 前端
+
+### 2. thread前端
+
 ```shell
 cd thread_webui
+npm install
 npm run dev
 ```
 
 ![thread ui](<thread_webui/截图 2026-07-14 21-00-27.png>)
-![workflow](art/workflow.png)
 
-## 节点
-0730
-- [ ] 上下文历史消息内容重复,比如多次重复调用toool,readfile等，导致token消耗大. 这也直接导致了 recursion limit 容易达到:
-  1. prompt提示?
-  2. 工具提示: 检查hash,如果没有变化 通知使用记忆
-  3. 历史消息 除旧?
-- [ ] 提示词工程:  总会偶尔发疯
-- [ ] recrusion limit 25 图内节点执行次数,全图累计.  50次都容易达到 
-- [ ] 文件权限
-- [ ] 子图内检查点
-- [ ] 
+---
 
-引入speckit 规范驱动开发,  应该更好做出spec plan tasks.
-/speckit.specify
-/speckit.plan
-/speckit.tasks
+## 任务清单
+- [ ] `todo_tasks.json`将原来的task策略 迁移到 现在`tasks.md`
+- [x] **上下文消息去重**：历史消息中工具调用结果重复出现（如多次 `read_file` 返回相同内容），导致token和节点调用次数过多 。
+  - 方案 1：工具内检查文件 hash，若无变化则提示 Agent 使用记忆；
+  - 方案 2：对历史消息做"除旧"——写入文件后，将之前同类工具的旧结果标记为空。
+- [ ] **Recursion Limit**：要配置合适的limit参数,来控制节点调用次数.当前配置为100,够第一个spec_subgraph运行.
+- [ ] **文件权限**：llm常常会能力越界,修改查看不必要的文件, 现在`file_ledger`不够。
+- [ ] **子图检查点支持**：全图将子图视为单个节点，无法展示子图内部的详细执行步骤, 无法从子图内某个检查点进行time-travel.
+- [x] **Prompt Playground**：提示词工程.引入可视化测试环境，复现和优化. 也可以用于llm单独的测试.
+- [x] **LLM 过度更新文件**：通过 prompt 约束为"仅在必要时更新文件"。
+- [x] 引入 SpecKit 规范驱动开发流程，生成 `constitution → spec → plan → tasks`。
 
-/speckit.implement (对于实现节点)
-/speckit.converge (对应judge节点)
+---
 
+## Issue
+- [ ] 上下文消息去重中.文件写入后，之前 `read_file` 产生的 ToolMessage 内容被置空。DeepSeek 缓存机制下，内容变更会导致额外一次重新缓存。
 
-## 技术扩展：
-- 角色文件权限
-- 子图state展示
-- recrusion limit 
+---
 
-## 一些技术思路：
-1. prompt管理：使用yaml+模板解析，能够为一个角色节点配置多场景。
-2. 模型和token：
-   1. 本地测试开发流程验证通过ollama，但是`qwen 2.5coder -1.5B`这样模型，调用tool参数是不合理的，不可采用。
-   2. openrouter免费模型的限制完全不足以支撑频繁调用。
-   3. token节省，使用langchain的SQLite Cache缓解一些. 
-3. 快速开发验证：使用thread的checkpoint，thread需要前端webui才灵活。设置了 重放/分叉/继续操作，能够节省token,也能更快调试开发。
-4. 知识库的限制:不应该作为llm知识变得更加泛泛,而是精细
+## 项目结构说明
 
-## 迭代过程的问题：
-Q1. 在涉及多轮对话时候，历史消息需要组织吗？
-   目前仍然是messages字段，一味的增加。
-   这可能涉及到Transfromer框架的注意力机制，对不同Message
+```
+someai/
+├── workflow.py              # 主工作流 
+├── user_server.py           # FastAPI 服务端
+├── thread.py                # Thread 封装：启动/继续/回放/分叉/清空
+├── ready_node.py            # 就绪确认节点
+├── human_node.py            # Human-in-the-Loop：审批、修改设计、时间旅行
+├── issue_manager.py         # Issue 分发管理
+├── utils.py                 # 通用工具函数
+│
+│
+├── graphs/                  # 子图
+│   ├── spec_graph.py        #   SpecKit 流水线：constitution→spec→plan→tasks
+│   ├── coder_graph.py       #   编码 Agent：Router→Writer→Tools 循环
+│   ├── test_coder_graph.py  #   测试编码 Agent
+│   ├── qa_graph.py          #   质量审查 Agent
+│   ├── judge_graph.py       #   评判 Agent
+│   └── test_exec_graph.py   #   测试执行 Agent
+│
+├── tools/                   # Agent 工具集
+│   ├── filer.py             #   文件读写
+│   ├── rag.py               #   知识库：Milvus + BGE-M3 混合检索
+│   ├── pyright_check.py     #   静态检查
+│   ├── environment.py       #   环境状态（git status、依赖引用）
+│   └── ...
+│
+├── globals/                 # 全局配置与状态
+│   ├── state.py             #   GraphState / Issue / FileSnapshot 类型
+│   ├── llm.py               #   LLM 客户端（DeepSeek Chat）、流式调用、用量追踪
+│   └── config.py            #   全局配置
+│
+├── prompts/                 # 提示词
+│
+├── templates/               # SpecKit copied
+│
+├── knowledges/              # 知识库源文件
+│
+├── art/                     # 架构图与流程图
+│
+├── thread_webui/            # React 前端（线程管理 UI）
+│
+├── generated/               # Agent 生成代码的输出目录
+│
+├── .specify/               # 自定义speckit  prompt和模板
+└── todo_tasks.json
+```
 
-## 一些理念：
-1. 人机边界和协同。
-- llm发散，会很喜欢调用工具，这使得在初期要跟着llm的ToolMessage请求补充我们的工具。至少对新项目来说，人决策、模型执行是模糊的。
-- 因为文档可能过大，human规划控制todo_tasks，每次执行只实现一个小功能
+---
+
+## License
+
+MIT

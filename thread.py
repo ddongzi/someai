@@ -21,7 +21,7 @@ class Thread:
     @property
     def config(self):
         return {
-            'recursion_limit': 50,
+            'recursion_limit': 100,
             "configurable": {
                 "thread_id": self.thread_id
             }
