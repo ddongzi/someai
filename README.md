@@ -34,6 +34,7 @@ npm run dev
 - [ ] **Recursion Limit**：要配置合适的limit参数,来控制节点调用次数.当前配置为100,够第一个spec_subgraph运行.
 - [ ] **文件权限**：llm常常会能力越界,修改查看不必要的文件, 现在`file_ledger`不够。
 - [ ] **子图检查点支持**：全图将子图视为单个节点，无法展示子图内部的详细执行步骤, 无法从子图内某个检查点进行time-travel.
+- [ ] 尽量使用英文prompt, message. 节省token
 - [x] **Prompt Playground**：提示词工程.引入可视化测试环境，复现和优化. 也可以用于llm单独的测试.
 - [x] **LLM 过度更新文件**：通过 prompt 约束为"仅在必要时更新文件"。
 - [x] 引入 SpecKit 规范驱动开发流程，生成 `constitution → spec → plan → tasks`。
