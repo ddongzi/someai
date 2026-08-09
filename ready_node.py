@@ -46,12 +46,11 @@ def ready_node(state: GraphState) -> Dict:
         'target': ''
     })
     run_logger.info(f'git result: {result}')
-    # 设置requirement
-    task = get_first_pending_task()
 
     file_ledger = init_file_ledger()
+
+    run_logger.info('init file_ledger: ', file_ledger)
             
     return {
-        'requirement': task['description'],
         'file_ledger': file_ledger,
     }

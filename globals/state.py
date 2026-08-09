@@ -35,6 +35,19 @@ class Issue(TypedDict):
     assign: str # coder, test_coder, human
     review: str # 修复建议
 
+class Task(TypedDict):
+    """当前执行中的任务"""
+    id: str                          # 任务ID，如 "T001"
+    title: str                       # 任务标题
+    status: str                      # pending | in_progress | completed
+    task_type: str                   # setup | code | test_code | doc
+    phase: str | None                # 所属阶段名称
+    phase_number: int | None         # 所属阶段编号
+    user_story: str | None           # 所属用户故事
+    priority: str | None             # 优先级
+    parallel: bool                   # 是否可并行
+    tags: List[str]                  # 标签列表
+
 class FileSnapshot(TypedDict):
     file_name: str
     file_path: str
@@ -47,8 +60,6 @@ class FileSnapshot(TypedDict):
 
 class GraphState(TypedDict):
 
-    requirement: Annotated[str, any_write]  # 需求，原始文本
-
     attempts: Annotated[int, operator.add] # 重试次数，目前是只看tester的重试次数的，因为目前都会跑到tester
 
     test_output: Annotated[str, any_write] # 测试代码输出
@@ -57,7 +68,7 @@ class GraphState(TypedDict):
 
     issues: Annotated[list[Issue], operator.add] # 修复建议列表
 
-    issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts] # 
+    issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts] #
 
     human_source: str # human 来源，比如max_attempts, no issue
 
@@ -66,6 +77,9 @@ class GraphState(TypedDict):
     # 子图状态
     coder_subgraph_status: Annotated[str, any_write] # success
     test_coder_subgraph_status:Annotated[str, any_write]
+
+    # 任务调度
+    current_task: Annotated[Task, any_write]       # 当前正在执行的任务
 
 
 def create_initial_state() -> GraphState:

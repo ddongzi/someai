@@ -21,9 +21,10 @@ from issue_manager import issue_manager_node
 from graphs.test_exec_graph import graph as test_execer_graph
 from graphs.judge_graph import graph as judge_graph
 from graphs.spec_graph import graph as spec_graph
+from graphs.setup_graph import graph as setup_graph
 from human_node import human_node
 import logging
-
+from task_route_node import task_route_node
 from ready_node import ready_node
 from utils import draw_workflow_png
 from langgraph.checkpoint.sqlite import SqliteSaver
@@ -79,8 +80,21 @@ class MyWorkflow:
         def decide_after_human_node(state: GraphState):
             return "success"
 
-        def decide_after_spec_graph(state:GraphState):
-            return 'failed'
+        def decide_after_setup_graph(state:GraphState):
+            return 'success'
+        
+        def route_by_task_type(state: GraphState) -> str:
+            """
+            根据当前任务的 task_type 决定路由到哪个下游节点。
+            用作条件边的路由函数。
+            """
+            current_task = state.get("current_task")
+            if not current_task or not current_task.get("id"):
+                return "end"
+
+            task_type = current_task.get("task_type", "unknown")
+
+            return task_type
 
         self.graph.add_node('ready_node', ready_node)
 
@@ -93,28 +107,39 @@ class MyWorkflow:
 
         self.graph.add_node("judge_graph", judge_graph)
         self.graph.add_node("spec_graph", spec_graph)
+        self.graph.add_node('setup_graph', setup_graph)
+
         self.graph.add_node("issue_manager_node", issue_manager_node)
 
+        self.graph.add_node('task_route_node', task_route_node)
         self.graph.set_entry_point("ready_node")
 
         self.graph.add_edge('ready_node', 'spec_graph')
 
         ## 为了测试spec 图, 先连接到 end
-        self.graph.add_edge('spec_graph', END)
+        self.graph.add_edge('spec_graph', 'task_route_node')
+        self.graph.add_conditional_edges(
+            'task_route_node',
+            route_by_task_type,
+            {
+                "setup": "setup_graph",
+                "code": "coder_graph",
+                "test_code": "test_coder_graph",
+                "doc": "coder_graph",
+                'unknown': END
+            }
 
+        )
+        self.graph.add_conditional_edges(
+            'setup_graph',
+            decide_after_setup_graph,
+            {
+                'success': END
+            }
+        )
         # self.graph.add_edge('spec_graph', 'coder_graph')
         # self.graph.add_edge('spec_graph', 'test_coder_graph')
         
-        self.graph.add_conditional_edges(
-            'spec_graph',
-            decide_after_spec_graph,
-            {
-                    'go_coder': 'coder_graph',      
-                    'go_test_coder': 'test_coder_graph', 
-                    'failed': END                 
-            }   
-        )
-
         self.graph.add_conditional_edges(
             'coder_graph', 
             decide_after_coder_graph,
@@ -148,7 +173,6 @@ class MyWorkflow:
                 "unexpected": END
             }
         )
-
         self.graph.add_conditional_edges(
             "issue_manager_node",
             decide_after_issue_manager_node,

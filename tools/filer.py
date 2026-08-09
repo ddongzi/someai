@@ -194,7 +194,7 @@ def create_file(file_path: str, content: str, description:str, state:Annotated[d
     参数:
         file_path: 位于项目内部的相对文件路径。
             注意：请直接写文件名或内部子路径，绝对不要包含项目路径
-        content: 写入文件的初始文本内容。
+        content: 写入文件的初始文本内容。  如果只是创建文件, 传入内容为'' 即可!.
         description: 文件摘要描述
         runtime (ToolRuntime): 工具执行时的运行时上下文对象。参数会自动注入
         state: 无需传入,会自动注入

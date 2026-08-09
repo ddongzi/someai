@@ -205,6 +205,8 @@ def tasks_node(state: SpecGraphState) -> Dict:
 def router_node(state: SpecGraphState) :
     # 状态初始化
 
+    
+
     return {
         'messages':[],
         'user_req': '我想要一个游戏地图生成组件',
@@ -224,7 +226,19 @@ graph.add_node('tools_node', ToolNode(tools=tools, handle_tool_errors=True))
 
 graph.set_entry_point('router_node')
 
-graph.add_edge('router_node', 'constitution_node')
+def decide_after_router(state:SpecGraphState):
+    if Path('tasks.json').exists():
+        graph_logger.info('tasks.json exist.  skip spec graph')
+        return 'no_need'
+    return 'success'
+graph.add_conditional_edges(
+    'router_node',
+    decide_after_router,
+    {
+        'no_need': END,
+        'success':'constitution_node'
+    }
+)
 
 def decide_after_spec(state:SpecGraphState):
     if  state['messages'] and tools_condition(state) != END:

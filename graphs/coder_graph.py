@@ -12,9 +12,8 @@ from typing import Annotated, List, TypedDict
 import operator
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
-
 from globals import MAX_ATTAMPTS
-from globals.state import GraphState, Issue,any_write,merge_dicts,FileSnapshot
+from globals.state import GraphState, Issue,any_write,merge_dicts,FileSnapshot,Task
 from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
 from tools.rag import knowledge_search
@@ -48,7 +47,7 @@ GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 
 class CoderGraphState(TypedDict,total=False):
     # 共享 with parent
-    requirement: Annotated[str, any_write] # 需求，原始文本
+    current_task: Annotated[Task, any_write]       # 当前正在执行的任务
 
     attempts: Annotated[int, operator.add] # 重试次数，目前是只看tester的重试次数的，因为目前都会跑到tester
 
@@ -69,7 +68,7 @@ def _do_first_write(state:CoderGraphState) -> Dict:
     system_prompt, user_prompt  = get_scene_prompt(
             file_name=PROMPT_FILE_NAME,
             scene_name='write_code',
-            requirement = state['requirement']
+            requirement = state['current_task']['title']
         )
 
     messages = [

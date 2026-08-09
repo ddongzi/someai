@@ -1,0 +1,926 @@
+{
+  "phases": [
+    {
+      "number": 1,
+      "title": "Setup (Shared Infrastructure)",
+      "priority": null,
+      "stories": []
+    },
+    {
+      "number": 2,
+      "title": "Foundational (Blocking Prerequisites)",
+      "priority": null,
+      "stories": []
+    },
+    {
+      "number": 3,
+      "title": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "priority": null,
+      "stories": []
+    },
+    {
+      "number": 4,
+      "title": "User Story 2 - Compose Multiple Generators into a Layered Map",
+      "priority": "P2",
+      "stories": []
+    },
+    {
+      "number": 5,
+      "title": "User Story 3 - Customize Generation via Hooks and Content Constraints",
+      "priority": "P3",
+      "stories": []
+    },
+    {
+      "number": 6,
+      "title": "User Story 4 - Debug and Inspect Generated Maps",
+      "priority": "P3",
+      "stories": []
+    },
+    {
+      "number": 7,
+      "title": "Polish & Cross-Cutting Concerns",
+      "priority": null,
+      "stories": []
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T001",
+      "title": "Create `src/gamemapgen/` package structure with `__init__.py`, `errors.py`, `prng.py`, `models.py`, `registry.py`, `config.py`, `constraints.py`, `hooks.py`, `composite.py`, `presets.py`, and `generators/` subpackage per plan.md",
+      "status": "in_progress",
+      "task_type": "setup",
+      "phase": "Setup (Shared Infrastructure)",
+      "phase_number": 1,
+      "user_story": null,
+      "priority": null,
+      "parallel": false,
+      "tags": []
+    },
+    {
+      "id": "T002",
+      "title": "Create `tests/` directory structure with `conftest.py`, `unit/`, `integration/`, `contract/`, `benchmarks/` subdirectories",
+      "status": "pending",
+      "task_type": "setup",
+      "phase": "Setup (Shared Infrastructure)",
+      "phase_number": 1,
+      "user_story": null,
+      "priority": null,
+      "parallel": false,
+      "tags": []
+    },
+    {
+      "id": "T003",
+      "title": "Create `pyproject.toml` with project metadata, Python 3.11+ requirement, and dev dependencies (`pytest`, `pytest-cov`)",
+      "status": "pending",
+      "task_type": "setup",
+      "phase": "Setup (Shared Infrastructure)",
+      "phase_number": 1,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T004",
+      "title": "Create `docs/` directory for getting-started guide and demos",
+      "status": "pending",
+      "task_type": "setup",
+      "phase": "Setup (Shared Infrastructure)",
+      "phase_number": 1,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T005",
+      "title": "Create `README.md` at repository root with project overview and quick-start pointer",
+      "status": "pending",
+      "task_type": "doc",
+      "phase": "Setup (Shared Infrastructure)",
+      "phase_number": 1,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T006",
+      "title": "Unit tests for `PRNG` determinism and seed validation in `tests/unit/test_prng.py` (same seed → identical sequence; out-of-range seed → `ValidationError`)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "Foundational (Blocking Prerequisites)",
+      "phase_number": 2,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T007",
+      "title": "Unit tests for `TileTypeRegistry` in `tests/unit/test_registry.py` (register/get/is_registered/list/glyph; duplicate and unknown type → `ValidationError`)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "Foundational (Blocking Prerequisites)",
+      "phase_number": 2,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T008",
+      "title": "Unit tests for typed errors in `tests/unit/test_errors.py` (hierarchy, catchability, actionable messages)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "Foundational (Blocking Prerequisites)",
+      "phase_number": 2,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T009",
+      "title": "Implement typed error hierarchy in `src/gamemapgen/errors.py` (`GameMapGenError` base → `ValidationError`, `GenerationError`, `ConstraintViolationError`, `PresetNotFoundError`, `GeneratorNotFoundError`)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "Foundational (Blocking Prerequisites)",
+      "phase_number": 2,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T010",
+      "title": "Implement `PRNG` class in `src/gamemapgen/prng.py` wrapping `random.Random` with 32-bit unsigned seed validation and methods `randint`, `random`, `uniform`, `choice`, `shuffle`, `sample`, `get_state`, `set_state`",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "Foundational (Blocking Prerequisites)",
+      "phase_number": 2,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T011",
+      "title": "Implement `TileType` dataclass and `TileTypeRegistry` in `src/gamemapgen/registry.py` with 11 built-in tile types (WALL, FLOOR, WATER, LAVA, DOOR, STAIRS, EMPTY, GRASS, ROAD, BRIDGE, TRAP) and their glyphs",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "Foundational (Blocking Prerequisites)",
+      "phase_number": 2,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T012",
+      "title": "Implement `GeneratorRegistry` in `src/gamemapgen/registry.py` with `register`, `get`, `list`, `create` methods (auto-registers built-in generators)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "Foundational (Blocking Prerequisites)",
+      "phase_number": 2,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T013",
+      "title": "Implement `ComplexityEstimate` dataclass in `src/gamemapgen/models.py` (`time`, `space`, `expected_ms`)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "Foundational (Blocking Prerequisites)",
+      "phase_number": 2,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T014",
+      "title": "Implement `BaseGenerator` abstract class in `src/gamemapgen/generators/base.py` with abstract `generate`, `validate_params`, `complexity_estimate` and concrete `to_ascii` helper",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "Foundational (Blocking Prerequisites)",
+      "phase_number": 2,
+      "user_story": null,
+      "priority": null,
+      "parallel": false,
+      "tags": []
+    },
+    {
+      "id": "T015",
+      "title": "Implement `__init__.py` public API exports in `src/gamemapgen/__init__.py` (all public types, `__version__` following SemVer)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "Foundational (Blocking Prerequisites)",
+      "phase_number": 2,
+      "user_story": null,
+      "priority": null,
+      "parallel": false,
+      "tags": []
+    },
+    {
+      "id": "T016",
+      "title": "Unit tests for `MapData`, `Tile`, `Position`, `MapMetadata`, `Region`, `Rect`, `Entity`, `Layer`, `AdjacencyGraph`, `Edge` dataclasses in `tests/unit/test_models.py` (construction, `to_dict`/`from_dict`, validation rules)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T017",
+      "title": "Unit tests for `GenerationParams` validation in `tests/unit/test_config.py` (type, range, consistency, dependency checks; invalid params → `ValidationError` with actionable message)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T018",
+      "title": "Unit tests for `DungeonGenerator` in `tests/unit/generators/test_dungeon.py` (valid output, determinism across ≥5 seeds, edge cases: min/max size, single-tile, extreme aspect ratio, invalid params)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T019",
+      "title": "Unit tests for `OpenWorldGenerator` in `tests/unit/generators/test_open_world.py` (valid output, determinism across ≥5 seeds, edge cases, invalid params)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T020",
+      "title": "Unit tests for `MazeGenerator` in `tests/unit/generators/test_maze.py` (valid output, odd-grid enforcement, determinism across ≥5 seeds, edge cases, invalid params)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T021",
+      "title": "Contract test for serialization round-trip in `tests/contract/test_serialization.py` (MapData → JSON → MapData lossless for each generator)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T022",
+      "title": "Integration test for deterministic generation pipeline in `tests/integration/test_pipeline.py` (registry.create → generate → byte-identical on repeat; different seed → different map)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T023",
+      "title": "Implement `Position`, `Rect`, `Tile`, `MapMetadata`, `Region`, `Entity`, `Layer`, `Edge`, `AdjacencyGraph`, `MapData` dataclasses with `to_dict`/`from_dict`/`to_json`/`to_ascii` in `src/gamemapgen/models.py`",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T024",
+      "title": "Implement `GenerationParams` dataclass with validation logic in `src/gamemapgen/config.py` (type/range/consistency/dependency checks per data-model.md §2.1)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T025",
+      "title": "Implement `DungeonGenerator` in `src/gamemapgen/generators/dungeon.py` (BSP room splitting + corridor connection, produces WALL/FLOOR/DOOR/STAIRS tiles, uses passed PRNG, `complexity_estimate` = O(n log n))",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T026",
+      "title": "Implement `OpenWorldGenerator` in `src/gamemapgen/generators/open_world.py` (Perlin noise heightmap + biome thresholding, produces GRASS/WATER/ROAD/BRIDGE tiles, uses passed PRNG, `complexity_estimate` = O(n × octaves))",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T027",
+      "title": "Implement `MazeGenerator` in `src/gamemapgen/generators/maze.py` (recursive backtracking on odd grid, produces WALL/FLOOR tiles, uses passed PRNG, `complexity_estimate` = O(n))",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P",
+        "US1"
+      ]
+    },
+    {
+      "id": "T028",
+      "title": "Implement `generators/__init__.py` in `src/gamemapgen/generators/__init__.py` exporting all three generators",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": false,
+      "tags": [
+        "US1"
+      ]
+    },
+    {
+      "id": "T029",
+      "title": "Wire built-in generators into `GeneratorRegistry` auto-registration in `src/gamemapgen/registry.py` (dungeon, open_world, maze)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": false,
+      "tags": [
+        "US1"
+      ]
+    },
+    {
+      "id": "T030",
+      "title": "Implement `ConfigResolver` in `src/gamemapgen/config.py` (resolution order: defaults < preset.params < overrides; raises `PresetNotFoundError`/`ValidationError`)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": false,
+      "tags": [
+        "US1"
+      ]
+    },
+    {
+      "id": "T031",
+      "title": "Implement built-in presets in `src/gamemapgen/presets.py` (small_dungeon, epic_dungeon, tiny_maze, large_maze, island_world, continent_world per config.md)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": false,
+      "tags": [
+        "US1"
+      ]
+    },
+    {
+      "id": "T032",
+      "title": "Implement `max_iterations`/`timeout_ms` budget enforcement in `src/gamemapgen/generators/base.py` to prevent infinite loops (FR-010)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 1 - Generate a Deterministic Map from Parameters (Priority: P1) 🎯 MVP",
+      "phase_number": 3,
+      "user_story": "US1",
+      "priority": null,
+      "parallel": false,
+      "tags": [
+        "US1"
+      ]
+    },
+    {
+      "id": "T033",
+      "title": "Unit tests for `CompositeGenerator` in `tests/unit/test_composite.py` (layer ordering, each layer receives prior output, determinism, layer failure handling → rollback or `incomplete=True` flag)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 2 - Compose Multiple Generators into a Layered Map",
+      "phase_number": 4,
+      "user_story": "US2",
+      "priority": "P2",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US2"
+      ]
+    },
+    {
+      "id": "T034",
+      "title": "Integration test for composite layered generation in `tests/integration/test_pipeline.py` (two-layer composition produces coherent map with both layers in documented order)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 2 - Compose Multiple Generators into a Layered Map",
+      "phase_number": 4,
+      "user_story": "US2",
+      "priority": "P2",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US2"
+      ]
+    },
+    {
+      "id": "T035",
+      "title": "Implement `CompositeGenerator` in `src/gamemapgen/composite.py` (holds ordered `(name, generator)` layers; each layer receives previous `MapData`; threads same seeded PRNG through layers; `complexity_estimate` = O(k × n))",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 2 - Compose Multiple Generators into a Layered Map",
+      "phase_number": 4,
+      "user_story": "US2",
+      "priority": "P2",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US2"
+      ]
+    },
+    {
+      "id": "T036",
+      "title": "Implement graceful layer-failure handling in `src/gamemapgen/composite.py` (rollback to consistent state with `GenerationError`, or return partial result flagged `incomplete=True` per FR-012)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 2 - Compose Multiple Generators into a Layered Map",
+      "phase_number": 4,
+      "user_story": "US2",
+      "priority": "P2",
+      "parallel": false,
+      "tags": [
+        "US2"
+      ]
+    },
+    {
+      "id": "T037",
+      "title": "Register `CompositeGenerator` as a composable generator in `src/gamemapgen/registry.py` (FR-013)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 2 - Compose Multiple Generators into a Layered Map",
+      "phase_number": 4,
+      "user_story": "US2",
+      "priority": "P2",
+      "parallel": false,
+      "tags": [
+        "US2"
+      ]
+    },
+    {
+      "id": "T038",
+      "title": "Unit tests for `HookManager` and `GenerationContext` in `tests/unit/test_hooks.py` (registration order, chaining, unknown lifecycle point → `ValidationError`, hook exception → wrapped `GenerationError`, snapshot capture)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 3 - Customize Generation via Hooks and Content Constraints",
+      "phase_number": 5,
+      "user_story": "US3",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US3"
+      ]
+    },
+    {
+      "id": "T039",
+      "title": "Unit tests for content constraints in `tests/unit/test_constraints.py` (`BannedTileType`, `BannedEntityType`, `MaxDensity`, `AgeRatingProfile`; enforcement via retry-with-adjustment up to `max_iterations`; unresolved → `ConstraintViolationError` identifying offending constraint)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 3 - Customize Generation via Hooks and Content Constraints",
+      "phase_number": 5,
+      "user_story": "US3",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US3"
+      ]
+    },
+    {
+      "id": "T040",
+      "title": "Integration test for hooks + constraints in `tests/integration/test_pipeline.py` (register hook placing marker entity, add `BannedTileType`, verify marker appears and no banned tile exists)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 3 - Customize Generation via Hooks and Content Constraints",
+      "phase_number": 5,
+      "user_story": "US3",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US3"
+      ]
+    },
+    {
+      "id": "T041",
+      "title": "Implement `GenerationContext` dataclass in `src/gamemapgen/hooks.py` (`map_data`, `prng`, `params`, `snapshots`)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 3 - Customize Generation via Hooks and Content Constraints",
+      "phase_number": 5,
+      "user_story": "US3",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US3"
+      ]
+    },
+    {
+      "id": "T042",
+      "title": "Implement `HookManager` in `src/gamemapgen/hooks.py` (`register`, `unregister`, `run`, `list_hooks`; chainable hooks in registration order; snapshot capture at each lifecycle point)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 3 - Customize Generation via Hooks and Content Constraints",
+      "phase_number": 5,
+      "user_story": "US3",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US3"
+      ]
+    },
+    {
+      "id": "T043",
+      "title": "Implement `ContentConstraint` base and concrete types (`BannedTileType`, `BannedEntityType`, `MaxDensity`, `AgeRatingProfile`) in `src/gamemapgen/constraints.py`",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 3 - Customize Generation via Hooks and Content Constraints",
+      "phase_number": 5,
+      "user_story": "US3",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US3"
+      ]
+    },
+    {
+      "id": "T044",
+      "title": "Implement constraint enforcement engine in `src/gamemapgen/constraints.py` (validate generated `MapData` against constraints; retry-with-adjustment up to `max_iterations`; raise `ConstraintViolationError` if unresolved)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 3 - Customize Generation via Hooks and Content Constraints",
+      "phase_number": 5,
+      "user_story": "US3",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US3"
+      ]
+    },
+    {
+      "id": "T045",
+      "title": "Integrate `HookManager` and constraint enforcement into `BaseGenerator.generate` lifecycle in `src/gamemapgen/generators/base.py` (before_generation → after_room_placement → after_corridor_connection → post_process; constraint check before finalize)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 3 - Customize Generation via Hooks and Content Constraints",
+      "phase_number": 5,
+      "user_story": "US3",
+      "priority": "P3",
+      "parallel": false,
+      "tags": [
+        "US3"
+      ]
+    },
+    {
+      "id": "T046",
+      "title": "Add `register_hook` and `add_constraint` convenience methods to `BaseGenerator` in `src/gamemapgen/generators/base.py`",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 3 - Customize Generation via Hooks and Content Constraints",
+      "phase_number": 5,
+      "user_story": "US3",
+      "priority": "P3",
+      "parallel": false,
+      "tags": [
+        "US3"
+      ]
+    },
+    {
+      "id": "T047",
+      "title": "Unit tests for `to_ascii` rendering in `tests/unit/test_models.py` (human-readable string, correct glyphs per tile type, no external rendering dependency)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 4 - Debug and Inspect Generated Maps",
+      "phase_number": 6,
+      "user_story": "US4",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US4"
+      ]
+    },
+    {
+      "id": "T048",
+      "title": "Unit tests for snapshot capture in `tests/unit/test_hooks.py` (snapshots available at each documented hook point: `before_generation`, `post_process`, etc.)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "User Story 4 - Debug and Inspect Generated Maps",
+      "phase_number": 6,
+      "user_story": "US4",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US4"
+      ]
+    },
+    {
+      "id": "T049",
+      "title": "Implement `MapData.to_ascii()` in `src/gamemapgen/models.py` using `TileTypeRegistry.glyph()` (single-character glyphs per tile type, no external rendering library)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 4 - Debug and Inspect Generated Maps",
+      "phase_number": 6,
+      "user_story": "US4",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US4"
+      ]
+    },
+    {
+      "id": "T050",
+      "title": "Implement `BaseGenerator.to_ascii(map_data)` in `src/gamemapgen/generators/base.py` delegating to `MapData.to_ascii()`",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 4 - Debug and Inspect Generated Maps",
+      "phase_number": 6,
+      "user_story": "US4",
+      "priority": "P3",
+      "parallel": true,
+      "tags": [
+        "P",
+        "US4"
+      ]
+    },
+    {
+      "id": "T051",
+      "title": "Expose `snapshots` on generator instances in `src/gamemapgen/generators/base.py` (populated from `GenerationContext.snapshots` after generation, per FR-027)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "User Story 4 - Debug and Inspect Generated Maps",
+      "phase_number": 6,
+      "user_story": "US4",
+      "priority": "P3",
+      "parallel": false,
+      "tags": [
+        "US4"
+      ]
+    },
+    {
+      "id": "T052",
+      "title": "Create getting-started guide in `docs/getting-started.md` covering installation, generation pipeline, and hook system (constitution Principle XIII)",
+      "status": "pending",
+      "task_type": "doc",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T053",
+      "title": "Create runnable demo scripts in `docs/demos/` for each built-in generator (dungeon, open_world, maze) with example presets",
+      "status": "pending",
+      "task_type": "doc",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T054",
+      "title": "Create performance benchmark harness in `tests/benchmarks/bench_generation.py` verifying 100x100 grid <100ms (SC-001) and no regression >10% (SC-008)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T055",
+      "title": "Add `@since`/`@deprecated` metadata annotations to all public types and functions in `src/gamemapgen/` (constitution Principle XI)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T056",
+      "title": "Add docstrings with at least one runnable usage example per public method in `src/gamemapgen/` (constitution Principle XIII)",
+      "status": "pending",
+      "task_type": "doc",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T057",
+      "title": "Add edge-case tests for empty maps, single-tile maps, max-size maps, extreme aspect ratios, boundary seeds (0 and 2^32-1), and iteration-budget exhaustion in `tests/unit/` (spec Edge Cases)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T058",
+      "title": "Add serialization round-trip tests for custom/unknown tile and entity types via registry-aware deserialization in `tests/contract/test_serialization.py` (SC-005)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": true,
+      "tags": [
+        "P"
+      ]
+    },
+    {
+      "id": "T059",
+      "title": "Run quickstart.md validation scenarios as tests in `tests/integration/test_quickstart.py` (all 6 scenarios from quickstart.md)",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": false,
+      "tags": []
+    },
+    {
+      "id": "T060",
+      "title": "Run full test suite with coverage: `pytest tests/ -v --cov=gamemapgen --cov-report=term-missing` and verify ≥90% line coverage per generator module",
+      "status": "pending",
+      "task_type": "test_code",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": false,
+      "tags": []
+    },
+    {
+      "id": "T061",
+      "title": "Verify no external runtime dependencies beyond standard library (audit imports in `src/gamemapgen/`)",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": false,
+      "tags": []
+    },
+    {
+      "id": "T062",
+      "title": "Verify no hardcoded magic numbers (all tunable values are parameters with defaults) across `src/gamemapgen/`",
+      "status": "pending",
+      "task_type": "code",
+      "phase": "Polish & Cross-Cutting Concerns",
+      "phase_number": 7,
+      "user_story": null,
+      "priority": null,
+      "parallel": false,
+      "tags": []
+    }
+  ]
+}

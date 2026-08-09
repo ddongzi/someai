@@ -322,3 +322,177 @@ def calculate_file_hash(file_path: Union[str, Path], chunk_size: int = 8192) -> 
             md5_hash.update(chunk)
             
     return md5_hash.hexdigest()
+
+
+import re
+from pathlib import Path
+from typing import Any
+
+
+def _detect_task_type(title: str) -> str:
+    """
+    根据任务标题识别任务类型。
+    返回: 'setup' | 'code' | 'test_code' | 'doc'
+    """
+    title_lower = title.lower()
+
+    # setup: 基础设施创建（包结构、目录结构、项目配置）
+    if re.search(
+        r'(package\s+structure|directory\s+structure|pyproject\.toml|create\s+\`[^`]+\`\s+directory)',
+        title_lower,
+    ):
+        return 'setup'
+
+    # test_code: 测试相关
+    if re.search(
+        r'(unit\s+test|integration\s+test|contract\s+test|benchmark|test\s+suite'
+        r'|\.test_|edge[- ]case\s+test|serialization\s+round[- ]trip\s+test'
+        r'|as\s+tests|validation\s+scenarios)',
+        title_lower,
+    ):
+        return 'test_code'
+
+    # doc: 文档、指南、demo、README
+    if re.search(
+        r'(\breadme\b|getting[- ]started|guide\b|\bdocstring|demo\s+script)',
+        title_lower,
+    ):
+        return 'doc'
+
+    # code: 默认
+    return 'code'
+
+
+def parse_tasks_md(path: str | Path, out_path: str | Path):
+    """
+    Parse Spec Kit tasks.md into structured JSON-compatible dict.
+
+    Output to out_path
+
+    """
+    text = Path(path).read_text(encoding="utf-8")
+
+    phases = []
+    tasks = []
+
+    current_phase = None
+    current_story = None
+    current_priority = None
+
+    phase_pattern = re.compile(
+        r"^##\s+Phase\s+(\d+):\s*(.*?)(?:\s+\(Priority:\s*(P\d+)\))?\s*$"
+    )
+
+    story_pattern = re.compile(
+        r"^###\s+User Story\s+(\d+)\s*-\s*(.*?)(?:\s+\(Priority:\s*(P\d+)\))?.*$"
+    )
+
+    task_pattern = re.compile(
+        r"^[-*]\s+\[([ xX])\]\s+"
+        r"(T\d+)"
+        r"(?:\s+\[([^\]]+)\])?"
+        r"(?:\s+\[([^\]]+)\])?"
+        r"\s+(.*)$"
+    )
+
+    for line in text.splitlines():
+        line = line.strip()
+
+        # -------------------------
+        # Phase
+        # -------------------------
+        match = phase_pattern.match(line)
+        if match:
+            phase_no, phase_title, priority = match.groups()
+
+            current_phase = {
+                "number": int(phase_no),
+                "title": phase_title.strip(),
+                "priority": priority,
+                "stories": [],
+            }
+
+            phases.append(current_phase)
+            current_story = None
+            current_priority = priority
+            continue
+
+        # -------------------------
+        # User Story
+        # -------------------------
+        match = story_pattern.match(line)
+        if match:
+            story_no, story_title, priority = match.groups()
+
+            current_story = {
+                "id": f"US{story_no}",
+                "title": story_title.strip(),
+                "priority": priority or current_priority,
+                "tasks": [],
+            }
+
+            if current_phase:
+                current_phase["stories"].append(current_story)
+
+            current_priority = priority or current_priority
+            continue
+
+        # -------------------------
+        # Task
+        # -------------------------
+        match = task_pattern.match(line)
+        if match:
+            checkbox, task_id, tag1, tag2, title = match.groups()
+
+            tags = [tag for tag in (tag1, tag2) if tag]
+
+            parallel = "P" in tags
+
+            user_story = next(
+                (tag for tag in tags if re.fullmatch(r"US\d+", tag)),
+                None,
+            )
+
+            task = {
+                "id": task_id,
+                "title": title.strip(),
+                "status": (
+                    "completed"
+                    if checkbox.lower() == "x"
+                    else "pending"
+                ),
+                "task_type": _detect_task_type(title.strip()),
+                "phase": (
+                    current_phase["title"]
+                    if current_phase
+                    else None
+                ),
+                "phase_number": (
+                    current_phase["number"]
+                    if current_phase
+                    else None
+                ),
+                "user_story": user_story or (
+                    current_story["id"]
+                    if current_story
+                    else None
+                ),
+                "priority": current_priority,
+                "parallel": parallel,
+                "tags": tags,
+            }
+
+            tasks.append(task)
+
+            if current_story:
+                current_story["tasks"].append(task["id"])
+
+    result = {
+        "phases": phases,
+        "tasks": tasks,
+    }
+    Path(out_path).write_text(json.dumps(result, indent=2))
+
+
+parse_tasks_md('generated/specs/game-map-generator/tasks.md',
+               'tasks.json')

@@ -13,7 +13,9 @@ graph TD;
 	qa_graph(qa_graph)
 	judge_graph(judge_graph)
 	spec_graph(spec_graph)
+	setup_graph(setup_graph)
 	issue_manager_node(issue_manager_node)
+	task_route_node(task_route_node)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> ready_node;
 	coder_graph -. &nbsp;unexpected&nbsp; .-> __end__;
@@ -26,9 +28,12 @@ graph TD;
 	judge_graph --> issue_manager_node;
 	qa_graph --> test_execer_graph;
 	ready_node --> spec_graph;
-	spec_graph -. &nbsp;failed&nbsp; .-> __end__;
-	spec_graph -. &nbsp;go_coder&nbsp; .-> coder_graph;
-	spec_graph -. &nbsp;go_test_coder&nbsp; .-> test_coder_graph;
+	setup_graph -. &nbsp;success&nbsp; .-> __end__;
+	spec_graph --> task_route_node;
+	task_route_node -. &nbsp;unknown&nbsp; .-> __end__;
+	task_route_node -. &nbsp;code&nbsp; .-> coder_graph;
+	task_route_node -. &nbsp;setup&nbsp; .-> setup_graph;
+	task_route_node -. &nbsp;test_code&nbsp; .-> test_coder_graph;
 	test_coder_graph -. &nbsp;unexpected&nbsp; .-> __end__;
 	test_coder_graph -. &nbsp;max_attempts&nbsp; .-> human_node;
 	test_coder_graph -. &nbsp;success&nbsp; .-> qa_graph;
