@@ -67,13 +67,7 @@ def setup_node(state: SetupGraphState) -> Dict:
         return {
             'messages': [full_chunk],
         }
-    else:
-        # 执行完毕, 清除消息
-        graph_logger.info("给出结果...")
-        existing_messages = state['messages']
-        return {
-            "messages": [RemoveMessage(id=m.id) for m in existing_messages]
-        }
+
 
 def router_node(state: SetupGraphState) :
     # 状态初始化
