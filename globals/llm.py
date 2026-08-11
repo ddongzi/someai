@@ -4,7 +4,7 @@ from langchain_community.cache import SQLiteCache
 from tools.search_replace_tool import apply_search_replace
 from tools.ast import ast_search
 from tools.pyright_client import find_symbol_definition, find_symbol_references
-from tools.filer import read_file, create_file,inspect_project,write_to_file
+from tools.filer import read_file, create_file,write_to_file
 from tools.git import git_tool
 from tools.pyright_check import static_check
 from tools.rag import knowledge_search
@@ -19,10 +19,6 @@ set_llm_cache(InMemoryCache())
 
 deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
 
-tools = [git_tool, knowledge_search, write_to_file,static_check,
-          apply_search_replace,ast_search,inspect_project,
-          find_symbol_references, find_symbol_definition, 
-          read_file, create_file]
 
 # llm = ChatOllama( 
 #     model="qwen2.5-coder:3b",   # tool calling 不好，格式部队
@@ -42,8 +38,8 @@ tools = [git_tool, knowledge_search, write_to_file,static_check,
 base_llm = ChatDeepSeek(
     api_key=deepseek_key,
     base_url="https://api.deepseek.com",
-    model="deepseek-chat",
-    temperature=0,
+    model="deepseek-v4-flash",
+    reasoning_effort = 'low'
 )
 
 # 2. 编写动态绑定工具的函数
@@ -177,6 +173,10 @@ def track_llm_usage(func):
 
 @track_llm_usage
 def call_llm(llm, prompt: list[AnyMessage], logger: Logger) -> str:
+    """
+    
+    full_content, full_chunk
+    """
     # logger.info(f'prompt: {fmt_messages(prompt)}')
 
     dict_list = messages_to_dict(prompt)

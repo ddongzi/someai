@@ -39,7 +39,7 @@ class Task(TypedDict):
     """当前执行中的任务"""
     id: str                          # 任务ID，如 "T001"
     title: str                       # 任务标题
-    status: str                      # pending | in_progress | completed
+    status: str                      # pending | in_progress | completed 默认为pending
     task_type: str                   # setup | code | test_code | doc
     phase: str | None                # 所属阶段名称
     phase_number: int | None         # 所属阶段编号
@@ -47,6 +47,11 @@ class Task(TypedDict):
     priority: str | None             # 优先级
     parallel: bool                   # 是否可并行
     tags: List[str]                  # 标签列表
+    target_files: List[str]          # 需要操作修改的文件列表
+    reference_files: List[str]       # 需要参考的文件列表
+
+class TaskList(TypedDict):
+    tasks: List[Task]
 
 class FileSnapshot(TypedDict):
     file_name: str

@@ -8,7 +8,7 @@ from globals.state import GraphState, Issue
 from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
 from tools.rag import knowledge_search
-from tools.filer import write_to_file,create_file,read_file, inspect_file_summary,inspect_project,delete_files
+from tools.filer import write_to_file,read_file, inspect_file_summary,delete_files
 from tools.ast import ast_search
 from tools.pyright_client import find_symbol_definition, find_symbol_references
 from typing_extensions import TypedDict
@@ -25,7 +25,7 @@ JUDGE_NODE_NAME = "judge_node"
 
 PROMPT_FILE_NAME ='judger'
 tools=[
-    ast_search,inspect_project,
+    ast_search,
     find_symbol_references, find_symbol_definition, 
     read_file,inspect_file_summary
 ]

@@ -124,8 +124,6 @@ def write_to_file(file_path: str, description: str, content: str, state:Annotate
     Args:
         file_path: 位于项目内部的相对文件路径。
             注意：请直接写文件名或内部子路径，绝对不要包含项目路径
-              正确示例: 'core/main.py', 'test.py'
-              错误示例: 'generated/test.py'
         content: 写入的全部内容。
         description: 文件摘要描述
 
@@ -250,7 +248,9 @@ def create_file(file_path: str, content: str, description:str, state:Annotated[d
         
     except Exception as e:
         return f"创建文件时发生未知错误: {str(e)}"
-    
+
+# inspect_project 必须是谨慎的.
+# 对于coder等实现角色, 有task指示明确文件就够了
 @tool
 def inspect_project(state: Annotated[dict, InjectedState]) -> str:
     """

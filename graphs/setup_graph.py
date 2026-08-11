@@ -7,7 +7,7 @@ import os
 import sys
 from dotenv import load_dotenv
 from pathlib import Path
-from tools.filer import write_to_file, create_file, read_file,delete_files,inspect_project
+from tools.filer import write_to_file, create_file, read_file,delete_files
 from tools.search_replace_tool import apply_search_replace
 from tools.environment import get_environment_variable,set_environment_variable
 from tools.time import get_current_time
@@ -33,7 +33,7 @@ PROMPT_FILE_NAME = "setup"
 tools= [
       write_to_file, create_file, read_file, 
       delete_files, 
-    get_environment_variable, get_current_time, inspect_project,
+    get_environment_variable, get_current_time, 
     set_environment_variable
 ]
 llm = get_llm_with_tools(tools)

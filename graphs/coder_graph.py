@@ -17,7 +17,7 @@ from globals.state import GraphState, Issue,any_write,merge_dicts,FileSnapshot,T
 from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
 from tools.rag import knowledge_search
-from tools.filer import write_to_file,create_file,read_file, inspect_file_summary,inspect_project,delete_files
+from tools.filer import write_to_file,read_file, inspect_file_summary,delete_files
 from tools.ast import ast_search
 from tools.pyright_client import find_symbol_definition, find_symbol_references
 from tools.pyright_check import static_check
@@ -31,9 +31,9 @@ PROMPT_FILE_NAME ='coder'
 
 tools=[
     knowledge_search, write_to_file,static_check,
-    apply_search_replace,ast_search,inspect_project,
+    apply_search_replace,ast_search,
     find_symbol_references, find_symbol_definition, 
-    read_file, create_file,inspect_file_summary, delete_files
+    read_file,inspect_file_summary, delete_files
 ]
 llm = get_llm_with_tools(tools)
 
