@@ -36,13 +36,16 @@ def set_environment_variable(variable_name: str, value: str, save_to_dotenv: boo
 
         # 3. 持久化写入 .env 文件
         if save_to_dotenv:
-            dotenv_path = Path(".env")
-            # 如果 .env 文件不存在，则自动创建
-            if not dotenv_path.exists():
-                dotenv_path.touch()
-            
+            # 使用项目根目录的绝对路径，避免工作目录不同导致写错位置
+            dotenv_path = Path(__file__).resolve().parent.parent / ".env"
             # 使用 python-dotenv 提供的 set_key 函数安全写入（自动处理覆盖或新增）
-            set_key(dotenv_path=str(dotenv_path), key_to_set=clean_name, value_to_set=clean_value)
+            # quote_mode='always' 确保值中包含空格等特殊字符时被正确引号包裹
+            set_key(
+                dotenv_path=str(dotenv_path),
+                key_to_set=clean_name,
+                value_to_set=clean_value,
+                quote_mode="always",
+            )
             msg += " 并已同步持久化写入到 .env 文件中。"
             
         return msg

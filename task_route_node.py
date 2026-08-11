@@ -7,13 +7,13 @@ from typing import Dict
 
 from globals.state import GraphState, TaskList, Task
 from globals.logger import run_logger
-from globals.llm import base_llm, call_llm
+from globals.llm import get_llm
 from utils import get_scene_prompt
 from langchain.messages import SystemMessage, HumanMessage
 
 TASKS_FILE = Path("tasks.json")
 
-llm = base_llm.with_structured_output(TaskList)
+llm = get_llm().with_structured_output(TaskList)
 
 
 def _save_tasks(tasks: list) -> None:
@@ -23,8 +23,8 @@ def _save_tasks(tasks: list) -> None:
     )
 
 
-def _load_tasks() -> list:
-    """从 tasks.json 加载任务列表"""
+def _load_tasks() -> list[dict]:
+    """从 tasks.json 加载任务列表，返回原始 dict 列表"""
     return json.loads(TASKS_FILE.read_text(encoding="utf-8"))
 
 
@@ -55,20 +55,7 @@ def _get_reference_files(feature_dir: str) -> list[str]:
 
 def _make_completed_task() -> Task:
     """构造一个表示已完成的空任务"""
-    return Task(
-        id="",
-        title="",
-        status="completed",
-        task_type="",
-        phase=None,
-        phase_number=None,
-        user_story=None,
-        priority=None,
-        parallel=False,
-        tags=[],
-        target_files=[],
-        reference_files=[],
-    )
+    return Task(status="completed")
 
 
 def task_route_node(state: GraphState) -> Dict:
@@ -123,7 +110,8 @@ def task_route_node(state: GraphState) -> Dict:
 
         # 使用 structured output，invoke 直接返回 TaskList 对象
         result: TaskList = llm.invoke(messages)
-        tasks = result.get("tasks", [])
+        # result.tasks 是 List[Task]（Pydantic model），转为 dict 列表方便后续处理
+        tasks = [t.model_dump() for t in result.tasks]
 
         run_logger.info(f"[task_route] LLM 解析出 {len(tasks)} 个任务")
 
@@ -133,22 +121,11 @@ def task_route_node(state: GraphState) -> Dict:
         tasks = _load_tasks()
 
     # 找到第一个 pending 状态的任务
-    for i, task in enumerate(tasks):
-        if task.get("status") == "pending":
-            current_task = Task(
-                id=task.get("id", ""),
-                title=task.get("title", ""),
-                status="in_progress",
-                task_type=task.get("task_type", "code"),
-                phase=task.get("phase"),
-                phase_number=task.get("phase_number"),
-                user_story=task.get("user_story"),
-                priority=task.get("priority"),
-                parallel=task.get("parallel", False),
-                tags=task.get("tags", []),
-                target_files=task.get("target_files", []),
-                reference_files=task.get("reference_files", []),
-            )
+    for i, task_dict in enumerate(tasks):
+        if task_dict.get("status") == "pending":
+            # 从 dict 构造 Task，并覆盖 status 为 in_progress
+            task_dict["status"] = "in_progress"
+            current_task = Task(**task_dict)
             tasks[i]["status"] = "in_progress"
             _save_tasks(tasks)
 

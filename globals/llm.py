@@ -35,18 +35,30 @@ deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
 #     presence_penalty=1.0         # 🌟 辅助：惩罚重复的话题
 # )
 # llm = llm.bind_tools(tools=tools)
-base_llm = ChatDeepSeek(
-    api_key=deepseek_key,
-    base_url="https://api.deepseek.com",
-    model="deepseek-v4-flash",
-    reasoning_effort = 'low'
-)
 
-# 2. 编写动态绑定工具的函数
+def get_llm():
+    """
+    无reason,  用于结构化
+    """
+    base_llm = ChatDeepSeek(
+        api_key=deepseek_key,
+        base_url="https://api.deepseek.com",
+        model="deepseek-v4-flash",
+        extra_body={"thinking": {"type": "disabled"}} 
+    )
+    return base_llm
+
 def get_llm_with_tools(tools: list):
     """
-    为传入的 LLM 实例动态绑定不同的 tool 能力。
+    为传入的 LLM 实例动态绑定不同的 tool 能力。 一定具有reasoning
     """
+    base_llm = ChatDeepSeek(
+        api_key=deepseek_key,
+        base_url="https://api.deepseek.com",
+        model="deepseek-v4-flash",
+        reasoning_effort = 'low'
+    )
+
     return base_llm.bind_tools(tools=tools)
 
 from langchain_core.messages import AnyMessage, SystemMessage, HumanMessage, AIMessage, ToolMessage

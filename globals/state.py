@@ -1,6 +1,9 @@
-from typing import Annotated, List, TypedDict,Dict
+from typing import Annotated, List, TypedDict, Dict, Optional
 import operator
 from pathlib import Path
+
+from pydantic import BaseModel, Field
+
 # reducer for shared state
 
 def any_write(left, right):
@@ -35,23 +38,43 @@ class Issue(TypedDict):
     assign: str # coder, test_coder, human
     review: str # 修复建议
 
-class Task(TypedDict):
-    """当前执行中的任务"""
-    id: str                          # 任务ID，如 "T001"
-    title: str                       # 任务标题
-    status: str                      # pending | in_progress | completed 默认为pending
-    task_type: str                   # setup | code | test_code | doc
-    phase: str | None                # 所属阶段名称
-    phase_number: int | None         # 所属阶段编号
-    user_story: str | None           # 所属用户故事
-    priority: str | None             # 优先级
-    parallel: bool                   # 是否可并行
-    tags: List[str]                  # 标签列表
-    target_files: List[str]          # 需要操作修改的文件列表
-    reference_files: List[str]       # 需要参考的文件列表
 
-class TaskList(TypedDict):
-    tasks: List[Task]
+class Task(BaseModel):
+    """当前执行中的任务，使用 Pydantic 进行约束校验"""
+    id: str = Field(default="", description="任务ID，如 'T001'")
+    title: str = Field(default="", description="任务标题")
+    status: str = Field(
+        default="pending",
+        description="任务状态: pending | in_progress | completed",
+    )
+    task_type: str = Field(
+        default="code",
+        description="任务类型: setup | code | test_code | doc",
+    )
+    phase: Optional[str] = Field(default=None, description="所属阶段名称")
+    phase_number: Optional[int] = Field(default=None, description="所属阶段编号")
+    user_story: Optional[str] = Field(default=None, description="所属用户故事")
+    priority: Optional[str] = Field(default=None, description="优先级")
+    parallel: bool = Field(default=False, description="是否可并行")
+    tags: List[str] = Field(default_factory=list, description="标签列表")
+    target_files: List[str] = Field(
+        default_factory=list, description="需要操作修改的文件列表"
+    )
+    reference_files: List[str] = Field(
+        default_factory=list, description="需要参考的文件列表"
+    )
+
+    # 兼容 TypedDict 的下标访问方式，如 state['current_task']['title']
+    def __getitem__(self, key: str):
+        return getattr(self, key)
+
+    def get(self, key: str, default=None):
+        return getattr(self, key, default)
+
+
+class TaskList(BaseModel):
+    """任务列表，用于 LLM structured output 解析"""
+    tasks: List[Task] = Field(default_factory=list, description="任务列表")
 
 class FileSnapshot(TypedDict):
     file_name: str

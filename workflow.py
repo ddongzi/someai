@@ -126,6 +126,7 @@ class MyWorkflow:
                 "code": "coder_graph",
                 "test_code": "test_coder_graph",
                 "doc": "coder_graph",
+                'end': END,
                 'unknown': END
             }
 

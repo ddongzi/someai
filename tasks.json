@@ -1,0 +1,1425 @@
+[
+  {
+    "id": "T001",
+    "title": "Create src/gamemapgen/ package structure",
+    "status": "in_progress",
+    "task_type": "setup",
+    "phase": "Phase 1: Setup",
+    "phase_number": 1,
+    "user_story": null,
+    "priority": null,
+    "parallel": false,
+    "tags": [
+      "setup",
+      "package-structure"
+    ],
+    "target_files": [
+      "src/gamemapgen/__init__.py",
+      "src/gamemapgen/errors.py",
+      "src/gamemapgen/prng.py",
+      "src/gamemapgen/models.py",
+      "src/gamemapgen/registry.py",
+      "src/gamemapgen/config.py",
+      "src/gamemapgen/constraints.py",
+      "src/gamemapgen/hooks.py",
+      "src/gamemapgen/composite.py",
+      "src/gamemapgen/presets.py",
+      "src/gamemapgen/generators/"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/plan.md"
+    ]
+  },
+  {
+    "id": "T002",
+    "title": "Create tests/ directory structure",
+    "status": "pending",
+    "task_type": "setup",
+    "phase": "Phase 1: Setup",
+    "phase_number": 1,
+    "user_story": null,
+    "priority": null,
+    "parallel": false,
+    "tags": [
+      "setup",
+      "test-structure"
+    ],
+    "target_files": [
+      "tests/conftest.py",
+      "tests/unit/",
+      "tests/integration/",
+      "tests/contract/",
+      "tests/benchmarks/"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/plan.md"
+    ]
+  },
+  {
+    "id": "T003",
+    "title": "Create pyproject.toml with project metadata",
+    "status": "pending",
+    "task_type": "setup",
+    "phase": "Phase 1: Setup",
+    "phase_number": 1,
+    "user_story": null,
+    "priority": null,
+    "parallel": true,
+    "tags": [
+      "setup",
+      "pyproject"
+    ],
+    "target_files": [
+      "pyproject.toml"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/plan.md"
+    ]
+  },
+  {
+    "id": "T004",
+    "title": "Create docs/ directory",
+    "status": "pending",
+    "task_type": "setup",
+    "phase": "Phase 1: Setup",
+    "phase_number": 1,
+    "user_story": null,
+    "priority": null,
+    "parallel": true,
+    "tags": [
+      "setup",
+      "docs"
+    ],
+    "target_files": [
+      "docs/"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/plan.md"
+    ]
+  },
+  {
+    "id": "T005",
+    "title": "Create README.md at repository root",
+    "status": "pending",
+    "task_type": "setup",
+    "phase": "Phase 1: Setup",
+    "phase_number": 1,
+    "user_story": null,
+    "priority": null,
+    "parallel": true,
+    "tags": [
+      "setup",
+      "readme"
+    ],
+    "target_files": [
+      "README.md"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/quickstart.md"
+    ]
+  },
+  {
+    "id": "T006",
+    "title": "Unit tests for PRNG determinism and seed validation",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 2: Foundational",
+    "phase_number": 2,
+    "user_story": null,
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "prng",
+      "foundational"
+    ],
+    "target_files": [
+      "tests/unit/test_prng.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T007",
+    "title": "Unit tests for TileTypeRegistry",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 2: Foundational",
+    "phase_number": 2,
+    "user_story": null,
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "registry",
+      "foundational"
+    ],
+    "target_files": [
+      "tests/unit/test_registry.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/tiles.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T008",
+    "title": "Unit tests for typed errors",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 2: Foundational",
+    "phase_number": 2,
+    "user_story": null,
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "errors",
+      "foundational"
+    ],
+    "target_files": [
+      "tests/unit/test_errors.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T009",
+    "title": "Implement typed error hierarchy",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 2: Foundational",
+    "phase_number": 2,
+    "user_story": null,
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "errors",
+      "foundational"
+    ],
+    "target_files": [
+      "src/gamemapgen/errors.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T010",
+    "title": "Implement PRNG class",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 2: Foundational",
+    "phase_number": 2,
+    "user_story": null,
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "prng",
+      "foundational"
+    ],
+    "target_files": [
+      "src/gamemapgen/prng.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T011",
+    "title": "Implement TileType dataclass and TileTypeRegistry",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 2: Foundational",
+    "phase_number": 2,
+    "user_story": null,
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "registry",
+      "tiles",
+      "foundational"
+    ],
+    "target_files": [
+      "src/gamemapgen/registry.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/tiles.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T012",
+    "title": "Implement GeneratorRegistry",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 2: Foundational",
+    "phase_number": 2,
+    "user_story": null,
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "registry",
+      "foundational"
+    ],
+    "target_files": [
+      "src/gamemapgen/registry.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T013",
+    "title": "Implement ComplexityEstimate dataclass",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 2: Foundational",
+    "phase_number": 2,
+    "user_story": null,
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "models",
+      "foundational"
+    ],
+    "target_files": [
+      "src/gamemapgen/models.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T014",
+    "title": "Implement BaseGenerator abstract class",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 2: Foundational",
+    "phase_number": 2,
+    "user_story": null,
+    "priority": "P1",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "generator",
+      "base",
+      "foundational"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/base.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T015",
+    "title": "Implement __init__.py public API exports",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 2: Foundational",
+    "phase_number": 2,
+    "user_story": null,
+    "priority": "P1",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "public-api",
+      "foundational"
+    ],
+    "target_files": [
+      "src/gamemapgen/__init__.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T016",
+    "title": "Unit tests for model dataclasses",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "models",
+      "US1"
+    ],
+    "target_files": [
+      "tests/unit/test_models.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/data-model.md"
+    ]
+  },
+  {
+    "id": "T017",
+    "title": "Unit tests for GenerationParams validation",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "config",
+      "US1"
+    ],
+    "target_files": [
+      "tests/unit/test_config.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/data-model.md"
+    ]
+  },
+  {
+    "id": "T018",
+    "title": "Unit tests for DungeonGenerator",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "dungeon",
+      "US1"
+    ],
+    "target_files": [
+      "tests/unit/generators/test_dungeon.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T019",
+    "title": "Unit tests for OpenWorldGenerator",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "open-world",
+      "US1"
+    ],
+    "target_files": [
+      "tests/unit/generators/test_open_world.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T020",
+    "title": "Unit tests for MazeGenerator",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "maze",
+      "US1"
+    ],
+    "target_files": [
+      "tests/unit/generators/test_maze.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T021",
+    "title": "Unit tests for preset resolution",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "presets",
+      "US1"
+    ],
+    "target_files": [
+      "tests/unit/test_presets.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T022",
+    "title": "Contract test for serialization round-trip",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "serialization",
+      "contract",
+      "US1"
+    ],
+    "target_files": [
+      "tests/contract/test_serialization.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T023",
+    "title": "Implement model dataclasses",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "models",
+      "US1"
+    ],
+    "target_files": [
+      "src/gamemapgen/models.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T024",
+    "title": "Implement GenerationParams dataclass with validation",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "config",
+      "US1"
+    ],
+    "target_files": [
+      "src/gamemapgen/config.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/data-model.md"
+    ]
+  },
+  {
+    "id": "T025",
+    "title": "Implement DungeonGenerator",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "dungeon",
+      "US1"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/dungeon.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/research.md"
+    ]
+  },
+  {
+    "id": "T026",
+    "title": "Implement OpenWorldGenerator",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "open-world",
+      "US1"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/open_world.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/research.md"
+    ]
+  },
+  {
+    "id": "T027",
+    "title": "Implement MazeGenerator",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "maze",
+      "US1"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/maze.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T028",
+    "title": "Implement generators/__init__.py exports",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "generators",
+      "US1"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/__init__.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md"
+    ]
+  },
+  {
+    "id": "T029",
+    "title": "Wire built-in generators into GeneratorRegistry auto-registration",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "registry",
+      "US1"
+    ],
+    "target_files": [
+      "src/gamemapgen/registry.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T030",
+    "title": "Implement ConfigResolver",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "config",
+      "US1"
+    ],
+    "target_files": [
+      "src/gamemapgen/config.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T031",
+    "title": "Implement built-in presets",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "presets",
+      "US1"
+    ],
+    "target_files": [
+      "src/gamemapgen/presets.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T032",
+    "title": "Implement max_iterations/timeout_ms budget enforcement",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 3: User Story 1",
+    "phase_number": 3,
+    "user_story": "US1",
+    "priority": "P1",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "budget",
+      "US1"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/base.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T033",
+    "title": "Unit tests for determinism",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 4: User Story 2",
+    "phase_number": 4,
+    "user_story": "US2",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "determinism",
+      "US2"
+    ],
+    "target_files": [
+      "tests/unit/test_determinism.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T034",
+    "title": "Contract test for byte-identical serialization determinism",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 4: User Story 2",
+    "phase_number": 4,
+    "user_story": "US2",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "serialization",
+      "contract",
+      "US2"
+    ],
+    "target_files": [
+      "tests/contract/test_serialization.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T035",
+    "title": "Integration test for cross-process/no-global-randomness determinism",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 4: User Story 2",
+    "phase_number": 4,
+    "user_story": "US2",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "test",
+      "integration",
+      "determinism",
+      "US2"
+    ],
+    "target_files": [
+      "tests/integration/test_pipeline.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T036",
+    "title": "Ensure generators use only seeded PRNG (audit randomness sources)",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 4: User Story 2",
+    "phase_number": 4,
+    "user_story": "US2",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "determinism",
+      "US2"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/dungeon.py",
+      "src/gamemapgen/generators/open_world.py",
+      "src/gamemapgen/generators/maze.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T037",
+    "title": "Implement deterministic byte-stable MapData.to_json",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 4: User Story 2",
+    "phase_number": 4,
+    "user_story": "US2",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "serialization",
+      "US2"
+    ],
+    "target_files": [
+      "src/gamemapgen/models.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T038",
+    "title": "Isolate PRNG state per generation call",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 4: User Story 2",
+    "phase_number": 4,
+    "user_story": "US2",
+    "priority": "P1",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "prng",
+      "determinism",
+      "US2"
+    ],
+    "target_files": [
+      "src/gamemapgen/prng.py",
+      "src/gamemapgen/generators/base.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T039",
+    "title": "Record full resolved parameters in MapMetadata.parameters",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 4: User Story 2",
+    "phase_number": 4,
+    "user_story": "US2",
+    "priority": "P1",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "metadata",
+      "US2"
+    ],
+    "target_files": [
+      "src/gamemapgen/models.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T040",
+    "title": "Unit tests for CompositeGenerator",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 5: User Story 3",
+    "phase_number": 5,
+    "user_story": "US3",
+    "priority": "P2",
+    "parallel": true,
+    "tags": [
+      "test",
+      "composite",
+      "US3"
+    ],
+    "target_files": [
+      "tests/unit/test_composite.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T041",
+    "title": "Integration test for composite layered generation",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 5: User Story 3",
+    "phase_number": 5,
+    "user_story": "US3",
+    "priority": "P2",
+    "parallel": true,
+    "tags": [
+      "test",
+      "integration",
+      "composite",
+      "US3"
+    ],
+    "target_files": [
+      "tests/integration/test_pipeline.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T042",
+    "title": "Implement CompositeGenerator",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 5: User Story 3",
+    "phase_number": 5,
+    "user_story": "US3",
+    "priority": "P2",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "composite",
+      "US3"
+    ],
+    "target_files": [
+      "src/gamemapgen/composite.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T043",
+    "title": "Implement graceful layer-failure handling in CompositeGenerator",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 5: User Story 3",
+    "phase_number": 5,
+    "user_story": "US3",
+    "priority": "P2",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "composite",
+      "failure-handling",
+      "US3"
+    ],
+    "target_files": [
+      "src/gamemapgen/composite.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T044",
+    "title": "Register CompositeGenerator and expose layers list",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 5: User Story 3",
+    "phase_number": 5,
+    "user_story": "US3",
+    "priority": "P2",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "registry",
+      "composite",
+      "US3"
+    ],
+    "target_files": [
+      "src/gamemapgen/registry.py",
+      "src/gamemapgen/models.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T045",
+    "title": "Unit tests for HookManager and GenerationContext",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 6: User Story 4",
+    "phase_number": 6,
+    "user_story": "US4",
+    "priority": "P2",
+    "parallel": true,
+    "tags": [
+      "test",
+      "hooks",
+      "US4"
+    ],
+    "target_files": [
+      "tests/unit/test_hooks.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T046",
+    "title": "Integration test for hooks",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 6: User Story 4",
+    "phase_number": 6,
+    "user_story": "US4",
+    "priority": "P2",
+    "parallel": true,
+    "tags": [
+      "test",
+      "integration",
+      "hooks",
+      "US4"
+    ],
+    "target_files": [
+      "tests/integration/test_pipeline.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T047",
+    "title": "Implement GenerationContext dataclass",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 6: User Story 4",
+    "phase_number": 6,
+    "user_story": "US4",
+    "priority": "P2",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "hooks",
+      "US4"
+    ],
+    "target_files": [
+      "src/gamemapgen/hooks.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T048",
+    "title": "Implement HookManager",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 6: User Story 4",
+    "phase_number": 6,
+    "user_story": "US4",
+    "priority": "P2",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "hooks",
+      "US4"
+    ],
+    "target_files": [
+      "src/gamemapgen/hooks.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T049",
+    "title": "Integrate HookManager into BaseGenerator.generate lifecycle",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 6: User Story 4",
+    "phase_number": 6,
+    "user_story": "US4",
+    "priority": "P2",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "hooks",
+      "base",
+      "US4"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/base.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T050",
+    "title": "Add register_hook convenience method and expose snapshots on BaseGenerator",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 6: User Story 4",
+    "phase_number": 6,
+    "user_story": "US4",
+    "priority": "P2",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "hooks",
+      "base",
+      "US4"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/base.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T051",
+    "title": "Unit tests for content constraints",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 7: User Story 5",
+    "phase_number": 7,
+    "user_story": "US5",
+    "priority": "P3",
+    "parallel": true,
+    "tags": [
+      "test",
+      "constraints",
+      "US5"
+    ],
+    "target_files": [
+      "tests/unit/test_constraints.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/data-model.md"
+    ]
+  },
+  {
+    "id": "T052",
+    "title": "Integration test for constraints",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 7: User Story 5",
+    "phase_number": 7,
+    "user_story": "US5",
+    "priority": "P3",
+    "parallel": true,
+    "tags": [
+      "test",
+      "integration",
+      "constraints",
+      "US5"
+    ],
+    "target_files": [
+      "tests/integration/test_pipeline.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T053",
+    "title": "Implement ContentConstraint base and concrete types",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 7: User Story 5",
+    "phase_number": 7,
+    "user_story": "US5",
+    "priority": "P3",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "constraints",
+      "US5"
+    ],
+    "target_files": [
+      "src/gamemapgen/constraints.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T054",
+    "title": "Implement constraint enforcement engine",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 7: User Story 5",
+    "phase_number": 7,
+    "user_story": "US5",
+    "priority": "P3",
+    "parallel": true,
+    "tags": [
+      "implementation",
+      "constraints",
+      "US5"
+    ],
+    "target_files": [
+      "src/gamemapgen/constraints.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T055",
+    "title": "Integrate constraint enforcement into BaseGenerator.generate lifecycle",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 7: User Story 5",
+    "phase_number": 7,
+    "user_story": "US5",
+    "priority": "P3",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "constraints",
+      "base",
+      "US5"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/base.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T056",
+    "title": "Add add_constraint convenience method and content_constraints param threading",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 7: User Story 5",
+    "phase_number": 7,
+    "user_story": "US5",
+    "priority": "P3",
+    "parallel": false,
+    "tags": [
+      "implementation",
+      "constraints",
+      "base",
+      "config",
+      "US5"
+    ],
+    "target_files": [
+      "src/gamemapgen/generators/base.py",
+      "src/gamemapgen/config.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T057",
+    "title": "Create getting-started guide",
+    "status": "pending",
+    "task_type": "doc",
+    "phase": "Phase 8: Polish",
+    "phase_number": 8,
+    "user_story": null,
+    "priority": null,
+    "parallel": true,
+    "tags": [
+      "docs",
+      "polish"
+    ],
+    "target_files": [
+      "docs/getting-started.md"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/quickstart.md",
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T058",
+    "title": "Create runnable demo scripts",
+    "status": "pending",
+    "task_type": "doc",
+    "phase": "Phase 8: Polish",
+    "phase_number": 8,
+    "user_story": null,
+    "priority": null,
+    "parallel": true,
+    "tags": [
+      "docs",
+      "demos",
+      "polish"
+    ],
+    "target_files": [
+      "docs/demos/"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/quickstart.md",
+      "specs/game-map-generator/plan.md"
+    ]
+  },
+  {
+    "id": "T059",
+    "title": "Create performance benchmark harness",
+    "status": "pending",
+    "task_type": "test_code",
+    "phase": "Phase 8: Polish",
+    "phase_number": 8,
+    "user_story": null,
+    "priority": null,
+    "parallel": true,
+    "tags": [
+      "benchmark",
+      "performance",
+      "polish"
+    ],
+    "target_files": [
+      "tests/benchmarks/bench_generation.py"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T060",
+    "title": "Add @since/@deprecated metadata annotations",
+    "status": "pending",
+    "task_type": "code",
+    "phase": "Phase 8: Polish",
+    "phase_number": 8,
+    "user_story": null,
+    "priority": null,
+    "parallel": true,
+    "tags": [
+      "metadata",
+      "polish"
+    ],
+    "target_files": [
+      "src/gamemapgen/"
+    ],
+    "reference_files": [
+      "specs/game-map-generator/spec.md"
+    ]
+  },
+  {
+    "id": "T061",
+    "title": "Add docstrings with runnable usage examples",
+    "status": "pending",
+    "task_type": "doc",
+    "phase": "Phase 8: Polish",
+    "phase_number": 8,
+    "user_story": null,
+    "priority": null,
+    "parallel": false,
+    "tags": [],
+    "target_files": [],
+    "reference_files": []
+  }
+]
