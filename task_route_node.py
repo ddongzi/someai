@@ -1,61 +1,27 @@
 """任务路由节点：从 tasks.json 读取并初始化当前任务，按任务类型进行路由"""
 
-import json
-import os
 from pathlib import Path
 from typing import Dict
 
-from globals.state import GraphState, TaskList, Task
+from globals.state import GraphState, TaskList
 from globals.logger import run_logger
 from globals.llm import get_llm
 from utils import get_scene_prompt
+from task_helper import (
+    save_tasks,
+    load_tasks,
+    get_feature_dir,
+    get_generated_dir,
+    get_reference_files,
+    make_completed_task,
+)
+
+from globals.state import Task
 from langchain.messages import SystemMessage, HumanMessage
 
 TASKS_FILE = Path("tasks.json")
 
 llm = get_llm().with_structured_output(TaskList)
-
-
-def _save_tasks(tasks: list) -> None:
-    """保存任务列表到 tasks.json"""
-    TASKS_FILE.write_text(
-        json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-
-
-def _load_tasks() -> list[dict]:
-    """从 tasks.json 加载任务列表，返回原始 dict 列表"""
-    return json.loads(TASKS_FILE.read_text(encoding="utf-8"))
-
-
-def _get_feature_dir() -> str:
-    """获取 SPECIFY_FEATURE_DIRECTORY 环境变量"""
-    return os.environ.get("SPECIFY_FEATURE_DIRECTORY", "")
-
-
-def _get_generated_dir() -> str:
-    """获取 GENERATED_DIR 环境变量，默认 'generated'"""
-    return os.environ.get("GENERATED_DIR", "generated")
-
-
-def _get_reference_files(feature_dir: str) -> list[str]:
-    """获取 generated/specs/{feature_dir}/ 下所有文件相对于 generated/ 的路径列表"""
-    specs_dir = Path(_get_generated_dir()) / "specs" / feature_dir
-    if not specs_dir.exists():
-        return []
-
-    ref_files = []
-    for root, _dirs, files in os.walk(specs_dir):
-        for f in files:
-            abs_path = Path(root) / f
-            rel_path = abs_path.relative_to(_get_generated_dir())
-            ref_files.append(str(rel_path))
-    return ref_files
-
-
-def _make_completed_task() -> Task:
-    """构造一个表示已完成的空任务"""
-    return Task(status="completed")
 
 
 def task_route_node(state: GraphState) -> Dict:
@@ -70,26 +36,26 @@ def task_route_node(state: GraphState) -> Dict:
     run_logger.info("task route node...")
 
     if not TASKS_FILE.exists():
-        feature_dir = _get_feature_dir()
+        feature_dir = get_feature_dir()
         if not feature_dir:
             run_logger.warning(
                 "[task_route] SPECIFY_FEATURE_DIRECTORY 未设置，无法生成任务"
             )
-            return {"current_task": _make_completed_task()}
+            return {"current_task": make_completed_task()}
 
         # 读取 tasks.md 内容
         tasks_md_path = (
-            Path(_get_generated_dir()) / "specs" / feature_dir / "tasks.md"
+            Path(get_generated_dir()) / "specs" / feature_dir / "tasks.md"
         )
 
         if not tasks_md_path.exists():
             run_logger.warning(
                 f"[task_route] tasks.md 不存在: {tasks_md_path}"
             )
-            return {"current_task": _make_completed_task()}
+            return {"current_task": make_completed_task()}
 
         tasks_content = tasks_md_path.read_text(encoding="utf-8")
-        reference_files = _get_reference_files(feature_dir)
+        reference_files = get_reference_files(feature_dir)
         reference_files_str = "\n".join(reference_files)
 
         run_logger.info(
@@ -116,18 +82,24 @@ def task_route_node(state: GraphState) -> Dict:
         run_logger.info(f"[task_route] LLM 解析出 {len(tasks)} 个任务")
 
         # 写入 tasks.json
-        _save_tasks(tasks)
+        save_tasks(tasks)
     else:
-        tasks = _load_tasks()
+        tasks = load_tasks()
 
-    # 找到第一个 pending 状态的任务
+    # 先找 in_progress 的任务
+    for i, task_dict in enumerate(tasks):
+        if task_dict.get("status") == "in_progress":
+            current_task = Task(**task_dict)
+            run_logger.info(f"current task: {current_task}")
+            return {"current_task": current_task}
+
+    # 再找第一个 pending 的任务，设为 in_progress
     for i, task_dict in enumerate(tasks):
         if task_dict.get("status") == "pending":
-            # 从 dict 构造 Task，并覆盖 status 为 in_progress
             task_dict["status"] = "in_progress"
             current_task = Task(**task_dict)
             tasks[i]["status"] = "in_progress"
-            _save_tasks(tasks)
+            save_tasks(tasks)
 
             run_logger.info(f"current task: {current_task}")
 
@@ -135,4 +107,4 @@ def task_route_node(state: GraphState) -> Dict:
 
     # 没有待处理的任务
     run_logger.info("[task_route] 所有任务已完成")
-    return {"current_task": _make_completed_task()}
+    return {"current_task": make_completed_task()}

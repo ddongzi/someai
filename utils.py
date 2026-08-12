@@ -323,3 +323,4 @@ def calculate_file_hash(file_path: Union[str, Path], chunk_size: int = 8192) -> 
             
     return md5_hash.hexdigest()
 
+

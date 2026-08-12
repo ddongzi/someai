@@ -1,26 +1,26 @@
-from tools.rag import get_knowledge
-from typing import Dict
-from tools.git import git_tool
-from utils import  get_scene_prompt, draw_workflow_png
-from globals.state import GraphState, Issue, FileSnapshot,Task,any_write,merge_dicts
+from typing import Dict, TypedDict, Annotated
 import os
 import sys
 from dotenv import load_dotenv
 from pathlib import Path
-from tools.filer import write_to_file, create_file, read_file,delete_files
-from tools.search_replace_tool import apply_search_replace
-from tools.environment import get_environment_variable,set_environment_variable
-from tools.time import get_current_time
-from langchain.messages import SystemMessage, HumanMessage, AnyMessage,ToolMessage
 import json
+
+from tools.rag import get_knowledge
+from tools.git import git_tool
+from utils import get_scene_prompt, draw_workflow_png
+from globals.state import GraphState, Issue, FileSnapshot, Task, any_write, merge_dicts
+from tools.filer import write_to_file, create_file, read_file, delete_files,create_directory
+from tools.search_replace_tool import apply_search_replace
+from tools.environment import get_environment_variable, set_environment_variable
+from tools.time import get_current_time
+from langchain.messages import SystemMessage, HumanMessage, AnyMessage, ToolMessage
 from globals.llm import call_llm, get_llm_with_tools
 from globals.logger import get_file_logger
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import RemoveMessage
 from langgraph.prebuilt import ToolNode, tools_condition
-from typing import Dict, TypedDict
-from typing import Annotated
-from langgraph.graph.message import add_messages,AnyMessage
+from langgraph.graph.message import add_messages, AnyMessage
+from task_helper import save_task
 
 load_dotenv()
 GRAPH_NAME='setup'
@@ -31,7 +31,7 @@ graph_logger = get_file_logger(
 )
 PROMPT_FILE_NAME = "setup"
 tools= [
-      write_to_file, create_file, read_file, 
+      write_to_file, create_file, read_file, create_directory,
       delete_files, 
     get_environment_variable, get_current_time, 
     set_environment_variable
@@ -50,7 +50,9 @@ def setup_node(state: SetupGraphState) -> Dict:
     system_prompt, user_prompt  = get_scene_prompt(
             file_name=PROMPT_FILE_NAME,
             scene_name='execute_setup',
-            task = state['current_task']['title']
+            task_title = state['current_task']['title'],
+            target_files = state['current_task']['target_files'],
+            reference_files = state['current_task']['reference_files']
         )
 
     messages = [
@@ -68,6 +70,10 @@ def setup_node(state: SetupGraphState) -> Dict:
             'messages': [full_chunk],
         }
 
+    # 任务完成, 更新current_task已完成.
+    state['current_task']['status'] = 'completed'
+    save_task(state['current_task'])
+    return {}
 
 def router_node(state: SetupGraphState) :
     # 状态初始化

@@ -22,5 +22,6 @@ all_tools = [
     apply_search_replace,
     setup_spec_environment,
     get_current_time,
-    web_search
+    web_search,
+    create_directory
 ]

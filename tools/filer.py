@@ -249,6 +249,45 @@ def create_file(file_path: str, content: str, description:str, state:Annotated[d
     except Exception as e:
         return f"创建文件时发生未知错误: {str(e)}"
 
+@tool
+def create_directory(directory_path: str,  state: Annotated[dict, InjectedState], runtime: ToolRuntime) -> str:
+    """
+    创建目录（支持一次性创建多级嵌套目录）。如果目录已存在，则视为成功。
+
+    参数:
+        directory_path: 位于项目内部的相对目录路径。
+            注意：请直接写目录名或内部子路径，绝对不要包含项目路径
+        runtime (ToolRuntime): 工具执行时的运行时上下文对象。参数会自动注入
+    """
+    try:
+        base_path = Path(GENERATED_DIR).resolve()
+        target_path = Path(base_path, directory_path).resolve()
+
+        # 1. 安全检查：防止路径穿越漏洞
+        if not target_path.is_relative_to(base_path):
+            return f"错误：拒绝访问。路径 '{directory_path}' 超出了允许的工作目录范围。"
+
+        # 2. 检查是否试图操作已存在的文件路径
+        if target_path.exists() and not target_path.is_dir():
+            return f"错误：路径 '{directory_path}' 已存在且不是一个目录。"
+
+        # 3. 创建目录（含所有必要的父级目录）
+        target_path.mkdir(parents=True, exist_ok=True)
+
+        return Command(
+            update={
+                'messages': [
+                    ToolMessage(
+                        content=f"成功：目录 '{directory_path}' 已创建。{description}",
+                        tool_call_id=runtime.tool_call_id,
+                    )
+                ]
+            }
+        )
+    except Exception as e:
+        return f"创建目录时发生未知错误: {str(e)}"
+
+
 # inspect_project 必须是谨慎的.
 # 对于coder等实现角色, 有task指示明确文件就够了
 @tool

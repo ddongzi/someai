@@ -2,7 +2,7 @@
   {
     "id": "T001",
     "title": "Create src/gamemapgen/ package structure",
-    "status": "in_progress",
+    "status": "completed",
     "task_type": "setup",
     "phase": "Phase 1: Setup",
     "phase_number": 1,
@@ -33,7 +33,7 @@
   {
     "id": "T002",
     "title": "Create tests/ directory structure",
-    "status": "pending",
+    "status": "completed",
     "task_type": "setup",
     "phase": "Phase 1: Setup",
     "phase_number": 1,
