@@ -278,7 +278,7 @@ def create_directory(directory_path: str,  state: Annotated[dict, InjectedState]
             update={
                 'messages': [
                     ToolMessage(
-                        content=f"成功：目录 '{directory_path}' 已创建。{description}",
+                        content=f"成功：目录 '{directory_path}' 已创建.",
                         tool_call_id=runtime.tool_call_id,
                     )
                 ]

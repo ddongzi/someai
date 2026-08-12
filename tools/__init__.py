@@ -1,6 +1,6 @@
 from tools.ast import ast_search
 from tools.environment import get_environment_variable
-from tools.filer import read_file, create_file,inspect_project,write_to_file,delete_files,inspect_file_summary
+from tools.filer import read_file, create_file,inspect_project,write_to_file,create_directory,delete_files,inspect_file_summary
 from tools.pyright_check import static_check
 from tools.pyright_client import find_symbol_definition, find_symbol_references
 from tools.search_replace_tool import apply_search_replace

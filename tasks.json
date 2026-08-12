@@ -58,7 +58,7 @@
   {
     "id": "T003",
     "title": "Create pyproject.toml with project metadata",
-    "status": "pending",
+    "status": "completed",
     "task_type": "setup",
     "phase": "Phase 1: Setup",
     "phase_number": 1,
@@ -79,7 +79,7 @@
   {
     "id": "T004",
     "title": "Create docs/ directory",
-    "status": "pending",
+    "status": "completed",
     "task_type": "setup",
     "phase": "Phase 1: Setup",
     "phase_number": 1,
@@ -100,7 +100,7 @@
   {
     "id": "T005",
     "title": "Create README.md at repository root",
-    "status": "pending",
+    "status": "completed",
     "task_type": "setup",
     "phase": "Phase 1: Setup",
     "phase_number": 1,
