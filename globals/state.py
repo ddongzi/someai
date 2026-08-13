@@ -39,29 +39,41 @@ class Issue(TypedDict):
     review: str # 修复建议
 
 
+# 从tasks.md通过llm解析出来
 class Task(BaseModel):
-    """当前执行中的任务，使用 Pydantic 进行约束校验"""
-    id: str = Field(default="", description="任务ID，如 'T001'")
-    title: str = Field(default="", description="任务标题")
+    """任务，使用 Pydantic 进行约束校验"""
+    id: str = Field(
+        default="", 
+        description="任务ID.必须提取自 Txxx格式.如T001.不为空"
+        )
+    content: str = Field(
+        default="", 
+        description="任务内容.去除ID,[P]等前缀标记后的内容.不为空"
+        )
     status: str = Field(
         default="pending",
-        description="任务状态: pending | in_progress | completed",
+        description="任务状态: pending | in_progress | completed.默认即可,手动设置.",
     )
     task_type: str = Field(
-        default="code",
-        description="任务类型: setup | code | test_code | doc",
+        default="",
+        description="""任务类型.可选: setup, code, test_code, doc.
+        - setup: 基础配置,目录和文件创建,初始化.
+        - code: 编写或修改业务代码.
+        - test_code: 编写或修改测试代码.
+        - doc: 编写或修改文档.
+        """,
     )
-    phase: Optional[str] = Field(default=None, description="所属阶段名称")
-    phase_number: Optional[int] = Field(default=None, description="所属阶段编号")
-    user_story: Optional[str] = Field(default=None, description="所属用户故事")
-    priority: Optional[str] = Field(default=None, description="优先级")
-    parallel: bool = Field(default=False, description="是否可并行")
-    tags: List[str] = Field(default_factory=list, description="标签列表")
+    phase: str = Field(
+        default="", 
+        description="所属阶段全名. 如Phase 1: User Story 1 - Create a new user (Priority: P1)"
+        )
     target_files: List[str] = Field(
-        default_factory=list, description="需要操作修改的文件列表"
+        default_factory=list, 
+        description="需要操作、创建或修改的具体目标文件或目录路径列表。不为空."
     )
     reference_files: List[str] = Field(
-        default_factory=list, description="需要参考的文件列表"
+        default_factory=list, 
+        description="需要参考的文件列表。留空即可,手动设置."
     )
 
     # 兼容 TypedDict 的下标访问方式，如 state['current_task']['title']

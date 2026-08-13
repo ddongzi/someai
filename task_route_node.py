@@ -67,7 +67,6 @@ def task_route_node(state: GraphState) -> Dict:
             file_name="task_parse_prompt",
             scene_name="base",
             tasks_content=tasks_content,
-            reference_files=reference_files_str,
         )
         messages = [
             SystemMessage(content=system_prompt),

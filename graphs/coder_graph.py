@@ -68,7 +68,7 @@ def _do_first_write(state:CoderGraphState) -> Dict:
     system_prompt, user_prompt  = get_scene_prompt(
             file_name=PROMPT_FILE_NAME,
             scene_name='write_code',
-            requirement = state['current_task']['title']
+            requirement = state['current_task']['content']
         )
 
     messages = [

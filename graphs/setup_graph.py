@@ -50,7 +50,7 @@ def setup_node(state: SetupGraphState) -> Dict:
     system_prompt, user_prompt  = get_scene_prompt(
             file_name=PROMPT_FILE_NAME,
             scene_name='execute_setup',
-            task_title = state['current_task']['title'],
+            task_title = state['current_task']['content'],
             target_files = state['current_task']['target_files'],
             reference_files = state['current_task']['reference_files']
         )
