@@ -4,7 +4,7 @@ import re
 import uuid
 from utils import get_scene_prompt,parse_llm_json
 from langchain_core.messages import SystemMessage, HumanMessage
-from globals.state import GraphState, Issue
+from globals.state import GraphState, Issue,Task
 from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
 from tools.rag import knowledge_search
@@ -38,18 +38,32 @@ graph_logger = get_file_logger(
 class JudgeGraphState(TypedDict):
     test_output: str # 测试代码输出
     file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
+    current_task: Annotated[Task, any_write]       # 当前正在执行的任务
 
     # 私有
     messages:Annotated[list[AnyMessage], add_messages]
 def judge_node(state: JudgeGraphState) -> Dict:
-    graph_logger.info("\n⚖️ [Judge] 正在分析失败原因")
+    graph_logger.info("\n⚖️ [Judge] Analyze the test output...")
     graph_logger.info("=" * 60)
 
     output = state.get("test_output", "")
+    current_task = state['current_task']
+    reference_files =  current_task['reference_files']
+    if current_task['task_type'] == 'code':
+        expected_result = "Expect all test cases to pass."
+        test_files = current_task['target_files']
+    if current_task['task_type'] == 'test_code':
+        expected_result = "Expect all test cases to fail."
+        # TODO
+        test_files = ''
+
     system_prompt, user_prompt = get_scene_prompt(
         file_name='judger',
         scene_name='base',
-        test_output=output
+        test_output=output,
+        expected_result=expected_result,
+        test_files=test_files,
+        reference_files=reference_files
     )
     messages = [
         SystemMessage(content=system_prompt),
@@ -69,21 +83,18 @@ def judge_node(state: JudgeGraphState) -> Dict:
     result = parse_llm_json(full_content)
 
     issues = []
-
+    if current_task['task_type'] == 'code':
+        assign = 'coder_graph'
+    if current_task['task_type'] == 'test_code':
+        assign = 'test_coder_graph'
+        
     for issue in result:
-        type = issue['type']
-        assign = 'unknown'
-        if type == 'CODE_BUG':
-            assign = 'coder_graph'
-        if type == 'TEST_BUG':
-            assign = 'test_coder_graph'
-        if type == "DESIGN_BUG":
-            assign = 'human_node'
+        itype = issue['type']
 
         issues.append(Issue(
                 issue_id=uuid.uuid4(),
                 source='judge_node',
-                type= issue['type'],
+                type=itype,
                 review=issue['review'],
                 assign=assign
             ))

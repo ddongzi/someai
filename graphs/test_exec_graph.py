@@ -5,7 +5,7 @@ import subprocess
 import sys
 from dotenv import load_dotenv
 import os
-from globals.state import GraphState, Issue
+from globals.state import GraphState, Issue,Task
 from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
 from tools.rag import knowledge_search
@@ -48,6 +48,7 @@ GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 class TestExecGraphState(TypedDict):
     test_output: Annotated[str, any_write] # 测试代码输出
     file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
+    current_task: Annotated[Task, any_write]       # 当前正在执行的任务
 
     # 私有
     messages:Annotated[list[AnyMessage], add_messages]
@@ -56,10 +57,14 @@ class TestExecGraphState(TypedDict):
 # Tester Node
 # ============================================================
 def test_exec_node(state: TestExecGraphState) -> Dict:
+    graph_logger.info("🤖 [TestExec] 开始执行测试")
+    test_files = state['current_task']['target_files']
     system_prompt, user_prompt  = get_scene_prompt(
             file_name=PROMPT_FILE_NAME,
             scene_name='base',
+            test_files = test_files
         )
+
 
     messages = [
         SystemMessage(content=system_prompt),

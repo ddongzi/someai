@@ -1,6 +1,5 @@
 from tools.rag import get_knowledge
 from typing import Dict
-from tools.git import git_tool
 from utils import get_first_pending_task
 from globals.state import GraphState, Issue, FileSnapshot
 from globals.logger import run_logger

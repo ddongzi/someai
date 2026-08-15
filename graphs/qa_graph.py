@@ -3,7 +3,7 @@ from typing import Dict
 from utils import get_scene_prompt,parse_llm_json
 from langchain_core.messages import SystemMessage, HumanMessage
 import uuid
-from globals.state import GraphState, Issue
+from globals.state import GraphState, Issue,Task
 from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
 from tools.rag import knowledge_search
@@ -42,6 +42,7 @@ GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 class QAGraphState(TypedDict):
     issues: Annotated[list[Issue], operator.add] # 修复建议列表
     file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
+    current_task: Annotated[Task, any_write]       # 当前正在执行的任务
 
     # 私有
     messages:Annotated[list[AnyMessage], add_messages]
@@ -49,11 +50,14 @@ def qa_node(state: QAGraphState) -> Dict:
     """
     代码审计节点
     """
-    graph_logger.info("\n🔍 [QA] 正在审计代码质量")
+    graph_logger.info("\n🔍 [QA] 正在审计代码")
+    current_task =  state['current_task']
 
     system_prompt, user_prompt  = get_scene_prompt(
         file_name='qaer',
         scene_name='base',
+        target_files = current_task['target_files'],
+        reference_files = current_task['reference_files'],
     )
 
     messages = [
@@ -74,13 +78,12 @@ def qa_node(state: QAGraphState) -> Dict:
     issues = []
 
     result = parse_llm_json(full_content)
+    if current_task['task_type'] == 'code':
+        assign = 'coder_graph'
+    if current_task['task_type'] == 'test_code':
+        assign = 'test_coder_graph'
+
     for item in result:
-        type = item['type']
-        assign = 'unknown'
-        if type == 'code':
-            assign = 'coder_graph'
-        if type == 'test_code':
-            assign = 'test_coder_graph'
         issues.append(Issue(
             issue_id=uuid.uuid4(),
             source='qa_node',

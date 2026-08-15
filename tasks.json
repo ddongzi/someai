@@ -141,7 +141,7 @@
   {
     "id": "T006",
     "content": "Unit tests for `PRNG` determinism and seed validation in `tests/unit/test_prng.py` (same seed → identical sequence; out-of-range seed → `ValidationError`; seed validated as 32-bit unsigned per FR-002)",
-    "status": "pending",
+    "status": "in_progress",
     "task_type": "test_code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [

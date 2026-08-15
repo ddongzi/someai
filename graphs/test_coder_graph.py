@@ -1,12 +1,9 @@
 from typing import Dict
-import re
 from utils import extract_python_code, get_all_files_in_dir,draw_workflow_png
 from globals import llm
-from typing import Dict
 from langchain_core.messages import SystemMessage, HumanMessage,ToolMessage
 import re
 from utils import extract_python_code,get_scene_prompt
-import logging
 from tools.search_replace_tool import apply_search_replace
 from dotenv import load_dotenv
 import os
@@ -15,14 +12,12 @@ import operator
 from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages,AnyMessage
 from typing import Annotated, List, TypedDict
-from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from globals.state import GraphState, Issue,any_write,merge_dicts,FileSnapshot,Task
 from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
-from tools.rag import knowledge_search
-from tools.filer import write_to_file,read_file, inspect_file_summary,delete_files
+from tools.filer import write_to_file,read_file, inspect_file_summary,delete_files,create_file
 from tools.ast import ast_search
 from tools.pyright_client import find_symbol_definition, find_symbol_references
 
@@ -33,11 +28,12 @@ GRAPH_NAME = 'test_coder_graph'
 TEST_CODER_NODE_NAME = "test_coder_node"
 
 PROMPT_FILE_NAME ='test_coder'
+# 不进行static_check,因为测试先行,很多import问题.
 tools=[
-    knowledge_search, write_to_file,
+     write_to_file,create_file,
     apply_search_replace,ast_search,
     find_symbol_references, find_symbol_definition, 
-    read_file, inspect_file_summary, delete_files
+    read_file, inspect_file_summary, delete_files,
 ]
 llm = get_llm_with_tools(tools)
 graph_logger = get_file_logger(
@@ -59,6 +55,7 @@ class TestCoderGraphState(TypedDict,total=False):
     file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts] 
 
     issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts]
+    current_task: Annotated[Task, any_write]       # 当前正在执行的任务
 
     # 私有
     messages:Annotated[list[AnyMessage], add_messages]
@@ -181,7 +178,6 @@ graph.add_conditional_edges(
           'tools_executor':'tools_node',
           'success': END
      }
-
 )
 graph = graph.compile()
 draw_workflow_png(graph.get_graph(), GRAPH_NAME)

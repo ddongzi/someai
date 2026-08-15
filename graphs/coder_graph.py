@@ -30,7 +30,7 @@ CODER_NODE_NAME = "coder_node"
 PROMPT_FILE_NAME ='coder'
 
 tools=[
-    knowledge_search, write_to_file,static_check,
+    write_to_file,static_check,
     apply_search_replace,ast_search,
     find_symbol_references, find_symbol_definition, 
     read_file,inspect_file_summary, delete_files
