@@ -43,17 +43,22 @@ thread = Thread(workflow=my_workflow)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     run_logger.info("服务器启动")
-    global knowledge
-    try:
-        # 确保只在服务真正运转的那一刻，在单进程内部初始化一次
-        knowledge = get_knowledge()
-        run_logger.info("🎉 全局知识库 KnowledgeManager 初始化成功！")
-    except Exception as e:
-        run_logger.error(f"❌ 知识库初始化失败: {e}")
-        knowledge = None
+
+    async def init_knowledge_background():
+        """后台异步初始化知识库，不阻塞服务器启动"""
+        global knowledge
+        try:
+            knowledge = get_knowledge()
+            run_logger.info("🎉 全局知识库 KnowledgeManager 初始化成功！")
+        except Exception as e:
+            run_logger.error(f"❌ 知识库初始化失败: {e}")
+            knowledge = None
+
+    asyncio.create_task(init_knowledge_background())
+
     async with my_workflow.setup() as active_saver:
-        yield 
-        
+        yield
+
     run_logger.info("服务器关闭")
 
 

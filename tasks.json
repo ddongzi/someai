@@ -1,7 +1,7 @@
 [
   {
     "id": "T001",
-    "content": "Create src/gamemapgen/ package structure with __init__.py, errors.py, prng.py, models.py, registry.py, config.py, constraints.py, hooks.py, composite.py, presets.py, and generators/ subpackage per plan.md",
+    "content": "Create `src/gamemapgen/` package structure with `__init__.py`, `errors.py`, `prng.py`, `models.py`, `registry.py`, `config.py`, `constraints.py`, `hooks.py`, `composite.py`, `presets.py`, and `generators/` subpackage per plan.md",
     "status": "completed",
     "task_type": "setup",
     "phase": "Phase 1: Setup (Shared Infrastructure)",
@@ -18,12 +18,26 @@
       "src/gamemapgen/presets.py",
       "src/gamemapgen/generators/"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T002",
-    "content": "Create tests/ directory structure with conftest.py, unit/, integration/, contract/, benchmarks/ subdirectories",
-    "status": "pending",
+    "content": "Create `tests/` directory structure with `conftest.py`, `unit/`, `integration/`, `contract/`, `benchmarks/` subdirectories",
+    "status": "completed",
     "task_type": "setup",
     "phase": "Phase 1: Setup (Shared Infrastructure)",
     "target_files": [
@@ -33,398 +47,903 @@
       "tests/contract/",
       "tests/benchmarks/"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T003",
-    "content": "Create pyproject.toml with project metadata, Python 3.11+ requirement, and dev dependencies (pytest, pytest-cov)",
-    "status": "pending",
+    "content": "Create `pyproject.toml` with project metadata, Python 3.11+ requirement, and dev dependencies (`pytest`, `pytest-cov`)",
+    "status": "completed",
     "task_type": "setup",
     "phase": "Phase 1: Setup (Shared Infrastructure)",
     "target_files": [
       "pyproject.toml"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T004",
-    "content": "Create docs/ directory for getting-started guide and demos",
-    "status": "pending",
+    "content": "Create `docs/` directory for getting-started guide and demos",
+    "status": "completed",
     "task_type": "setup",
     "phase": "Phase 1: Setup (Shared Infrastructure)",
     "target_files": [
       "docs/"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T005",
-    "content": "Create README.md at repository root with project overview and quick-start pointer",
-    "status": "pending",
-    "task_type": "doc",
+    "content": "Create `README.md` at repository root with project overview and quick-start pointer",
+    "status": "completed",
+    "task_type": "setup",
     "phase": "Phase 1: Setup (Shared Infrastructure)",
     "target_files": [
       "README.md"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T006",
-    "content": "Unit tests for PRNG determinism and seed validation in tests/unit/test_prng.py (same seed → identical sequence; out-of-range seed → ValidationError; seed validated as 32-bit unsigned per FR-002)",
+    "content": "Unit tests for `PRNG` determinism and seed validation in `tests/unit/test_prng.py` (same seed → identical sequence; out-of-range seed → `ValidationError`; seed validated as 32-bit unsigned per FR-002)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [
       "tests/unit/test_prng.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T007",
-    "content": "Unit tests for TileTypeRegistry in tests/unit/test_registry.py (register/get/is_registered/list/glyph; duplicate and unknown type → ValidationError)",
+    "content": "Unit tests for `TileTypeRegistry` in `tests/unit/test_registry.py` (register/get/is_registered/list/glyph; duplicate and unknown type → `ValidationError`)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [
       "tests/unit/test_registry.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T008",
-    "content": "Unit tests for typed errors in tests/unit/test_errors.py (hierarchy, catchability, actionable messages identifying offending parameter)",
+    "content": "Unit tests for typed errors in `tests/unit/test_errors.py` (hierarchy, catchability, actionable messages identifying offending parameter)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [
       "tests/unit/test_errors.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T009",
-    "content": "Implement typed error hierarchy in src/gamemapgen/errors.py (GameMapGenError base → ValidationError, GenerationError, ConstraintViolationError, PresetNotFoundError, GeneratorNotFoundError), each with actionable messages per Principle XII",
+    "content": "Implement typed error hierarchy in `src/gamemapgen/errors.py` (`GameMapGenError` base → `ValidationError`, `GenerationError`, `ConstraintViolationError`, `PresetNotFoundError`, `GeneratorNotFoundError`), each with actionable messages per Principle XII",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [
       "src/gamemapgen/errors.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T010",
-    "content": "Implement PRNG class in src/gamemapgen/prng.py wrapping random.Random with 32-bit unsigned seed validation and methods randint, random, uniform, choice, shuffle, sample, get_state, set_state",
+    "content": "Implement `PRNG` class in `src/gamemapgen/prng.py` wrapping `random.Random` with 32-bit unsigned seed validation and methods `randint`, `random`, `uniform`, `choice`, `shuffle`, `sample`, `get_state`, `set_state`",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [
       "src/gamemapgen/prng.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T011",
-    "content": "Implement TileType dataclass and TileTypeRegistry in src/gamemapgen/registry.py with 11 built-in tile types (WALL, FLOOR, WATER, LAVA, DOOR, STAIRS, EMPTY, GRASS, ROAD, BRIDGE, TRAP) and their glyphs (e.g., #, ., ~)",
+    "content": "Implement `TileType` dataclass and `TileTypeRegistry` in `src/gamemapgen/registry.py` with 11 built-in tile types (WALL, FLOOR, WATER, LAVA, DOOR, STAIRS, EMPTY, GRASS, ROAD, BRIDGE, TRAP) and their glyphs (e.g., `#`, `.`, `~`)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [
       "src/gamemapgen/registry.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T012",
-    "content": "Implement GeneratorRegistry in src/gamemapgen/registry.py with register, get, list, create methods (auto-registers built-in generators)",
+    "content": "Implement `GeneratorRegistry` in `src/gamemapgen/registry.py` with `register`, `get`, `list`, `create` methods (auto-registers built-in generators)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [
       "src/gamemapgen/registry.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T013",
-    "content": "Implement ComplexityEstimate dataclass in src/gamemapgen/models.py (time, space, expected_ms)",
+    "content": "Implement `ComplexityEstimate` dataclass in `src/gamemapgen/models.py` (`time`, `space`, `expected_ms`)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [
       "src/gamemapgen/models.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T014",
-    "content": "Implement BaseGenerator abstract class in src/gamemapgen/generators/base.py with abstract generate, validate_params, complexity_estimate and concrete to_ascii helper (per Principle IX)",
+    "content": "Implement `BaseGenerator` abstract class in `src/gamemapgen/generators/base.py` with abstract `generate`, `validate_params`, `complexity_estimate` and concrete `to_ascii` helper (per Principle IX)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [
       "src/gamemapgen/generators/base.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T015",
-    "content": "Implement __init__.py public API exports in src/gamemapgen/__init__.py (all public types, __version__ following SemVer per Principle XI)",
+    "content": "Implement `__init__.py` public API exports in `src/gamemapgen/__init__.py` (all public types, `__version__` following SemVer per Principle XI)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [
       "src/gamemapgen/__init__.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T016",
-    "content": "Unit tests for MapData, Tile, Position, MapMetadata, Region, Rect, Entity, Layer, AdjacencyGraph, Edge dataclasses in tests/unit/test_models.py (construction, to_dict/from_dict, validation rules, to_ascii)",
+    "content": "Unit tests for `MapData`, `Tile`, `Position`, `MapMetadata`, `Region`, `Rect`, `Entity`, `Layer`, `AdjacencyGraph`, `Edge` dataclasses in `tests/unit/test_models.py` (construction, `to_dict`/`from_dict`, validation rules, `to_ascii`)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "tests/unit/test_models.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T017",
-    "content": "Unit tests for GenerationParams validation in tests/unit/test_config.py (type, range, consistency, dependency checks; invalid params → ValidationError with actionable message naming the offending parameter and valid range)",
+    "content": "Unit tests for `GenerationParams` validation in `tests/unit/test_config.py` (type, range, consistency, dependency checks; invalid params → `ValidationError` with actionable message naming the offending parameter and valid range)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "tests/unit/test_config.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T018",
-    "content": "Unit tests for DungeonGenerator in tests/unit/generators/test_dungeon.py (valid output with WALL/FLOOR/DOOR/STAIRS, connected region, edge cases: min/max size, single-tile, extreme aspect ratio, invalid params)",
+    "content": "Unit tests for `DungeonGenerator` in `tests/unit/generators/test_dungeon.py` (valid output with WALL/FLOOR/DOOR/STAIRS, connected region, edge cases: min/max size, single-tile, extreme aspect ratio, invalid params)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "tests/unit/generators/test_dungeon.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T019",
-    "content": "Unit tests for OpenWorldGenerator in tests/unit/generators/test_open_world.py (valid output, edge cases, invalid params)",
+    "content": "Unit tests for `OpenWorldGenerator` in `tests/unit/generators/test_open_world.py` (valid output, edge cases, invalid params)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "tests/unit/generators/test_open_world.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T020",
-    "content": "Unit tests for MazeGenerator in tests/unit/generators/test_maze.py (valid output, odd-grid enforcement, edge cases, invalid params)",
+    "content": "Unit tests for `MazeGenerator` in `tests/unit/generators/test_maze.py` (valid output, odd-grid enforcement, edge cases, invalid params)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "tests/unit/generators/test_maze.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T021",
-    "content": "Unit tests for preset resolution in tests/unit/test_presets.py (generate from \"small_dungeon\" preset → valid MapData with preset dimensions; unknown preset → PresetNotFoundError listing available presets; overrides take precedence)",
+    "content": "Unit tests for preset resolution in `tests/unit/test_presets.py` (generate from `\"small_dungeon\"` preset → valid `MapData` with preset dimensions; unknown preset → `PresetNotFoundError` listing available presets; overrides take precedence)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "tests/unit/test_presets.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T022",
-    "content": "Contract test for serialization round-trip in tests/contract/test_serialization.py (MapData → JSON → MapData lossless for each generator)",
+    "content": "Contract test for serialization round-trip in `tests/contract/test_serialization.py` (MapData → JSON → MapData lossless for each generator)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "tests/contract/test_serialization.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T023",
-    "content": "Implement Position, Rect, Tile, MapMetadata, Region, Entity, Layer, Edge, AdjacencyGraph, MapData dataclasses with to_dict/from_dict/to_json/to_ascii in src/gamemapgen/models.py",
+    "content": "Implement `Position`, `Rect`, `Tile`, `MapMetadata`, `Region`, `Entity`, `Layer`, `Edge`, `AdjacencyGraph`, `MapData` dataclasses with `to_dict`/`from_dict`/`to_json`/`to_ascii` in `src/gamemapgen/models.py`",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/models.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T024",
-    "content": "Implement GenerationParams dataclass with validation logic in src/gamemapgen/config.py (type/range/consistency/dependency checks per data-model.md §2.1)",
+    "content": "Implement `GenerationParams` dataclass with validation logic in `src/gamemapgen/config.py` (type/range/consistency/dependency checks per data-model.md §2.1)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/config.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T025",
-    "content": "Implement DungeonGenerator in src/gamemapgen/generators/dungeon.py (BSP room splitting + corridor connection, produces WALL/FLOOR/DOOR/STAIRS tiles, uses passed PRNG, complexity_estimate = O(n log n))",
+    "content": "Implement `DungeonGenerator` in `src/gamemapgen/generators/dungeon.py` (BSP room splitting + corridor connection, produces WALL/FLOOR/DOOR/STAIRS tiles, uses passed PRNG, `complexity_estimate` = O(n log n))",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/generators/dungeon.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T026",
-    "content": "Implement OpenWorldGenerator in src/gamemapgen/generators/open_world.py (Perlin noise heightmap + biome thresholding, produces GRASS/WATER/ROAD/BRIDGE tiles, uses passed PRNG, complexity_estimate = O(n × octaves))",
+    "content": "Implement `OpenWorldGenerator` in `src/gamemapgen/generators/open_world.py` (Perlin noise heightmap + biome thresholding, produces GRASS/WATER/ROAD/BRIDGE tiles, uses passed PRNG, `complexity_estimate` = O(n × octaves))",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/generators/open_world.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T027",
-    "content": "Implement MazeGenerator in src/gamemapgen/generators/maze.py (recursive backtracking on odd grid, produces WALL/FLOOR tiles, uses passed PRNG, complexity_estimate = O(n))",
+    "content": "Implement `MazeGenerator` in `src/gamemapgen/generators/maze.py` (recursive backtracking on odd grid, produces WALL/FLOOR tiles, uses passed PRNG, `complexity_estimate` = O(n))",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/generators/maze.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T028",
-    "content": "Implement generators/__init__.py in src/gamemapgen/generators/__init__.py exporting all three generators",
+    "content": "Implement `generators/__init__.py` in `src/gamemapgen/generators/__init__.py` exporting all three generators",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/generators/__init__.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T029",
-    "content": "Wire built-in generators into GeneratorRegistry auto-registration in src/gamemapgen/registry.py (dungeon, open_world, maze)",
+    "content": "Wire built-in generators into `GeneratorRegistry` auto-registration in `src/gamemapgen/registry.py` (dungeon, open_world, maze)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/registry.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T030",
-    "content": "Implement ConfigResolver in src/gamemapgen/config.py (resolution order: defaults < preset.params < overrides; raises PresetNotFoundError/ValidationError)",
+    "content": "Implement `ConfigResolver` in `src/gamemapgen/config.py` (resolution order: defaults < preset.params < overrides; raises `PresetNotFoundError`/`ValidationError`)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/config.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T031",
-    "content": "Implement built-in presets in src/gamemapgen/presets.py (small_dungeon, epic_dungeon, tiny_maze, large_maze, island_world, continent_world per config.md)",
+    "content": "Implement built-in presets in `src/gamemapgen/presets.py` (small_dungeon, epic_dungeon, tiny_maze, large_maze, island_world, continent_world per config.md)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/presets.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T032",
-    "content": "Implement max_iterations/timeout_ms budget enforcement in src/gamemapgen/generators/base.py to prevent infinite loops (FR-012)",
+    "content": "Implement `max_iterations`/`timeout_ms` budget enforcement in `src/gamemapgen/generators/base.py` to prevent infinite loops (FR-012)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 3: User Story 1 - Generate a Playable Dungeon from a Preset (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/generators/base.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T033",
-    "content": "Unit tests for determinism in tests/unit/test_determinism.py (each generator run with ≥5 distinct seeds, two runs per seed → byte-identical to_json output; different seeds → different output, per SC-002)",
+    "content": "Unit tests for determinism in `tests/unit/test_determinism.py` (each generator run with ≥5 distinct seeds, two runs per seed → byte-identical `to_json` output; different seeds → different output, per SC-002)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 4: User Story 2 - Reproduce the Same World with a Seed (Priority: P1) 🎯 MVP",
     "target_files": [
       "tests/unit/test_determinism.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T034",
-    "content": "Contract test for byte-identical serialization determinism in tests/contract/test_serialization.py (serialized JSON of two same-seed runs is byte-identical; serialized JSON of different seeds differs)",
+    "content": "Contract test for byte-identical serialization determinism in `tests/contract/test_serialization.py` (serialized JSON of two same-seed runs is byte-identical; serialized JSON of different seeds differs)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 4: User Story 2 - Reproduce the Same World with a Seed (Priority: P1) 🎯 MVP",
     "target_files": [
       "tests/contract/test_serialization.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T035",
-    "content": "Integration test for cross-process/no-global-randomness determinism in tests/integration/test_pipeline.py (two separately-constructed registry+generator instances with same seed produce identical output; monkeypatch module-level random usage detection)",
+    "content": "Integration test for cross-process/no-global-randomness determinism in `tests/integration/test_pipeline.py` (two separately-constructed registry+generator instances with same seed produce identical output; monkeypatch module-level `random` usage detection)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 4: User Story 2 - Reproduce the Same World with a Seed (Priority: P1) 🎯 MVP",
     "target_files": [
       "tests/integration/test_pipeline.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T036",
-    "content": "Ensure each generator's generate uses ONLY the explicitly-passed seeded PRNG and never module-level random.* functions in src/gamemapgen/generators/*.py (audit + fix all randomness sources)",
+    "content": "Ensure each generator's `generate` uses ONLY the explicitly-passed seeded `PRNG` and never module-level `random.*` functions in `src/gamemapgen/generators/*.py` (audit + fix all randomness sources)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 4: User Story 2 - Reproduce the Same World with a Seed (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/generators/dungeon.py",
       "src/gamemapgen/generators/open_world.py",
-      "src/gamemapgen/generators/maze.py"
+      "src/gamemapgen/generators/maze.py",
+      "src/gamemapgen/generators/base.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T037",
-    "content": "Implement deterministic, byte-stable MapData.to_json() in src/gamemapgen/models.py (stable key ordering and formatting so identical maps serialize identically regardless of dict insertion order)",
+    "content": "Implement deterministic, byte-stable `MapData.to_json()` in `src/gamemapgen/models.py` (stable key ordering and formatting so identical maps serialize identically regardless of dict insertion order)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 4: User Story 2 - Reproduce the Same World with a Seed (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/models.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T038",
-    "content": "Isolate PRNG state per generation call in src/gamemapgen/prng.py and src/gamemapgen/generators/base.py (fresh PRNG constructed from seed at start of each generate; get_state/set_state snapshots to prevent cross-run contamination)",
+    "content": "Isolate PRNG state per generation call in `src/gamemapgen/prng.py` and `src/gamemapgen/generators/base.py` (fresh PRNG constructed from seed at start of each `generate`; `get_state`/`set_state` snapshots to prevent cross-run contamination)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 4: User Story 2 - Reproduce the Same World with a Seed (Priority: P1) 🎯 MVP",
@@ -432,198 +951,451 @@
       "src/gamemapgen/prng.py",
       "src/gamemapgen/generators/base.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T039",
-    "content": "Record full resolved parameters (seed + all params) in MapMetadata.parameters in src/gamemapgen/models.py so a map is fully reproducible from its metadata (spec FR metadata contract)",
+    "content": "Record full resolved parameters (seed + all params) in `MapMetadata.parameters` in `src/gamemapgen/models.py` so a map is fully reproducible from its metadata (spec FR metadata contract)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 4: User Story 2 - Reproduce the Same World with a Seed (Priority: P1) 🎯 MVP",
     "target_files": [
       "src/gamemapgen/models.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T040",
-    "content": "Unit tests for CompositeGenerator in tests/unit/test_composite.py (layer ordering, each layer receives prior output, determinism for fixed seed, layer failure handling → rollback or incomplete=True flag)",
+    "content": "Unit tests for `CompositeGenerator` in `tests/unit/test_composite.py` (layer ordering, each layer receives prior output, determinism for fixed seed, layer failure handling → rollback or `incomplete=True` flag)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 5: User Story 3 - Compose Complex Maps from Layers (Priority: P2)",
     "target_files": [
       "tests/unit/test_composite.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T041",
-    "content": "Integration test for composite layered generation in tests/integration/test_pipeline.py (two-layer composition produces coherent map with both layers in documented order, e.g., terrain then roads)",
+    "content": "Integration test for composite layered generation in `tests/integration/test_pipeline.py` (two-layer composition produces coherent map with both layers in documented order, e.g., terrain then roads)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 5: User Story 3 - Compose Complex Maps from Layers (Priority: P2)",
     "target_files": [
       "tests/integration/test_pipeline.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T042",
-    "content": "Implement CompositeGenerator in src/gamemapgen/composite.py (holds ordered (name, generator) layers; each layer receives previous MapData; threads same seeded PRNG through layers; complexity_estimate = O(k × n))",
+    "content": "Implement `CompositeGenerator` in `src/gamemapgen/composite.py` (holds ordered `(name, generator)` layers; each layer receives previous `MapData`; threads same seeded PRNG through layers; `complexity_estimate` = O(k × n))",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 5: User Story 3 - Compose Complex Maps from Layers (Priority: P2)",
     "target_files": [
       "src/gamemapgen/composite.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T043",
-    "content": "Implement graceful layer-failure handling in src/gamemapgen/composite.py (rollback to consistent state with GenerationError, or return partial result flagged incomplete=True per FR-014)",
+    "content": "Implement graceful layer-failure handling in `src/gamemapgen/composite.py` (rollback to consistent state with `GenerationError`, or return partial result flagged `incomplete=True` per FR-014)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 5: User Story 3 - Compose Complex Maps from Layers (Priority: P2)",
     "target_files": [
       "src/gamemapgen/composite.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T044",
-    "content": "Register CompositeGenerator as a composable generator in src/gamemapgen/registry.py (FR-007) and expose layers list on resulting MapData",
+    "content": "Register `CompositeGenerator` as a composable generator in `src/gamemapgen/registry.py` (FR-007) and expose `layers` list on resulting `MapData`",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 5: User Story 3 - Compose Complex Maps from Layers (Priority: P2)",
     "target_files": [
-      "src/gamemapgen/registry.py"
+      "src/gamemapgen/registry.py",
+      "src/gamemapgen/models.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T045",
-    "content": "Unit tests for HookManager and GenerationContext in tests/unit/test_hooks.py (registration order, chaining, unknown lifecycle point → ValidationError, hook exception → wrapped GenerationError, snapshot capture)",
+    "content": "Unit tests for `HookManager` and `GenerationContext` in `tests/unit/test_hooks.py` (registration order, chaining, unknown lifecycle point → `ValidationError`, hook exception → wrapped `GenerationError`, snapshot capture)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 6: User Story 4 - Customize Maps via Hooks (Priority: P2)",
     "target_files": [
       "tests/unit/test_hooks.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T046",
-    "content": "Integration test for hooks in tests/integration/test_pipeline.py (register hook placing a marker entity after room placement → marker appears in final output)",
+    "content": "Integration test for hooks in `tests/integration/test_pipeline.py` (register hook placing a marker entity after room placement → marker appears in final output)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 6: User Story 4 - Customize Maps via Hooks (Priority: P2)",
     "target_files": [
       "tests/integration/test_pipeline.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T047",
-    "content": "Implement GenerationContext dataclass in src/gamemapgen/hooks.py (map_data, prng, params, snapshots)",
+    "content": "Implement `GenerationContext` dataclass in `src/gamemapgen/hooks.py` (`map_data`, `prng`, `params`, `snapshots`)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 6: User Story 4 - Customize Maps via Hooks (Priority: P2)",
     "target_files": [
       "src/gamemapgen/hooks.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T048",
-    "content": "Implement HookManager in src/gamemapgen/hooks.py (register, unregister, run, list_hooks; chainable hooks in registration order; snapshot capture at each lifecycle point per Principle IX)",
+    "content": "Implement `HookManager` in `src/gamemapgen/hooks.py` (`register`, `unregister`, `run`, `list_hooks`; chainable hooks in registration order; snapshot capture at each lifecycle point per Principle IX)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 6: User Story 4 - Customize Maps via Hooks (Priority: P2)",
     "target_files": [
       "src/gamemapgen/hooks.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T049",
-    "content": "Integrate HookManager into BaseGenerator.generate lifecycle in src/gamemapgen/generators/base.py (before_generation → after_room_placement → after_corridor_connection → post_process; snapshots populated per FR)",
+    "content": "Integrate `HookManager` into `BaseGenerator.generate` lifecycle in `src/gamemapgen/generators/base.py` (before_generation → after_room_placement → after_corridor_connection → post_process; snapshots populated per FR)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 6: User Story 4 - Customize Maps via Hooks (Priority: P2)",
     "target_files": [
       "src/gamemapgen/generators/base.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T050",
-    "content": "Add register_hook convenience method and expose snapshots on BaseGenerator in src/gamemapgen/generators/base.py (populated from GenerationContext.snapshots after generation)",
+    "content": "Add `register_hook` convenience method and expose `snapshots` on `BaseGenerator` in `src/gamemapgen/generators/base.py` (populated from `GenerationContext.snapshots` after generation)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 6: User Story 4 - Customize Maps via Hooks (Priority: P2)",
     "target_files": [
       "src/gamemapgen/generators/base.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T051",
-    "content": "Unit tests for content constraints in tests/unit/test_constraints.py (BannedTileType, BannedEntityType, MaxDensity, AgeRatingProfile; enforcement via retry-with-adjustment up to max_iterations; unresolved → ConstraintViolationError identifying offending constraint; metadata records enforcement)",
+    "content": "Unit tests for content constraints in `tests/unit/test_constraints.py` (`BannedTileType`, `BannedEntityType`, `MaxDensity`, `AgeRatingProfile`; enforcement via retry-with-adjustment up to `max_iterations`; unresolved → `ConstraintViolationError` identifying offending constraint; metadata records enforcement)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 7: User Story 5 - Enforce Content Constraints (Priority: P3)",
     "target_files": [
       "tests/unit/test_constraints.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T052",
-    "content": "Integration test for constraints in tests/integration/test_pipeline.py (add BannedTileType, verify no banned tile appears; declare unsatisfiable constraint → clean ConstraintViolationError)",
+    "content": "Integration test for constraints in `tests/integration/test_pipeline.py` (add `BannedTileType`, verify no banned tile appears; declare unsatisfiable constraint → clean `ConstraintViolationError`)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 7: User Story 5 - Enforce Content Constraints (Priority: P3)",
     "target_files": [
       "tests/integration/test_pipeline.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T053",
-    "content": "Implement ContentConstraint base and concrete types (BannedTileType, BannedEntityType, MaxDensity, AgeRatingProfile) in src/gamemapgen/constraints.py per data-model.md §3",
+    "content": "Implement `ContentConstraint` base and concrete types (`BannedTileType`, `BannedEntityType`, `MaxDensity`, `AgeRatingProfile`) in `src/gamemapgen/constraints.py` per data-model.md §3",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 7: User Story 5 - Enforce Content Constraints (Priority: P3)",
     "target_files": [
       "src/gamemapgen/constraints.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T054",
-    "content": "Implement constraint enforcement engine in src/gamemapgen/constraints.py (validate generated MapData against constraints; retry-with-adjustment up to max_iterations; raise ConstraintViolationError if unresolved; record enforcement in metadata)",
+    "content": "Implement constraint enforcement engine in `src/gamemapgen/constraints.py` (validate generated `MapData` against constraints; retry-with-adjustment up to `max_iterations`; raise `ConstraintViolationError` if unresolved; record enforcement in metadata)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 7: User Story 5 - Enforce Content Constraints (Priority: P3)",
     "target_files": [
       "src/gamemapgen/constraints.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T055",
-    "content": "Integrate constraint enforcement into BaseGenerator.generate lifecycle in src/gamemapgen/generators/base.py (constraint check before finalize, retry loop bounded by max_iterations per FR-009)",
+    "content": "Integrate constraint enforcement into `BaseGenerator.generate` lifecycle in `src/gamemapgen/generators/base.py` (constraint check before finalize, retry loop bounded by `max_iterations` per FR-009)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 7: User Story 5 - Enforce Content Constraints (Priority: P3)",
     "target_files": [
       "src/gamemapgen/generators/base.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T056",
-    "content": "Add add_constraint convenience method and content_constraints param threading on BaseGenerator in src/gamemapgen/generators/base.py and src/gamemapgen/config.py",
+    "content": "Add `add_constraint` convenience method and `content_constraints` param threading on `BaseGenerator` in `src/gamemapgen/generators/base.py` and `src/gamemapgen/config.py`",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 7: User Story 5 - Enforce Content Constraints (Priority: P3)",
@@ -631,127 +1403,295 @@
       "src/gamemapgen/generators/base.py",
       "src/gamemapgen/config.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T057",
-    "content": "Create getting-started guide in docs/getting-started.md covering installation, generation pipeline, and hook system (Principle XIII, FR-015)",
+    "content": "Create getting-started guide in `docs/getting-started.md` covering installation, generation pipeline, and hook system (Principle XIII, FR-015)",
     "status": "pending",
-    "task_type": "doc",
+    "task_type": "setup",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "docs/getting-started.md"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T058",
-    "content": "Create runnable demo scripts in docs/demos/ for each built-in generator (dungeon, open_world, maze) with example presets (Principle XIII)",
+    "content": "Create runnable demo scripts in `docs/demos/` for each built-in generator (dungeon, open_world, maze) with example presets (Principle XIII)",
     "status": "pending",
-    "task_type": "doc",
+    "task_type": "setup",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "docs/demos/"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T059",
-    "content": "Create performance benchmark harness in tests/benchmarks/bench_generation.py verifying 100x100 grid <100ms (SC-001) and no regression >10% (SC-008)",
+    "content": "Create performance benchmark harness in `tests/benchmarks/bench_generation.py` verifying 100x100 grid <100ms (SC-001) and no regression >10% (SC-008)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "tests/benchmarks/bench_generation.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T060",
-    "content": "Add @since/@deprecated metadata annotations to all public types and functions in src/gamemapgen/ (Principle XI)",
+    "content": "Add `@since`/`@deprecated` metadata annotations to all public types and functions in `src/gamemapgen/` (Principle XI)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "src/gamemapgen/"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T061",
-    "content": "Add docstrings with at least one runnable usage example per public method in src/gamemapgen/ (Principle XIII, SC-004)",
+    "content": "Add docstrings with at least one runnable usage example per public method in `src/gamemapgen/` (Principle XIII, SC-004)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "src/gamemapgen/"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T062",
-    "content": "Add edge-case tests for empty maps, single-tile maps, max-size maps, extreme aspect ratios, boundary seeds (0 and 2^32-1), and iteration-budget exhaustion in tests/unit/ (spec Edge Cases)",
+    "content": "Add edge-case tests for empty maps, single-tile maps, max-size maps, extreme aspect ratios, boundary seeds (0 and 2^32-1), and iteration-budget exhaustion in `tests/unit/` (spec Edge Cases)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "tests/unit/"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T063",
-    "content": "Add serialization round-trip tests for custom/unknown tile and entity types via registry-aware deserialization in tests/contract/test_serialization.py (SC-005)",
+    "content": "Add serialization round-trip tests for custom/unknown tile and entity types via registry-aware deserialization in `tests/contract/test_serialization.py` (SC-005)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "tests/contract/test_serialization.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T064",
-    "content": "Run quickstart.md validation scenarios as tests in tests/integration/test_quickstart.py (all 6 scenarios from quickstart.md)",
+    "content": "Run quickstart.md validation scenarios as tests in `tests/integration/test_quickstart.py` (all 6 scenarios from quickstart.md)",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "tests/integration/test_quickstart.py"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T065",
-    "content": "Run full test suite with coverage: pytest tests/ -v --cov=gamemapgen --cov-report=term-missing and verify ≥90% line coverage per generator module",
+    "content": "Run full test suite with coverage: `pytest tests/ -v --cov=gamemapgen --cov-report=term-missing` and verify ≥90% line coverage per generator module",
     "status": "pending",
     "task_type": "test_code",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "tests/"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T066",
-    "content": "Verify no external runtime dependencies beyond standard library (audit imports in src/gamemapgen/)",
+    "content": "Verify no external runtime dependencies beyond standard library (audit imports in `src/gamemapgen/`)",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "src/gamemapgen/"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   },
   {
     "id": "T067",
-    "content": "Verify no hardcoded magic numbers (all tunable values are parameters with defaults) across src/gamemapgen/",
+    "content": "Verify no hardcoded magic numbers (all tunable values are parameters with defaults) across `src/gamemapgen/`",
     "status": "pending",
     "task_type": "code",
     "phase": "Phase 8: Polish & Cross-Cutting Concerns",
     "target_files": [
       "src/gamemapgen/"
     ],
-    "reference_files": []
+    "reference_files": [
+      "specs/game-map-generator/plan.md",
+      "specs/game-map-generator/research.md",
+      "specs/game-map-generator/data-model.md",
+      "specs/game-map-generator/spec.md",
+      "specs/game-map-generator/contracts/README.md",
+      "specs/game-map-generator/contracts/config.md",
+      "specs/game-map-generator/contracts/constraints.md",
+      "specs/game-map-generator/contracts/errors.md",
+      "specs/game-map-generator/contracts/generator.md",
+      "specs/game-map-generator/contracts/hooks.md",
+      "specs/game-map-generator/contracts/models.md",
+      "specs/game-map-generator/contracts/prng.md",
+      "specs/game-map-generator/contracts/tiles.md"
+    ]
   }
 ]

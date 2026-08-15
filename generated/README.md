@@ -2,6 +2,8 @@
 
 A framework-agnostic, procedural **game map generation** library in Python. It generates deterministic, seed-driven map data (tile grids, regions, entities, layers, adjacency graphs) as pure, JSON-serializable data structures.
 
+Built on top of the legacy `SeedManager` (GridRandom / RoomSplit / RecursiveBacktrack / PerlinNoise), GameMapGen refactors and extends it into a constitution-compliant, modular library — no rendering, no runtime dependencies, fully serializable.
+
 ## Features
 
 - **Multiple modular generators** — dungeon, open-world, maze
@@ -27,6 +29,8 @@ pip install pytest pytest-cov
 
 ## Quick Start
 
+Generate a dungeon map in a few lines:
+
 ```python
 from gamemapgen import GeneratorRegistry
 
@@ -36,6 +40,9 @@ gen = registry.create("dungeon", seed=42, width=50, height=50)
 map_data = gen.generate()
 print(map_data.to_ascii())
 ```
+
+> 🔗 **Quick-Start Pointer**: for a step-by-step, runnable walkthrough with validation scenarios covering all public APIs (registry, config, hooks, constraints, serialization), see
+> [**Quickstart Guide → `specs/game-map-generator/quickstart.md`**](./specs/game-map-generator/quickstart.md)
 
 ## Project Layout
 
@@ -47,9 +54,10 @@ specs/game-map-generator # Feature specs, plan, data model, quickstart
 
 ## Documentation
 
-- [Quickstart](./specs/game-map-generator/quickstart.md) — runnable validation scenarios
+- [Quickstart](./specs/game-map-generator/quickstart.md) — runnable validation scenarios & getting-started pointer
 - [Plan](./specs/game-map-generator/plan.md) — implementation plan and architecture
 - [Data Model](./specs/game-map-generator/data-model.md) — entity definitions and validation rules
+- [Spec](./specs/game-map-generator/spec.md) — feature specification and user stories
 
 ## License
 

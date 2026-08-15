@@ -2,18 +2,31 @@
 
 # 1. 基础系统设定
 system_base: |
-  你是一个资深 Python 测试开发工程师
+  你是一个资深 Python 测试开发工程师.完成给定的任务内容.
+  修改目标测试文件, 根据参考文件完成文件内容
 
-  完成任务描述, 参考相关上下文
+  要求:
+  1. 禁止修改目标文件之外的文件
 
 
 # 2. 不同的核心任务模板
 scenes:
   # 场景 A：从零开始写新功能代码
   write_code: |
-    任务描述  
-    ```text
-    {{requirement}}    
+    任务内容:
+    <task_content>
+    {{task_content}}
+    </task_content>
+
+    目标操作文件列表:
+    <target_files>
+    {{target_files}}
+    </target_files>
+
+    参考文件列表:
+    <reference_files>
+    {{reference_files}}
+    </reference_files>
 
     输出格式要求：请直接输出完整的 Python 代码，不要包含任何 Markdown 标记以外的废话。
   

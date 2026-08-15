@@ -12,7 +12,7 @@ from task_helper import (
     load_tasks,
     get_feature_dir,
     get_generated_dir,
-    get_reference_files,
+    get_unified_reference_files,
     make_completed_task,
 )
 
@@ -55,11 +55,11 @@ def task_route_node(state: GraphState) -> Dict:
             return {"current_task": make_completed_task()}
 
         tasks_content = tasks_md_path.read_text(encoding="utf-8")
-        reference_files = get_reference_files(feature_dir)
-        reference_files_str = "\n".join(reference_files)
 
+        # 获取统一参考文件列表: plan.md, contracts/*, research.md, data-model.md, spec.md
+        unified_refs = get_unified_reference_files(feature_dir)
         run_logger.info(
-            f"[task_route] 读取 tasks.md 成功，参考文件数: {len(reference_files)}"
+            f"[task_route] 读取 tasks.md 成功，参考文件数: {len(unified_refs)}"
         )
 
         # 构造 prompt 并调用 LLM 解析任务
@@ -75,8 +75,13 @@ def task_route_node(state: GraphState) -> Dict:
 
         # 使用 structured output，invoke 直接返回 TaskList 对象
         result: TaskList = llm.invoke(messages)
+
         # result.tasks 是 List[Task]（Pydantic model），转为 dict 列表方便后续处理
         tasks = [t.model_dump() for t in result.tasks]
+
+        # 统一设置参考文件列表: plan.md, contracts/*, research.md, data-model.md, spec.md
+        for t in tasks:
+            t["reference_files"] = unified_refs
 
         run_logger.info(f"[task_route] LLM 解析出 {len(tasks)} 个任务")
 

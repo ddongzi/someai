@@ -12,6 +12,5 @@ scenes:
    任务描述:
    - 标题: {{task_title}}
    - 目标操作修改文件列表: {{target_files}}
-   - 参考文件列表: {{reference_files}}
 
    执行完任务之后,你需要给出总结报告.

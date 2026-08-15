@@ -56,11 +56,10 @@ class Task(BaseModel):
     )
     task_type: str = Field(
         default="",
-        description="""任务类型.可选: setup, code, test_code, doc.
-        - setup: 基础配置,目录和文件创建,初始化.
+        description="""任务类型.可选: setup, code, test_code.
+        - setup: 基础配置,目录和文件创建,初始化. 相关文档修改
         - code: 编写或修改业务代码.
         - test_code: 编写或修改测试代码.
-        - doc: 编写或修改文档.
         """,
     )
     phase: str = Field(

@@ -8,7 +8,6 @@ from globals.state import Task
 
 TASKS_FILE = Path("tasks.json")
 
-
 def save_tasks(tasks: list) -> None:
     """保存任务列表到 tasks.json"""
     TASKS_FILE.write_text(
@@ -17,7 +16,9 @@ def save_tasks(tasks: list) -> None:
 
 
 def load_tasks() -> list[dict]:
-    """从 tasks.json 加载任务列表，返回原始 dict 列表"""
+    """从 tasks.json 加载任务列表，返回原始 dict 列表；文件不存在时返回空列表"""
+    if not TASKS_FILE.exists():
+        return []
     return json.loads(TASKS_FILE.read_text(encoding="utf-8"))
 
 
@@ -43,18 +44,30 @@ def get_generated_dir() -> str:
     return os.environ.get("GENERATED_DIR", "generated")
 
 
-def get_reference_files(feature_dir: str) -> list[str]:
-    """获取 generated/specs/{feature_dir}/ 下所有文件相对于 generated/ 的路径列表"""
+def get_unified_reference_files(feature_dir: str) -> list[str]:
+    """获取统一参考文件列表（相对于 generated/ 的路径）
+
+    约定所有 task 的参考文件统一为:
+        plan.md, contracts/*, research.md, data-model.md, spec.md
+    """
     specs_dir = Path(get_generated_dir()) / "specs" / feature_dir
     if not specs_dir.exists():
         return []
 
     ref_files = []
-    for root, _dirs, files in os.walk(specs_dir):
-        for f in files:
-            abs_path = Path(root) / f
-            rel_path = abs_path.relative_to(get_generated_dir())
-            ref_files.append(str(rel_path))
+    # 顶层固定文档
+    for name in ["plan.md", "research.md", "data-model.md", "spec.md"]:
+        f = specs_dir / name
+        if f.exists():
+            ref_files.append(str(f.relative_to(get_generated_dir())))
+
+    # contracts 目录下所有文件
+    contracts_dir = specs_dir / "contracts"
+    if contracts_dir.is_dir():
+        for f in sorted(contracts_dir.iterdir()):
+            if f.is_file():
+                ref_files.append(str(f.relative_to(get_generated_dir())))
+
     return ref_files
 
 
