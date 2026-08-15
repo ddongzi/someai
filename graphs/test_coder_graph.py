@@ -93,14 +93,18 @@ def _do_first_write(state:TestCoderGraphState) -> Dict:
 
 
 def _do_fix_bug(state: TestCoderGraphState)->Dict:
-    graph_logger.info(f"[Coder] 有review, 修复代码。")
+    graph_logger.info(f"[TestCoder] will fix bug. issues: {issues}")
     
+    current_task = state['current_task']
     issues = state['issue_buckets'][GRAPH_NAME]
     reviews = [iss['review'] for iss in issues]
     system_prompt, user_prompt  = get_scene_prompt(
         file_name=PROMPT_FILE_NAME,
         scene_name='fix_bug',
-        review = '\n'.join(reviews)
+        review = '\n'.join(reviews),
+        task_content = current_task['content'],
+        target_files = current_task['target_files'],
+        reference_files = current_task['reference_files'],
     )
  
     messages = [
@@ -109,7 +113,6 @@ def _do_fix_bug(state: TestCoderGraphState)->Dict:
     ]
     for msg in state['messages']:
         messages.append(msg)   
-
 
     full_content, full_chunk = call_llm(llm,messages, logger=graph_logger)
     full_chunk.name = TEST_CODER_NODE_NAME
@@ -123,7 +126,6 @@ def _do_fix_bug(state: TestCoderGraphState)->Dict:
         'messages': [full_chunk],
         'test_coder_subgraph_status':'success',
         'issue_buckets':{'test_coder_graph':[]},
-
     }
 def test_writer_node(state: TestCoderGraphState) -> Dict:
     graph_logger.info("\n📝 [TestWriter] 正在生成或重构自动化测试")

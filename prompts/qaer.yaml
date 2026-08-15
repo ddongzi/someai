@@ -13,7 +13,7 @@ system_base: |
   ```json
   [
     {
-      "type": "code",
+      "type": "CODE_BUG",
       "review": "参考文件明确要求使用Optional参数, 但目标文件中没有."
     }
   ]
@@ -23,7 +23,7 @@ system_base: |
   ```json
   [
     {
-      "type": "固定为code",
+      "type": "固定为CODE_BUG",
       "review": "审计意见"
     }
     ...
