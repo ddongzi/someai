@@ -36,7 +36,14 @@ class Issue(TypedDict):
     source: str # qaer, judger
     type: str # 类型：CODE_BUG, DESIGN_BUG, TEST_CODE_BUG
     assign: str # coder, test_coder, human
-    review: str # 修复建议
+    
+    review: str # 修复建议 will delete
+    # 修复建议具体
+    gap_type: str # gap类型：missing, partial, contradicts, unrequested
+    evidence: str # 证据，观测到的文件/区域
+    source_ref: str # 来源引用，追溯到FR-###/SC-###等
+    how_to_fix: str # 如何修复
+    severity: str # 严重程度：CRITICAL, HIGH, MEDIUM, LOW
 
 
 # 从tasks.md通过llm解析出来
@@ -108,9 +115,9 @@ class GraphState(TypedDict):
 
     is_issueing: bool # 是否正在处理修复建议
 
-    issues: Annotated[list[Issue], operator.add] # 修复建议列表
+    issues: list[Issue] # 修复建议列表
 
-    issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts] #
+    issue_buckets: dict[str, list[Issue]]
 
     human_source: str # human 来源，比如max_attempts, no issue
 

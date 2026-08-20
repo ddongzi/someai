@@ -39,6 +39,7 @@ class JudgeGraphState(TypedDict):
     test_output: str # 测试代码输出
     file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
     current_task: Annotated[Task, any_write]       # 当前正在执行的任务
+    issues: list[Issue] # 修复建议列表
 
     # 私有
     messages:Annotated[list[AnyMessage], add_messages]
@@ -82,7 +83,7 @@ def judge_node(state: JudgeGraphState) -> Dict:
         }
     result = parse_llm_json(full_content)
 
-    issues = []
+    issues = list(state.get('issues', []))
     if current_task['task_type'] == 'code':
         assign = 'coder_graph'
     if current_task['task_type'] == 'test_code':

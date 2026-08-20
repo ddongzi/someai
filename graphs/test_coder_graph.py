@@ -54,7 +54,7 @@ class TestCoderGraphState(TypedDict,total=False):
     test_coder_subgraph_status:Annotated[str, any_write] 
     file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts] 
 
-    issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts]
+    issue_buckets: dict[str, list[Issue]]
     current_task: Annotated[Task, any_write]       # 当前正在执行的任务
 
     # 私有
@@ -93,10 +93,11 @@ def _do_first_write(state:TestCoderGraphState) -> Dict:
 
 
 def _do_fix_bug(state: TestCoderGraphState)->Dict:
-    graph_logger.info(f"[TestCoder] will fix bug. issues: {issues}")
-    
     current_task = state['current_task']
     issues = state['issue_buckets'][GRAPH_NAME]
+
+    graph_logger.info(f"[TestCoder] will fix bug. {len(issues)}")
+
     reviews = [iss['review'] for iss in issues]
     system_prompt, user_prompt  = get_scene_prompt(
         file_name=PROMPT_FILE_NAME,
@@ -118,6 +119,7 @@ def _do_fix_bug(state: TestCoderGraphState)->Dict:
     full_chunk.name = TEST_CODER_NODE_NAME
     if full_chunk.tool_calls:
         # 
+        
         return {
             'messages': [full_chunk],
         }

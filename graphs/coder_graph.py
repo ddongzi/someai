@@ -53,7 +53,7 @@ class CoderGraphState(TypedDict,total=False):
 
     file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
 
-    issue_buckets: Annotated[dict[str, list[Issue]], merge_dicts]
+    issue_buckets: dict[str, list[Issue]]
 
     coder_subgraph_status: Annotated[str, any_write] 
 

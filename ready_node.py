@@ -3,6 +3,7 @@ from typing import Dict
 from utils import get_first_pending_task
 from globals.state import GraphState, Issue, FileSnapshot
 from globals.logger import run_logger
+from tools.git import git_tool
 import os
 import sys
 from dotenv import load_dotenv

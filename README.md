@@ -27,6 +27,9 @@ npm run dev
 ---
 
 ## 任务清单
+- [ ] 引入coverage对标qa, 形成确定的checklist
+- [ ] 到底多少次才能没有bug?  一直都有bug, 看参考非常仔细.
+- [ ] 由于一次一个task,一个type, 目前是串行, 删除原来的Annotated[int, operator.add], 不需要了. 直接赋值更加灵活
 - [ ] generated环境问题, test_execer比如需要pytest-cov库
 - [ ] implement类task, 测试文件怎么知道是哪些?涉及测试执行和评判
 - [ ] 考虑将judge和execer合并为一个graph

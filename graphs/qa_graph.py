@@ -40,9 +40,10 @@ graph_logger = get_file_logger(
 GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 
 class QAGraphState(TypedDict):
-    issues: Annotated[list[Issue], operator.add] # 修复建议列表
+    issues: list[Issue] # 修复建议列表（串行场景，直接覆盖）
     file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
     current_task: Annotated[Task, any_write]       # 当前正在执行的任务
+    issues: list[Issue] # 修复建议列表
 
     # 私有
     messages:Annotated[list[AnyMessage], add_messages]
@@ -75,7 +76,7 @@ def qa_node(state: QAGraphState) -> Dict:
         return {
             'messages': [full_chunk],
         }
-    issues = []
+    issues = list(state.get('issues', []))
 
     result = parse_llm_json(full_content)
     if current_task['task_type'] == 'code':
