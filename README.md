@@ -27,7 +27,9 @@ npm run dev
 ---
 
 ## 任务清单
-- [ ] 引入coverage对标qa, 形成确定的checklist
+- [ ] ds涨价近10倍了..
+- [ ] testrun, judge 适配新issue
+- [ ] 引入coverage对标qa, 形成确定的checklist.   
 - [ ] 到底多少次才能没有bug?  一直都有bug, 看参考非常仔细.
 - [ ] 由于一次一个task,一个type, 目前是串行, 删除原来的Annotated[int, operator.add], 不需要了. 直接赋值更加灵活
 - [ ] generated环境问题, test_execer比如需要pytest-cov库

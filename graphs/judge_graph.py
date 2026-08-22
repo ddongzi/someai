@@ -90,14 +90,17 @@ def judge_node(state: JudgeGraphState) -> Dict:
         assign = 'test_coder_graph'
         
     for issue in result:
-        itype = issue['type']
 
         issues.append(Issue(
                 issue_id=uuid.uuid4(),
                 source='judge_node',
-                type=itype,
-                review=issue['review'],
-                assign=assign
+                assign=assign,
+
+                gap_type="contradicts",
+                evidence=output,
+                source_ref="",
+                how_to_fix="",
+                severity="HIGH"
             ))
     return {
         "issues": issues,

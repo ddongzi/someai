@@ -14,7 +14,7 @@ from langgraph.graph.message import add_messages,AnyMessage
 from typing import Annotated, List, TypedDict
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
-from globals.state import GraphState, Issue,any_write,merge_dicts,FileSnapshot,Task
+from globals.state import get_issue_review,GraphState, Issue,any_write,merge_dicts,FileSnapshot,Task
 from globals.llm import get_llm_with_tools,call_llm
 from utils import get_file_logger
 from tools.filer import write_to_file,read_file, inspect_file_summary,delete_files,create_file
@@ -98,7 +98,8 @@ def _do_fix_bug(state: TestCoderGraphState)->Dict:
 
     graph_logger.info(f"[TestCoder] will fix bug. {len(issues)}")
 
-    reviews = [iss['review'] for iss in issues]
+    reviews = [get_issue_review(iss) for iss in issues]
+    
     system_prompt, user_prompt  = get_scene_prompt(
         file_name=PROMPT_FILE_NAME,
         scene_name='fix_bug',

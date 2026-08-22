@@ -23,9 +23,9 @@ scenes:
     在修改错误时候，可能会用到跨文件跳转来得到相关引用、定义，进行同步修改。
 
     - 报错信息:
-    ```json
+    <review>
     {{review}}
-    ```
+    </review>
 
     输出格式要求：为Search-and-Replace Block标准格式。不包含其他任何内容。
 

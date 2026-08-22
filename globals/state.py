@@ -34,16 +34,17 @@ def replace_dict(left: dict, right: dict) -> dict:
 class Issue(TypedDict):
     issue_id: str # 修复建议ID，唯一标识
     source: str # qaer, judger
-    type: str # 类型：CODE_BUG, DESIGN_BUG, TEST_CODE_BUG
     assign: str # coder, test_coder, human
     
-    review: str # 修复建议 will delete
     # 修复建议具体
     gap_type: str # gap类型：missing, partial, contradicts, unrequested
     evidence: str # 证据，观测到的文件/区域
     source_ref: str # 来源引用，追溯到FR-###/SC-###等
     how_to_fix: str # 如何修复
     severity: str # 严重程度：CRITICAL, HIGH, MEDIUM, LOW
+
+def get_issue_review(issue:Issue):
+    return f"gap_type: {issue['gap_type']}, evidence: {issue['evidence']}, source_ref: {issue['source_ref']}, how_to_fix: {issue['how_to_fix']}, severity: {issue['severity']}"
 
 
 # 从tasks.md通过llm解析出来

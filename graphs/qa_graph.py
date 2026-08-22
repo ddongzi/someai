@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 from typing import Dict
 from utils import get_scene_prompt,parse_llm_json
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -54,13 +55,10 @@ def qa_node(state: QAGraphState) -> Dict:
     graph_logger.info("\n🔍 [QA] 正在审计代码")
     current_task =  state['current_task']
 
-    system_prompt, user_prompt  = get_scene_prompt(
-        file_name='qaer',
-        scene_name='base',
-        target_files = current_task['target_files'],
-        reference_files = current_task['reference_files'],
-    )
+    system_prompt = Path('.specify/converge_prompt.md').read_text()
+    user_prompt = f'Current Task: {current_task}'
 
+    # TODO 或许 还是要限制target 文件权限
     messages = [
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt)
@@ -81,16 +79,22 @@ def qa_node(state: QAGraphState) -> Dict:
     result = parse_llm_json(full_content)
     if current_task['task_type'] == 'code':
         assign = 'coder_graph'
+        itype = 'CODE_BUG'
     if current_task['task_type'] == 'test_code':
         assign = 'test_coder_graph'
+        itype = 'TEST_CODE_BUG'
 
     for item in result:
         issues.append(Issue(
             issue_id=uuid.uuid4(),
             source='qa_node',
-            type= item['type'],
-            review=item['review'],
-            assign=assign
+            type= itype,
+            assign=assign,
+
+            gap_type=item['gap_type'],
+            evidence=item['evidence'],
+            source_ref=item['source_ref'],
+            severity=item['servity']
         ))
     return {
         'issues': issues,
