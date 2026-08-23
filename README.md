@@ -11,7 +11,7 @@
 
 ```shell
 uv sync
-python user_server.py
+bash run.sh
 ```
 
 ### 2. thread前端
@@ -25,15 +25,14 @@ npm run dev
 ![thread ui](<thread_webui/截图 2026-07-14 21-00-27.png>)
 
 ---
+## 任务阶段
+T008之前done
 
 ## 任务清单
 - [ ] ds涨价近10倍了..
-- [ ] testrun, judge 适配新issue
-- [ ] 引入coverage对标qa, 形成确定的checklist.   
-- [ ] 到底多少次才能没有bug?  一直都有bug, 看参考非常仔细.
-- [ ] 由于一次一个task,一个type, 目前是串行, 删除原来的Annotated[int, operator.add], 不需要了. 直接赋值更加灵活
+- [x] testrun, judge 适配新issue
+- [x] 由于一次一个task,一个type, 目前是串行, 删除原来的Annotated[int, operator.add], 不需要了. 直接赋值更加灵活
 - [ ] generated环境问题, test_execer比如需要pytest-cov库
-- [ ] implement类task, 测试文件怎么知道是哪些?涉及测试执行和评判
 - [ ] 考虑将judge和execer合并为一个graph
 - [x] task参考文件列表统一设置为: plan.md contracts/*, reasearch, data-model, spec.md
 - [x] tasks.json通过llm结构输出.只输出原有内容. 使用这两步骤明显效果好了. 1. 尽量少推测.比如reference_files说明只通过手动设置. 2. 字段少,减少错误. (甚至可以不是llm而是直接function). 
