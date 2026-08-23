@@ -166,7 +166,7 @@
   {
     "id": "T007",
     "content": "Unit tests for `TileTypeRegistry` in `tests/unit/test_registry.py` (register/get/is_registered/list/glyph; duplicate and unknown type → `ValidationError`)",
-    "status": "pending",
+    "status": "in_progress",
     "task_type": "test_code",
     "phase": "Phase 2: Foundational (Blocking Prerequisites)",
     "target_files": [

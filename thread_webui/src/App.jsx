@@ -58,6 +58,24 @@ export default function App() {
       setSseEnabled(false); // 流挂了，自动关闭前端开关状态
     }
   });
+
+  // 🔄 历史快照自动刷新：只要 SSE 在传输，就每 10 秒拉取一次最新历史
+  const refreshHistory = useCallback(async () => {
+    try {
+      const historyList = await getHistory();
+      setCheckpoints(historyList);
+    } catch (err) {
+      console.error('刷新历史快照失败:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isConnected) return undefined;
+    // 立即拉一次，再启动 10 秒轮询
+    refreshHistory();
+    const timer = setInterval(refreshHistory, 10000);
+    return () => clearInterval(timer);
+  }, [isConnected, refreshHistory]);
   const handleStart = async () => {
     addLog('🚀 手动初始化 LangGraph 工作流...', 'info');
 
