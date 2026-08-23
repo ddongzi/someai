@@ -47,12 +47,12 @@ def human_node(state: GraphState) -> Dict:
         if human_input['approved']:
             current_task = state['current_task']
             current_task['status'] = 'completed'
+            save_task(current_task)    
             git_tool.invoke({
                 'action': 'commit',
                     'reason': f'Human approved, commit. TASK [{current_task['id']}] [{current_task['content']}]',
                     'target': ''
             })
-            save_task(current_task)    
 
         run_logger.info(f"人工干预输入: {human_input}")
 
