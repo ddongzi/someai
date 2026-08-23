@@ -29,7 +29,7 @@ def save_task(task: Task) -> None:
     tasks = load_tasks()
     for i, task_dict in enumerate(tasks):
         if task_dict.get("id") == task['id']:
-            tasks[i] = task.model_dump()
+            tasks[i]['status'] = task['status']
             save_tasks(tasks)
             return
 
