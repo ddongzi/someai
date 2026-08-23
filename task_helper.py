@@ -24,11 +24,11 @@ def load_tasks() -> list[dict]:
 
 def save_task(task: Task) -> None:
     """将单个任务的当前状态更新到 tasks.json 中对应的任务"""
-    if not task.id:
+    if not task['id']:
         return
     tasks = load_tasks()
     for i, task_dict in enumerate(tasks):
-        if task_dict.get("id") == task.id:
+        if task_dict.get("id") == task['id']:
             tasks[i] = task.model_dump()
             save_tasks(tasks)
             return
