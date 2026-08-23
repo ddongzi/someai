@@ -92,9 +92,7 @@ class Task(BaseModel):
 
     def get(self, key: str, default=None):
         return getattr(self, key, default)
-    
-    def __str__(self) -> str:
-        return f'TASK [{self.id}] [{self.content}]'
+
 
 class TaskList(BaseModel):
     """任务列表，用于 LLM structured output 解析"""
