@@ -189,31 +189,45 @@ def get_scene_prompt(file_name: str, scene_name: str = 'base', **kwargs) -> Tupl
 
 import json
 import re
+import json
+import re
 
 def parse_llm_json(llm_output: str):
     """
-    清洗并解析 LLM 输出的 JSON 字符串，支持带有 Markdown 标记或前后废话的情况
+    清洗并解析 LLM 输出的 JSON 字符串，支持 Markdown 代码块及杂余文本
     """
-    from globals.logger import run_logger
-    # 1. 去除两端的空白字符
     text = llm_output.strip()
     
-    # 2. 核心正则：匹配最外层的 {} 或 []
-    # 这样即使 LLM 输出 "这是结果：```json {\"a\": 1} ``` 谢谢！" 也能精准提取
-    match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
-    
-    if not match:
-        raise ValueError("在 LLM 输出中未找到有效的 JSON 结构 ({} 或 [])")
+    # 1. 优先提取 ```json ... ``` 或 ``` ... ``` 代码块中的内容
+    markdown_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text, re.IGNORECASE)
+    if markdown_match:
+        json_str = markdown_match.group(1).strip()
+    else:
+        # 2. 回退机制：寻找第一个 '{' 或 '[' 到最后一个匹配的 '}' 或 ']'
+        # 找到最先出现的起始括号类型
+        dict_start = text.find('{')
+        list_start = text.find('[')
         
-    json_str = match.group(1)
-    
+        if dict_start == -1 and list_start == -1:
+            raise ValueError("在 LLM 输出中未找到有效的 JSON 结构 ({} 或 [])")
+            
+        # 根据谁先出现，决定寻找对应的闭合括号
+        if dict_start != -1 and (list_start == -1 or dict_start < list_start):
+            dict_end = text.rfind('}')
+            if dict_end == -1:
+                raise ValueError("找到 '{' 但未找到对应的 '}'")
+            json_str = text[dict_start:dict_end + 1]
+        else:
+            list_end = text.rfind(']')
+            if list_end == -1:
+                raise ValueError("找到 '[' 但未找到对应的 ']'")
+            json_str = text[list_start:list_end + 1]
+            
     # 3. 解析 JSON
     try:
         return json.loads(json_str)
     except json.JSONDecodeError as e:
-        # 如果解析失败，通常是由于 LLM 输出了不规范的控制字符、单引号或截断
-        run_logger.info(f"JSON 语法错误: {e}")
-        # 兜底清洗：处理常见的反斜杠转义或截断（可选）
+        # 可以在此处集成 json_repair 库处理非标 JSON（如尾部逗号、未闭合引号等）
         return handle_json_retry(json_str)
 
 def handle_json_retry(corrupted_str: str):

@@ -18,6 +18,7 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from utils import draw_workflow_png
 import operator
+from tools.environment import get_environment_variable
 from langgraph.graph.message import add_messages,AnyMessage
 from globals.state import GraphState, Issue,any_write,merge_dicts,FileSnapshot
 GRAPH_NAME = 'qa_graph'
@@ -26,8 +27,7 @@ QA_NODE_NAME = "qa_node"
 
 PROMPT_FILE_NAME ='qaer'
 tools=[
-    ast_search,
-    find_symbol_references, find_symbol_definition, 
+    get_environment_variable,
     read_file,inspect_file_summary
 ]
 llm = get_llm_with_tools(tools)
@@ -41,7 +41,6 @@ graph_logger = get_file_logger(
 GENERATED_DIR = os.environ.get("GENERATED_DIR", "generated")
 
 class QAGraphState(TypedDict):
-    issues: list[Issue] # 修复建议列表（串行场景，直接覆盖）
     file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts]
     current_task: Annotated[Task, any_write]       # 当前正在执行的任务
     issues: list[Issue] # 修复建议列表
@@ -53,12 +52,14 @@ def qa_node(state: QAGraphState) -> Dict:
     代码审计节点
     """
     graph_logger.info("\n🔍 [QA] 正在审计代码")
-    current_task =  state['current_task']
+    current_task:Task =  state['current_task']
 
-    system_prompt = Path('.specify/converge_prompt.md').read_text()
-    user_prompt = f'Current Task: {current_task}'
-
-    # TODO 或许 还是要限制target 文件权限
+    system_prompt, user_prompt = get_scene_prompt(
+        file_name='qaer',
+        scene_name='base',
+        task_content = current_task['content'],
+        target_files = current_task['target_files']
+    )
     messages = [
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt)
@@ -94,7 +95,7 @@ def qa_node(state: QAGraphState) -> Dict:
             gap_type=item['gap_type'],
             evidence=item['evidence'],
             source_ref=item['source_ref'],
-            severity=item['servity']
+            severity=item['severity']
         ))
     return {
         'issues': issues,

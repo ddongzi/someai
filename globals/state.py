@@ -92,7 +92,9 @@ class Task(BaseModel):
 
     def get(self, key: str, default=None):
         return getattr(self, key, default)
-
+    
+    def __str__(self) -> str:
+        return f'TASK [{self.id}] [{self.content}]'
 
 class TaskList(BaseModel):
     """任务列表，用于 LLM structured output 解析"""
@@ -110,7 +112,7 @@ class FileSnapshot(TypedDict):
 
 class GraphState(TypedDict):
 
-    attempts: Annotated[int, operator.add] # 重试次数，目前是只看tester的重试次数的，因为目前都会跑到tester
+    attempts: int #  
 
     test_output: Annotated[str, any_write] # 测试代码输出
 

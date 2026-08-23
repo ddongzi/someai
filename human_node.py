@@ -4,7 +4,7 @@ from tools.git import git_tool
 from globals import MAX_ATTAMPTS
 from globals.state import GraphState, Issue
 from globals.logger import run_logger
-
+from task_helper import save_task
 def human_node(state: GraphState) -> Dict:
     run_logger.info(f"进入人工干预节点, {state['attempts']}")
     tip = ''
@@ -44,12 +44,15 @@ def human_node(state: GraphState) -> Dict:
             'type': 'approval',
             'input_type': 'choice',
         })
-        if human_input == 'approved':
+        if human_input['approved']:
+            current_task = state['current_task']
             git_tool.invoke({
                 'action': 'commit',
-                    'reason': 'No issue.! Human approved, commit.',
+                    'reason': f'Human approved, commit. {current_task}',
                     'target': ''
             })
+            current_task.status = 'completed'
+            save_task(current_task)    
         run_logger.info(f"人工干预输入: {human_input}")
 
         return {}

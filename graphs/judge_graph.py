@@ -54,7 +54,7 @@ def judge_node(state: JudgeGraphState) -> Dict:
         expected_result = "Expect all test cases to pass."
         test_files = current_task['target_files']
     if current_task['task_type'] == 'test_code':
-        expected_result = "Expect all test cases to fail."
+        expected_result = "Expect all test cases to fail, or Process failed."
         # TODO
         test_files = ''
 

@@ -49,7 +49,7 @@ class TestCoderGraphState(TypedDict,total=False):
         # 共享 with parent
     current_task: Annotated[Task, any_write]       # 当前正在执行的任务
 
-    attempts: Annotated[int, any_write] # 重试次数，目前是只看tester的重试次数的，因为目前都会跑到tester
+    attempts:int# 重试次数，目前是只看tester的重试次数的，因为目前都会跑到tester
 
     test_coder_subgraph_status:Annotated[str, any_write] 
     file_ledger: Annotated[dict[str, FileSnapshot], merge_dicts] 
@@ -149,7 +149,7 @@ def router_node(state: TestCoderGraphState) :
 
     return {
         'messages':[],
-        'attempts':1,
+        'attempts':state['attempts'] + 1,
     }
 
 graph = StateGraph(TestCoderGraphState)
